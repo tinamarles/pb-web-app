@@ -1,0 +1,25 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  db:
+    # Use the official Postgres image from Docker Hub
+    image: postgres:15
+    container_name: web_app_postgres_db  # Updated to remove 'psj'
+    restart: always
+    environment:
+      # These must match your .env file
+      - POSTGRES_USER=pbDB_user
+      - POSTGRES_PASSWORD=my_secret_password
+      - POSTGRES_DB=pbDB
+    ports:
+      # Map the container's port to a port on your local machine
+      - "5432:5432"
+    volumes:
+      # This line saves your database data to a persistent volume
+      - postgres_data:/var/lib/postgresql/data/
+    
+volumes:
+  # Define the named volume
+  postgres_data:
