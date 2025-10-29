@@ -1,26 +1,189 @@
-@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit&family=Shadows+Into+Light+Two&display=swap");
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-size: 16px;
+  --radius: 16px;
+  --transition-duration-200: 200ms;
+
+  /* Primitives (the Atoms) */
+
+  /* ======================== */
+  /* +++ COLOR PRIMITIVES +++ */
+  /* ======================== */
+
+  /* Neutral Color System (exact values from your Figma) */
+  --neutral-100: #ffffff;
+  --neutral-98: #f9f9fa;
+  --neutral-96: #f3f3f4;
+  --neutral-94: #eeeeef;
+  --neutral-92: #e8e8e9;
+  --neutral-90: #e2e2e3;
+  --neutral-87: #dadad8;
+  --neutral-80: #c6c6c7;
+  --neutral-60: #909192;
+  --neutral-50: #767778;
+  --neutral-30: #454748;
+  --neutral-25: #3a3c3d;
+  --neutral-22: #333536;
+  --neutral-20: #2f3132;
+  --neutral-17: #282a2b;
+  --neutral-12: #1e2021;
+  --neutral-10: #1a1c1d;
+  --neutral-6: #121415;
+  --neutral-4: #0c0e0f;
+  --neutral-0: #000000;
+
+  /* Primitives for Experimental theme */
+  --purple-40: #6f43c0; /* -40 value */
+  --purple-60: #a47aef; /* -60 value */
+  --teal-50: #278198; /* -50 value */
+  --teal-70: #43b9d7; /* -70 value */
+  --yellow-90: #f9e534; /* -90 value */
+  --darkgrey-20: #263238; /* -20 value */
+  --darkgrey-40: #4b626d; /* -40 value */
+  --lightgrey-80: #bdc8d0; /* -80 value */
+  --lightgrey-94: #eceff1; /* -94 value */
+  --ex-info-60: #3192fc; /* -60 value */
+  --ex-success-70: #2bc374; /* -70 value */
+  --ex-error-60: #f75b5c; /* -60 value */
+  --ex-warning-70: #f9920d; /* -70 value */
+
+  /* ============================= */
+  /* +++ TYPOGRAPHY Primitives +++ */
+  /* ============================= */
+
+  /* Static font families */
+  --font-headers: "Outfit", sans-serif;
+  --font-base: "Inter", sans-serif;
+  --font-slogan: "Shadows Into Light Two", cursive;
+
+  /* ============================= */
+  /* +++ SPACING Primitives    +++ */
+  /* ============================= */
+
+  --px-4: 0.25rem;
+  --px-8: 0.5rem;
+  --px-11: 0.6875rem;
+  --px-12: 0.75rem;
+  --px-14: 0.875rem;
+  --px-16: 1rem;
+  --px-18: 1.125rem;
+  --px-20: 1.25rem;
+  --px-22: 1.375rem;
+  --px-24: 1.5rem;
+  --px-26: 1.625rem;
+  --px-28: 1.75rem;
+  --px-30: 1.875rem;
+  --px-32: 2rem;
+  --px-36: 2.25rem;
+  --px-40: 2.5rem;
+  --px-44: 2.75rem;
+  --px-48: 3rem;
+  --px-52: 3.25rem;
+  --px-56: 3.5rem;
+  --px-60: 3.75rem;
+  --px-64: 4rem;
+  --px-80: 5rem;
+  --px-96: 6rem;
+  --px-120: 7.5rem;
+  --px-160: 10rem;
+  --px-192: 12rem;
+  --px-240: 15rem;
+  --px-256: 16rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ===== COLOR DESIGN TOKENS ===== */
+@theme {
+
+  /* Primary color - Purple */
+  --color-primary: var(--purple-40);
+  --color-on-primary: var(--neutral-100);
+ 
+  /* Secondary color - Teal */
+  --color-secondary: var(--teal-50);
+  --color-on-secondary: var(--neutral-100);
+ 
+  /* Tertiary color - Yellow */
+  --color-tertiary: var(--yellow-90);
+  --color-on-tertiary: var(--neutral-30);
+
+  /* Keep error, success, warning the same as light theme */
+  --color-error: var(--ex-error-60);
+  --color-on-error: var(--error-100);
+
+  --color-success: var(--ex-success-70);
+  --color-on-success: var(--success-100);
+
+  --color-warning: var(--ex-warning-70);
+  --color-on-warning: var(--warning-100);
+
+  /* Surface color tokens */
+
+  --color-background: var(--neutral-98);
+  --color-on-background: var(--neutral-10);
+
+  --color-surface: var(--neutral-98);
+  --color-on-surface: var(--neutral-10);
+  --color-surface-variant: var(--neutral-90);
+  --color-on-surface-variant: var(--neutral-30);
+
+  --color-surface-dim: var(--lightgrey-80);
+  --color-surface-bright: var(--neutral-98);
+  --color-surface-container-lowest: var(--neutral-100);
+  --color-surface-container-low: var(--neutral-96);
+  --color-surface-container: var(--neutral-94);
+  --color-surface-container-high: var(--neutral-92);
+  --color-surface-container-highest: var(--neutral-90);
+
+  --color-inverse-surface: var(--darkgrey-20);
+  --color-inverse-on-surface: var(--neutral-96);
+  --color-inverse-primary: var(--purple-40);
+
+  /* Special color tokens */
+  --color-outline: var(--neutral-50);
+  --color-outline-variant: var(--neutral-80);
+  --color-shadow: var(--neutral-0);
+  --color-scrim: var(--neutral-0);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+[data-theme="dark"] {
+  /* Primary color - Purple */
+  --color-primary: var(--purple-60);
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Secondary color - Teal */
+  --color-secondary: var(--teal-70);
+
+  /* Tertiary color - Yellow ==> same as for light*/
+  
+  /* Keep error, success, warning the same as light theme */
+
+  /* Surface colors */
+
+  --color-surface-dim: var(--darkgrey-40);
+  --color-inverse-surface: var(--lightgrey-94);
+  --color-inverse-on-surface: var(--neutral-20);
+  --color-inverse-primary: var(--purple-60);
+
+  --color-background: var(--neutral-6);
+  --color-on-background: var(--neutral-90);
+
+  --color-surface: var(--neutral-6);
+  --color-on-surface: var(--neutral-90);
+  --color-surface-variant: var(--neutral-30);
+  --color-on-surface-variant: var(--neutral-80);
+
+  --color-surface-bright: var(--neutral-25);
+  --color-surface-container-lowest: var(--neutral-4);
+  --color-surface-container-low: var(--neutral-10);
+  --color-surface-container: var(--neutral-12);
+  --color-surface-container-high: var(--neutral-17);
+  --color-surface-container-highest: var(--neutral-22);
+
+  /* Special color tokens */
+  --color-outline: var(--neutral-60);
+  --color-outline-variant: var(--neutral-30);
+  --color-shadow: var(--neutral-0);
+  --color-scrim: var(--neutral-0);
 }

@@ -43,3 +43,6 @@
 /frontend/.env.production.local
 
 /backend/superuser.json
+
+# This line ignores any file that starts with an underscore inside the `frontend` directory.
+/frontend/**/_*

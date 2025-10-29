@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +27,8 @@ load_dotenv(os.path.join(BASE_DIR.parent, '.env'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY = 'django-insecure-)%ajph=9s=e4=&kg5*!)kfl3cl(s5owoa(%7h)onax$4v4)lh*'
-SECRET_KEY = os.environ.get('SECRET_KEY')
+# SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+SECRET_KEY = os.environ.get('SIMPLE_SECRET_KEY')
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY not found. Ensure it's set in the .env file or as an environment variable.")
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -50,7 +52,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'django_typomatic',
+
+    # Applications
+    'members',
+    'clubs',
+    'leagues',
+    'public',
+    'users'
 ]
 
 MIDDLEWARE = [
@@ -107,6 +119,9 @@ DATABASES = {
 #    }
 # }
 
+# To use the CustomUser instead of the default User
+AUTH_USER_MODEL = 'users.CustomUser'
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -125,6 +140,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+AUTHENTICATION_BACKENDS = [
+    'users.backends.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
@@ -150,10 +170,17 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        # 'rest_framework.permissions.IsAuthenticated',
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
+        # 'rest_framework.permissions.AllowAny',
         # 'rest_framework.permissions.AnonymousUser', # DEFAULT
     ]
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # Add this line
+    )
 }
 
 CORS_ALLOWED_ORIGINS = [
@@ -161,6 +188,52 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://pb-web-app.vercel.app"
 ]
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+
+    # consider setting UPDATE_LAST_LOGIN to True for user experience and logging.
+    # This can be useful for tracking user activity
+    "UPDATE_LAST_LOGIN": False,
+
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+
+    # VERIFYING_KEY is only used for asymmetric algorithms (eg. RS256)
+    # We are using HS256 which is symmetric and the SIGNING_KEY is used for
+    # verification.
+    # "VERIFYING_KEY": "",
+
+    # "AUDIENCE": None, --> only used if API needs to verify intended audience of the token
+    # "ISSUER": None,   --> only if API needs to verify the token's issuer
+    # "JWK_URL": None,  --> only used if using JSON Web Key sets
+    # "LEEWAY": 0,      --> default
+
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
+
+# Requirement for Next.js middleware
+    'TOKEN_OBTAIN_SERIALIZER': 'users.CustomTokenObtainPairSerializer',
+    'TOKEN_VERIFY_SERIALIZER': 'rest_framework_simplejwt.serializers.TokenVerifySerializer',
+
+
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
+
+    "JTI_CLAIM": "jti",
+
+# SLIDING_TOKEN_... are for a different type of token strategy.
+    # "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    # "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
+    # "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

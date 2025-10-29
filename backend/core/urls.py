@@ -1,22 +1,32 @@
-"""
-URL configuration for core project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework_simplejwt.views import (
+    TokenRefreshView,
+)
+from rest_framework.routers import DefaultRouter
+
+# Import the ViewSets from different apps
+from users.views import CustomTokenObtainPairView, LogoutAndBlacklistRefreshToken, UserDetailsView
+from clubs.views import ClubViewSet, ClubMembershipViewSet
+
+# Create a single router instance
+router = DefaultRouter()
+
+# Register all viewsets with the single router
+
+router.register(r'clubs', ClubViewSet, basename='clubs')
+router.register(r'memberships', ClubMembershipViewSet, basename='club-membership')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("api/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/logout/", LogoutAndBlacklistRefreshToken.as_view(), name='logout_and_blacklist'),
+    path("api/auth/user/", UserDetailsView.as_view(), name="user_details" ),
+    # App-specific API URLs
+    path('api/members/', include('members.urls')),
+    path('api/profile/', include('users.urls')),
+    # Use include to attach the URLs from the single, master router
+    path('api/', include(router.urls)),
 ]
