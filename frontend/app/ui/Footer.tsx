@@ -6,10 +6,10 @@ import { SiFacebook, SiInstagram } from "@icons-pack/react-simple-icons";
 
 export function Footer() {
   return (
-    <footer className="bg-white dark:bg-gray-800 py-8 text-center text-sm text-gray-600 dark:text-gray-400 transition-colors">
+    <footer className="bg-background p-4 transition-colors">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <Logo size="sm" />
+          <Logo size="sm" variant="full" />
           <div className="flex space-x-4">
             <Link href="#" className="hover:text-primary transition-colors">
               Explore
@@ -22,7 +22,7 @@ export function Footer() {
             </Link>
           </div>
         </div>
-        <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+        <div className="mt-6 border-t border-outline pt-6">
           <p>&copy; 2025 PickleHub. All rights reserved.</p>
           <div className="flex justify-center space-x-4 mt-4">
             {/* Social media icons can go here using SVGs or other icon libraries */}

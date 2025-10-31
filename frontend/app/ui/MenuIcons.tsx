@@ -5,56 +5,48 @@ import {
 import { LogOutIcon } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthUserProvider";
+import { Button } from "./button";
 
+// <Button variant='outlined' size='md' icon='dashboard' label='Outlined Button'/>
+/* <Button key={index} asChild variant="subtle" size="md">  
+                <Link key={index} href={link.href}>  
+                  {link.name}  
+                </Link>
+              </Button> 
+*/
 export function ShowDashboard() {
   return (
-    <Link
-      href="#"
-      className="flex items-center rounded-lg bg-primary px-4 transition-colors hover:bg-primary/80"
-    >
-      <span className="block text-on-surface">
-        Dashboard
-      </span>{" "}
-      <UserIcon className="h-5 ml-4 stroke-on-primary" />
-    </Link>
+    <Button asChild variant="subtle" size="md" icon='dashboard'>
+      <Link href="#">
+          Dashboard
+      </Link>
+    </Button>
   );
 }
 export function ShowSignUp() {
   return (
-    <Link
-      href="/signup"
-      className="flex items-center rounded-lg bg-primary px-4 transition-colors hover:bg-primary/80"
-    >
-      <span className="flex-1 rounded-lg px-4 py-2 text-on-primary block">
-        Sign Up
-      </span>{" "}
-      {/*<UserPlusIcon className="lg:hidden h-5 ml-4 stroke-primary-500 hover:stroke-neutral-900" /> */}
-    </Link>
+    <Button asChild variant="filled" size="md">
+      <Link href="/signup">
+          Sign Up
+      </Link>
+    </Button>
   );
 }
 
 export function ShowLogin() {
   return (
-    <Link
-      href="/login"
-      className="flex items-center rounded-lg bg-surface border border-outline px-4 transition-colors hover:bg-primary/80"
-    >
-      <span className="block py-2 px-3 text-on-surface">Sign In</span>
-      {/* <LogInIcon className="h-5 md:ml-4 stroke-neutral-800 dark:stroke-neutral-200 hover:stroke-primary-500" /> */}
-    </Link>
+    <Button asChild variant="outlined" size="md">
+      <Link href="/login">
+          Sign In
+      </Link>
+    </Button>
   );
 }
 export function ShowLogout() {
   const { logout } = useAuth();
   return (
-    <button
+    <Button variant = "subtle" size="md" icon="signout" label="Log Out"
       onClick={() => logout()}
-      className="flex h-10 items-center justify-between bg-surface text-on-surface rounded-lg hover:bg-primary/80 transition-colors"
-    >
-      <span className="block text-on-surface">
-        Log Out
-      </span>{" "}
-      <LogOutIcon className="h-5 stroke-on-surface hover:stroke-primary/80" />
-    </button>
+    />
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { inter } from "@/app/ui/fonts";
+import { inter, outfit, shadowsIntoLightTwo } from "@/app/ui/fonts";
 import "@/app/globals.css";
 import { Providers } from "@/app/providers/Providers";
 
@@ -14,8 +14,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${outfit.variable} ${shadowsIntoLightTwo.variable}`}
+      suppressHydrationWarning
+    >
+      <body>
         <Providers>{children}</Providers>
       </body>
     </html>

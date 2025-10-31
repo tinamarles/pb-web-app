@@ -3,6 +3,7 @@
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
+import { Button } from "./button";
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -29,16 +30,23 @@ export default function ThemeToggle() {
   };
 
   return (
-    <button
-      onClick={toggleTheme}
-      className="p-2 rounded-md hover:text-primary"
+    <Button 
+        variant="outlined" 
+        size="md" 
+        icon = {currentTheme === "dark" ? "sun" : "moon"}
+        iconOnly
+        onClick={toggleTheme}
+        className="rounded-full"
     >
-      {currentTheme === "dark" ? (
-        <SunIcon className="h-6 w-6 rounded-full text-on-primary hover:text-primary hover:bg-surface transition-colors" />
-      ) : (
-        <MoonIcon className="h-6 w-6 rounded-full text-on-primary hover:text-primary hover:bg-surface transition-colors" />
-      )}
       <span className="sr-only">Toggle theme</span>
-    </button>
+    </Button>
   );
 }
+
+/*
+{
+              theme === themeOption.value ? (
+                <Icon name="success" size="md" />
+              ) : null
+            }
+*/
