@@ -1,0 +1,19 @@
+=== PICKLEHUB GIT STATUS ===
+Date: Sun Nov  9 12:53:33 EST 2025
+
+Current HEAD: 0c7956a
+Current Branch: main
+Repo Path: /Users/tinamarles/Desktop/web-projects/pb-web-app
+Remote Origin: https://github.com/tinamarles/pb-web-app.git
+
+=== RECENT COMMITS ===
+0c7956a updated requirements.txt
+e0e6a97 changes in css and next.js v16
+70db465 chore: removed superuser.json from repo history
+bf92ea1 temp: Adding superuser data for initial deployment
+6fe15e2 feat: added whitenoise to MIDDLEWARE in settings.py and updated requirements.txt
+73dff06 feat: added gunicorn to requirements.txt
+17ff28e feat: upd requirements.txt
+e4720cc feat: updated settings.py STATIC_URL and STATIC_ROOT
+271aceb feat: frontend directory structure corrected
+53099fd feat: modified ALLOWED_HOSTS in settings.py

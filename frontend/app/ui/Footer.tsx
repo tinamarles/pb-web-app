@@ -1,4 +1,5 @@
-// Reusable Footer Component
+// frontent/app/ui/footer.tsx
+
 import Link from "next/link";
 import { Logo } from "@/app/ui/logo";
 
