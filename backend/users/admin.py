@@ -16,7 +16,7 @@ class CustomUserAdmin(UserAdmin):
 
     # This will add the phone_number field to the 'Personal info' fieldset.
     fieldsets = UserAdmin.fieldsets + (
-        (None, {'fields': ('mobile_phone', 'home_phone', 'work_phone', 'skill_level', 'dob', 'gender','is_coach')}),
+        (None, {'fields': ('mobile_phone', 'home_phone', 'work_phone', 'skill_level', 'dob', 'gender','is_coach','profile_picture_url')}),
     )
 
     # The search_fields will allow you to search for users

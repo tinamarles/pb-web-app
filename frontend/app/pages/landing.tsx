@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthUserProvider";
 import ThemeToggle from "@/app/ui/ThemeToggle";
-import { Footer } from "@/app/ui/Footer";
+//import { Footer } from "@/app/ui/Footer";
+import { Footer } from '@/app/shared';
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Logo } from "@/app/ui/logo";
-import { Button } from "../ui/button";
+import { Logo, Button } from "@/app/ui";
 import {
   ShowLogin,
   ShowLogout,
@@ -299,7 +299,7 @@ function FeaturesSection() {
         <h2 className="text-3xl lg:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
           Discover What PicklePro Offers
         </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((item, index) => (
             <div
               key={index}
@@ -465,7 +465,7 @@ function TestimonialsSection() {
         <h2 className="text-3xl lg:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
           What Our Players Say
         </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
             <div
               key={index}

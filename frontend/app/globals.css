@@ -154,9 +154,7 @@
   --color-secondary: var(--teal-70);
 
   /* Tertiary color - Yellow ==> same as for light*/
-  
   /* Keep error, success, warning the same as light theme */
-
   /* Surface colors */
 
   --color-surface-dim: var(--darkgrey-40);
@@ -186,8 +184,106 @@
   --color-scrim: var(--neutral-0);
 }
 @theme inline {
+/* Gap sizes */
+  --gap-xs: var(--px-4);
+  --gap-sm: var(--px-8);
+  --gap-md: var(--px-12);
+  --gap-lg: var(--px-16);
+  --gap-xl: var(--px-20); /* CTA section mobile*/
+  --gap-2xl: var(--px-24); /* card, hero.leftColumn */
+  --gap-3xl: var(--px-48); /* section, card.container.mobile*/
+  --gap-section: var(--px-48);
+  --gap-4xl: var(--px-64); /* card.container */
 
+  /* Padding sizes */
+  --p-xs: var(--px-4);
+  --p-sm: var(--px-8);
+  --p-md: var(--px-12);
+  --p-lg: var(--px-16);
+  --p-container: var(--px-16);
+  --p-xl: var(--px-20);
+  --p-sidebarItem: var(--px-20);
+  --p-section-mobile: var(--px-20);
+  --p-2xl: var(--px-24);
+  --p-card: var(--px-24);
+  --p-hero: var(--px-32);
+  --p-3xl: var(--px-48);
+  --p-4xl: var(--px-64);
+  --p-section-desktop: var(--px-64);
 
+  /* Avatar sizes: xl, lg, md for the avatar; sm, xs, 2xs for the upload-button on top */
+  --avatar-xl: var(--px-96);
+  --avatar-lg: var(--px-64);
+  --avatar-md: var(
+    --px-48
+  ); /* this avatar currently has no image upload button as too small */
+  --avatar-sm: var(--px-40);
+  --avatar-btn-xl: var(
+    --px-40
+  ); /* container button-xl on avatar-xl*/
+  --avatar-btn-lg: var(
+    --px-36
+  ); /* container button-lg currently not used */
+  --avatar-btn-md: var(
+    --px-28
+  ); /* container button-md on avatar-lg */
+
+  /* Icon sizes - used within buttons, input fields, navigation items */
+  --icon-sm: var(--px-16);
+  --icon-md: var(--px-18);
+  --icon-lg: var(
+    --px-20
+  ); /* used for inputField icons like email, phone, password lock, location */
+  --icon-xl: var(--px-24);
+
+  /* Icon bordered sizes - icon size + 8px padding (var(--px-8)) for circular frame */
+  --icon-bordered-sm: var(
+    --px-24
+  ); /* 1rem + 0.5rem = 1.5rem (24px) */
+  --icon-bordered-md: var(
+    --px-26
+  ); /* 1.125rem + 0.5rem = 1.625rem (26px) */
+  --icon-bordered-lg: var(
+    --px-28
+  ); /* 1.25rem + 0.5rem = 1.75rem (28px) */
+  --icon-bordered-xl: var(
+    --px-32
+  ); /* 1.5rem + 0.5rem = 2rem (32px) */
+
+  --icon-av-xl: var(--px-60); /* icon for generic avatar-xl */
+  --icon-av-lg: var(--px-40); /* icon for generic avatar-lg */
+  --icon-av-md: var(--px-28); /* icon for generic avatar-md */
+  --icon-av-sm: var(--px-24); /* icon for generic avatar-sm */
+}
+
+/* ===================================================================== */
+/* ================= UTILITIES                               =========== */
+/* ===================================================================== */
+@utility icon-* {
+  height: --value(--icon-*);
+  width: --value(--icon-*);
+}
+@utility icon-bordered-* {
+  height: --value(--icon-bordered-*);
+  width: --value(--icon-bordered-*);
+}
+@utility av-* {
+  height: --value(--avatar-*);
+  width: --value(--avatar-*);
+}
+@utility avatar-container {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-primary);
+  border-radius: 50%;
+}
+@utility p-* {
+  padding: --value(--p-*);
+}
+@utility gap-* {
+  gap: --value(--gap-*);
 }
 
 /* +++ TYPOGRAPHY +++ */
@@ -469,6 +565,229 @@
   }
   /* default square shape is applied, if rounded-full is required then it is added */
   border-radius: var(--px-8);
+}
+
+/* === Dropdown Menu === */
+@layer components {
+  /* +++ ICON BORDERED - Circular frame for icons +++ */
+  /* Note: Sizing handled by @utility icon-bordered-* (see UTILITIES section) */
+  .icon-bordered {
+    @apply inline-flex items-center justify-center;
+    @apply text-primary;
+    @apply rounded-full;
+    @apply border border-primary;
+    @apply flex-shrink-0;
+    @apply icon-bordered-lg;
+  }
+
+  /* +++ DROPDOWN Container +++ */
+  .dropdown-container {
+    @apply relative;
+    width: min-content;
+  }
+
+  .dropdown-trigger {
+    @apply cursor-pointer;
+
+    /* Hover ring for button wrapper (not avatar directly) 
+    &:hover button {
+      @apply text-primary bg-transparent;
+      @apply transition-all duration-200;
+    } */
+  }
+
+  /* +++ DROPDOWN Menu +++ */
+  .dropdown-menu {
+    @apply absolute top-full;
+    @apply mt-2;
+    @apply bg-surface;
+    @apply border border-outline-variant;
+    @apply shadow-md;
+    @apply z-50;
+    @apply flex flex-col gap-md;
+    padding: var(--px-8);
+    border-radius: var(--radius);
+    /* Animation */
+    animation: dropdown-slide-in 150ms ease-out;
+    width: min-content;
+    height: min-content;
+    white-space: nowrap;
+    box-shadow: 0px 10px 20px 0px rgba(0, 0, 0, 0.2);
+    overflow: var(--overflow-clip-fallback, clip);
+  }
+
+  .dropdown-align-left {
+    left: 0;
+  }
+
+  .dropdown-align-right {
+    right: 0;
+  }
+
+  @keyframes dropdown-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* +++ MENU ITEM +++ */
+  .menu-item-wrapper {
+    @apply w-full;
+  }
+
+  .menu-item-separator {
+    border-bottom: 1px solid var(--color-outline-variant);
+    padding-bottom: var(--px-8);
+    margin-bottom: var(--px-8);
+  }
+
+  .menu-item {
+    @apply w-full;
+    @apply flex items-center gap-sm;
+    @apply single-line-small text-on-surface;
+    @apply transition-colors duration-200;
+    @apply text-left;
+    @apply border-l-2 border-transparent;
+    padding: var(--px-4) var(--px-8);
+    width: min-content;
+    white-space: nowrap;
+    height: 28px;
+    flex-direction: row;
+    justify-content: center;
+    align-content: center;
+    flex-wrap: nowrap;
+
+    &:hover:not(:disabled) {
+      @apply border-primary;
+    }
+
+    &:focus-visible {
+      --tw-ring-color: color-mix(
+        in srgb,
+        var(--color-secondary),
+        transparent 80%
+      );
+      @apply focus-ring-base;
+    }
+
+    &:disabled {
+      @apply opacity-40 cursor-not-allowed;
+    }
+  }
+
+  .menu-item-danger {
+    @apply text-error;
+
+    &:hover:not(:disabled) {
+      @apply bg-error/20;
+    }
+
+    &:focus-visible {
+      --tw-ring-color: color-mix(
+        in srgb,
+        var(--color-error),
+        transparent 80%
+      );
+      @apply focus-ring-base;
+    }
+  }
+
+  .menu-item-icon {
+    @apply flex items-center justify-center flex-shrink-0;
+  }
+
+  .menu-item-label {
+    @apply flex-grow;
+  }
+
+  .menu-item-trailing {
+    @apply flex items-center justify-center flex-shrink-0;
+    @apply ml-auto;
+  }
+
+  .menu-item-active {  
+    @apply bg-secondary/80;  
+    opacity: 0.4;  
+}
+}
+/* === Footer classes === */
+/* +++ FOOTER Component - responsive +++ */
+@layer components {
+  .footer {
+    padding: var(--px-4) 0;
+    @apply flex flex-col gap-xs;
+    @apply bg-background;
+
+    @media (min-width: 768px) {
+      padding: var(--px-12) 0;
+      gap: var(--px-12);
+    }
+    @media (min-width: 1024px) {
+      padding: var(--px-16) 0;
+      gap: var(--px-12);
+    }
+  }
+
+  .footer__main {
+    @apply hidden;
+    @media (min-width: 768px) {
+      @apply flex gap-xl;
+    }
+  }
+  .footer__main > :first-child {
+    flex-grow: 1; /* Applies flex-grow: 1 to the first direct child */
+  }
+  .footer__main__ct {
+    @apply hidden;
+    @media (min-width: 768px) {
+      @apply flex flex-col;
+      @apply gap-md;
+      @apply text-on-surface;
+      min-width: 200px;
+    }
+  }
+  .footer__copyright {
+    @apply hidden;
+    @media (min-width: 768px) {
+      @apply flex items-center justify-center label-md text-on-surface-variant;
+    }
+  }
+  .footer__main__ct__nav {
+    @apply hidden;
+    @media (min-width: 768px) {
+      padding-top: var(--px-12);
+      @apply flex flex-col gap-sm;
+      @apply body-md text-on-surface-variant;
+    }
+  }
+  .footer__main__ct__nav > a:hover {
+    @apply text-primary transition-colors;
+  }
+  .footer__socialLinks {
+    @apply hover:text-primary transition-colors;
+  }
+
+  /* Footer classes for mobile version */
+  .footer__line-1 {
+    @apply flex items-center gap-sm label-sm text-on-surface-variant;
+    @media (min-width: 768px) {
+      @apply hidden;
+    }
+  }
+  .footer__line-2 {
+    @apply flex gap-xl label-sm text-on-surface-variant;
+    @media (min-width: 768px) {
+      @apply hidden;
+    }
+  }
+  .footer__line-2 > a:hover {
+    @apply text-primary transition-colors;
+  }
 }
 /* === BUTTON COMPONENT CLASSES === */
 @layer components {

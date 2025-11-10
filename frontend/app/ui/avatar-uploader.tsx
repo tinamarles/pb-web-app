@@ -11,7 +11,7 @@ export function AvatarUploader({ onUploadSuccess }: AvatarUploaderProps) {
   return (
     <CldUploadWidget
       uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
-      signatureEndpoint="/api/sign-cloudinary-params"
+      // signatureEndpoint="/api/sign-cloudinary-params"
       onSuccess={(result) => {
         if (typeof result.info === "object" && "secure_url" in result.info) {
           onUploadSuccess(result.info.secure_url);

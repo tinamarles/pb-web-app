@@ -35,10 +35,6 @@ import {
   Mail,
   Lock,
   Play,
-  Facebook,
-  Twitter,
-  Instagram,
-  Linkedin,
   Sparkles,
   Send,
   BarChart3,
@@ -61,6 +57,14 @@ import {
   NotebookPen,
   MessageCircleQuestionMark,
 } from "lucide-react";
+
+import { 
+  SlSocialFacebook,
+  SlSocialTwitter,
+  SlSocialInstagram,
+  SlSocialLinkedin
+ } from "react-icons/sl";
+
 
 /**
  * Central Icon System - Maps unified business names to Lucide components
@@ -132,7 +136,7 @@ const iconMap = {
   blog: NotebookPen,
 
   // Quick Actions
-  "book-court": CalendarClock,
+  bookcourt: CalendarClock,
   matches: Swords,
 
   // Visibility & State
@@ -153,10 +157,10 @@ const iconMap = {
   play: Play,
 
   // Social Media
-  facebook: Facebook,
-  twitter: Twitter,
-  instagram: Instagram,
-  linkedin: Linkedin,
+  facebook: SlSocialFacebook,
+  twitter: SlSocialTwitter,
+  instagram: SlSocialInstagram,
+  linkedin: SlSocialLinkedin,
 
   // Light Dark Scheme
   sun: Sun,
