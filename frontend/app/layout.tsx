@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { inter, outfit, shadowsIntoLightTwo } from "@/app/ui/fonts";
 import "@/app/globals.css";
 import { Providers } from "@/app/providers/Providers";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Club Management",
@@ -20,7 +21,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster position="top-right" />  {/* ← REQUIRED for toast to show! */}
+        </Providers>
       </body>
     </html>
   );

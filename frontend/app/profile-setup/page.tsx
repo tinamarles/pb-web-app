@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/app/providers/AuthUserProvider";
+import Link from "next/link";
 
 export default function MemberDashboardPage() {
   const { user, logout } = useAuth();
@@ -18,6 +19,9 @@ export default function MemberDashboardPage() {
     <main>
       <h1>Welcome, {user.firstName || user.username}</h1>
       <p>PROFILE SETUP PAGE</p>
+      <Link href="/testavatar">
+        <p>Avatar test</p>
+      </Link>
       <button
         onClick={() => logout()}
         className="text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600"

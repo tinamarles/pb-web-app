@@ -55,7 +55,8 @@ export async function proxy(request: NextRequest) {
     }
 
     const userDashboardPath = DASHBOARD_ROUTES[userRole];
-
+    console.log('in proxy before redirect:', userDashboardPath);
+    console.log('pathname: ', pathname);
     // Redirect authenticated users trying to access public pages
     if (PUBLIC_ROUTES.includes(pathname)) {
       // New User Redirection Logic
@@ -89,5 +90,5 @@ export async function proxy(request: NextRequest) {
 
 // Specify which paths the middleware should run on
 export const config = {
-  matcher: ['/', '/login', '/signup', '/dashboard/:path*', '/profile-setup'],
+  matcher: ['/', '/login', '/signup', '/dashboard/:path*', '/profile-setup', '/testavatar'],
 };

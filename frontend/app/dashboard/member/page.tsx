@@ -3,6 +3,7 @@
 import { useAuth } from "@/app/providers/AuthUserProvider";
 import { isMemberUser } from "@/app/lib/definitions";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function MemberDashboardPage() {
   const { user, logout } = useAuth();
@@ -20,6 +21,20 @@ export default function MemberDashboardPage() {
     <main>
       <h1>Welcome, {user.firstName || user.username}</h1>
       <p>MEMBER DASHBOARD</p>
+
+      <div>
+        {user?.profilePictureUrl ? (
+          <Image
+            src={user.profilePictureUrl}
+            width={64}
+            height={64}
+            className="rounded-full"
+            alt="Your avatar"
+          />
+        ) : (
+          <div className="bg-gray-300 w-16 h-16 rounded-full" />
+        )}
+      </div>
 
       <Link href="/testavatar">
         <p>Avatar test</p>
