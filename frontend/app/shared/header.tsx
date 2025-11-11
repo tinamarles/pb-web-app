@@ -1,18 +1,21 @@
+"use client";
 // frontend/app/shared/header.tsx
 // Figma Make components/layout/header.tsx
-
+import Link from "next/link";
 import { useState, memo, useCallback } from "react";
 import {
   Button,
+  ButtonItem,
+  NavigationButtonItem,
   Logo,
+  LogoConfig,
   Icon,
-  // Search,
+  Search,
   Avatar,
   Dropdown,
   MenuItem,
 } from "@/app/ui";
 
-import { ButtonItem, LogoConfig } from "@/app/shared";
 import { useAuth } from "@/app/providers/AuthUserProvider";
 
 export interface HeaderProps {
@@ -20,6 +23,7 @@ export interface HeaderProps {
   title?: string; // Header title text - OPTIONAL
   links?: LinkItem[]; // Navigation links - OPTIONAL
   buttons?: ButtonItem[]; // Action buttons - OPTIONAL
+  navigationButtons?: NavigationButtonItem[]; // Link-based buttons with no onClick handlers - OPTIONAL
   showSearch?: boolean; // Show search functionality - OPTIONAL
   showHelp?: boolean; // Show help icon - OPTIONAL
   showNotifications?: boolean; // Show notifications icon - OPTIONAL
@@ -37,7 +41,7 @@ export interface LinkItem {
 }
 
 export interface SubmenuItem {
-  icon: string; // Icon name
+  icon?: string; // Icon name
   label: string; // Item text
   url: string; // Destination URL
 }
@@ -47,6 +51,7 @@ export const Header = memo(function Header({
   title,
   links = [],
   buttons = [],
+  navigationButtons = [],
   showSearch = false,
   showHelp = false,
   showNotifications = false,
@@ -135,7 +140,7 @@ export const Header = memo(function Header({
     // Regular link without submenu
     return (
       <Button key={link.href} asChild variant="subtle" size="md">
-        <a
+        <Link
           href={link.href}
           className={`${link.active ? "active" : ""} ${
             link.disabled ? "disabled" : ""
@@ -145,7 +150,7 @@ export const Header = memo(function Header({
             <Icon name={link.icon} />
           )}
           {link.label}
-        </a>
+        </Link>
       </Button>
     );
   };
@@ -191,6 +196,49 @@ export const Header = memo(function Header({
         icon={typeof button.icon === "string" ? button.icon : undefined}
         label={button.label}
       />
+    ));
+  };
+
+  // NAVIGATION BUTTONS RENDER
+  const renderNavigationButtons = (isMobile = false) => {
+    if (!navigationButtons.length) return null;
+
+    // For mobile: Button with asChild wrapping Link
+    // For desktop: Button with asChild wrapping Link with full label
+    if (isMobile) {
+      return (
+        <div className="header__actions-mobile">
+          {navigationButtons.map((button, index) => (
+            <Button
+              key={index}
+              asChild
+              variant="subtle"
+              size={button.size || "md"}
+              iconOnly={!!button.icon && !button.label}
+            >
+              <Link href={button.href}>
+                {button.icon && <Icon name={button.icon} />}
+                {button.label && <span className="sr-only">{button.label}</span>}
+              </Link>
+            </Button>
+          ))}
+        </div>
+      );
+    }
+
+    // Desktop: Button with asChild wrapping Link - full icon + label
+    return navigationButtons.map((button, index) => (
+      <Button
+        key={index}
+        asChild
+        variant={button.variant || "filled"}
+        size={button.size || "md"}
+      >
+        <Link href={button.href}>
+          {button.icon && <Icon name={button.icon} />}
+          {button.label}
+        </Link>
+      </Button>
     ));
   };
 
@@ -341,11 +389,16 @@ export const Header = memo(function Header({
         </div>
       )}
 
-      {/* Action Buttons - Desktop */}
-      {hasButtons && !hasRightIcons && (
-        <div className="header__actions">{renderButtons()}</div>
-      )}
+      {/* Action Buttons - Desktop - show alongside right icons OR alone */}
+      {hasButtons && <div className="header__actions">{renderButtons()}</div>}
 
+      {/* Navigation Buttons - Desktop - show alongside right icons OR alone */}
+      {navigationButtons.length && (
+        <div className="header__actions">
+          {renderNavigationButtons()}
+        </div>
+      )}
+      
       {/* Mobile Hamburger Menu Button */}
       {hasLinks && (
         <div className="header__hamburger">

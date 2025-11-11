@@ -2,17 +2,17 @@
 //         HeaderProps,
 //         LinkItem } from './header';
 export { Footer } from "./footer";
-//export { Module } from './module';
+export { Header, type HeaderProps, type LinkItem, type SubmenuItem } from './header';
+export { Module } from './module';
 
 // TYPES
-//export type {ActionHandler} from '.utils';
-export type { ButtonItem, LogoConfig } from "./types";
+export type {ActionHandler} from './utils';
 
 // UTILITIES
 // Export utility functions
 
-//export { actionHandlers,
-//         executeAction,
-//         getAvailableActions,
-//         hasActionHandler,
-//       } from './utils';
+export { actionHandlers,
+         executeAction,
+         getAvailableActions,
+         hasActionHandler,
+       } from './utils';

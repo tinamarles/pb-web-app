@@ -2,10 +2,9 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
 import { Button } from "./button";
 
-export default function ThemeToggle() {
+export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -43,10 +42,4 @@ export default function ThemeToggle() {
   );
 }
 
-/*
-{
-              theme === themeOption.value ? (
-                <Icon name="success" size="md" />
-              ) : null
-            }
-*/
+
