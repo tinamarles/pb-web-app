@@ -129,7 +129,7 @@ export const Module = memo(function Module({
   console.log("🎯 Module: Rendering with headerProps:", headerProps);
 
   return (
-    <div className="page-container">
+    <div className="module-container">
       <Header {...headerProps} />
       {children}
       <Footer />

@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${outfit.variable} ${shadowsIntoLightTwo.variable}`}
+      className={`${inter.variable} ${outfit.variable} ${shadowsIntoLightTwo.variable} page-container`}
       suppressHydrationWarning
     >
       <body suppressHydrationWarning>

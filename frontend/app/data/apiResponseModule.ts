@@ -136,6 +136,7 @@ export const apiResponseModule: ModuleConfig[] = [
       },
     ],
     search: true,
+    help: true,
     actions: [],
     navigationButtons: [
       {
@@ -179,14 +180,15 @@ export const apiResponseModule: ModuleConfig[] = [
     showLogo: true,
     navigation: [],
     search: false,
-    actions: [
+    help: true,
+    actions: [],
+    navigationButtons: [
       {
-        id: "signout",
-        label: "Sign Out",
+        id: "home",
+        label: "Home",
         variant: "subtle",
         size: "md",
-        icon: "signout",
-        onClick: "handleSignOut",
+        href: "/",
       },
     ],
   },

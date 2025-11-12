@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatBackendErrors } from "@/app/lib/utils";
 import { useAutofillFix } from "@/app/lib/hooks";
-
-import { Logo } from "@/app/ui/logo";
+import { Icon, Button } from "@/app/ui";
 
 export default function LoginPage() {
   // Call the useAutoFillFix Hook to prevent the default browser behaviour for input fields
@@ -51,40 +50,47 @@ export default function LoginPage() {
     <>
       {/* Mobile: small app-icon, Tablet: medium full logo, Desktop: large full logo */}
 
-      <Logo variant="app-icon" className="w-12 h-12 sm:hidden m-3" />
+      {/* <Logo variant="app-icon" className="w-12 h-12 sm:hidden m-3" /> 
       <div className="hidden sm:block">
         <Logo variant="full" size="lg" className="m-3" />
-      </div>
+      </div> */}
       <div
-        className="w-full min-h-2/3
-                  shrink-0
-                  p-4"
+        className="w-full p-4 
+                  shrink-0 z-30
+                  bg-surface-container-low 
+                  rounded-2xl 
+                  border border-outline-variant 
+                  min-h-5/6
+                  shadow-2xl"
       >
         <h1
-          className="text-3xl 
-                  my-8 
-                  tracking-wide"
+          className="headline-lg text-primary py-4"
         >
           Sign in to Pickle Hub
         </h1>
-        <form onSubmit={handleSubmit} className="space-y-4 text-md">
+        <form onSubmit={handleSubmit} className="space-y-8 text-md">
           {/* We now use the 'error' state from the AuthContext to display the message */}
           {error && (
-            <div className="mt-4 p-4 text-center rounded-md bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300">
+            <div className="mt-4 p-4 
+                            text-center 
+                            rounded-md 
+                            bg-error text-on-error">
               {error}
             </div>
           )}
           <div>
             <label
               htmlFor="identifier"
-              className="block py-2
+              className="block py-2 body-lg
                               after:ml-0.5
-                              after:text-red-500
+                              after:text-error
                               after:content-['*']"
             >
               Username or Email
             </label>
-            <div className="relative">
+            
+            <div className="input-field">
+              <Icon name="emailfilled" className="icon-lg text-on-surface-variant fill-current" />
               <input
                 type="text"
                 id="identifier"
@@ -93,40 +99,25 @@ export default function LoginPage() {
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
                 placeholder="Your Username or Email"
-                className="peer block w-full 
-                        rounded-md 
-                        py-3 
-                        pl-10
-                        bg-gray-100 
-                        dark:text-gray-800
-                        placeholder:text-gray-400
-                        shadow-sm/20 inset-shadow-2xs/10"
+                className="peer input-base has-icon"
               />
-              <svg
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 peer-focus:text-gray-500"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
-                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
-              </svg>
             </div>
           </div>
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <label
                 htmlFor="password"
-                className="block
+                className="block body-lg
                                 after:ml-0.5
-                                after:text-red-500 
+                                after:text-error 
                                 after:content-['*']"
               >
                 Password
               </label>
-              <p className="text-blue-500 py-2">Forgot password?</p>
+              <p className="body-lg text-secondary py-2">Forgot password?</p>
             </div>
-            <div className="relative">
+            <div className="input-field">
+              <Icon name="lock" className="icon-lg text-on-surface-variant fill-current" />
               <input
                 type="password"
                 id="password"
@@ -135,62 +126,31 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="*************"
-                className="peer block w-full 
-                          rounded-md 
-                          py-3 
-                          pl-10
-                          bg-gray-100 
-                          dark:text-gray-800
-                          placeholder:text-gray-400
-                          shadow-sm/20 inset-shadow-2xs/10"
+                className="peer input-base has-icon"
               />
-              <svg
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 peer-focus:text-gray-500"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              
             </div>
           </div>
-          <button
-            type="submit"
-            className="w-full 
-                      flex 
-                      justify-center 
-                      py-2 px-4 
-                      border border-transparent 
-                      rounded-md 
-                      shadow-sm 
-                      text-white 
-                      bg-blue-600 
-                      hover:bg-blue-700 
-                      focus:outline-none 
-                      focus:ring-2 
-                      focus:ring-offset-2 
-                      focus:ring-blue-500 
-                      disabled:opacity-50"
-          >
-            Sign In
-          </button>
+          <Button 
+              type='submit'
+              variant='filled'
+              size='lg'
+              label='Sign In' 
+              className='w-full mt-6 body-lg' />
         </form>
-      </div>
-      <div className="mt-4 text-center">
-        <p className="">
+        <div className="mt-6 p-lg text-center">
+        <p className="body-md">
           Not a member?{" "}
           <Link
             href="/signup"
-            className="font-semibold leading-6 text-blue-500 hover:text-indigo-500"
+            className="body-md text-secondary"
           >
             Create an account
           </Link>
         </p>
       </div>
+      </div>
+      
     </>
   );
 }

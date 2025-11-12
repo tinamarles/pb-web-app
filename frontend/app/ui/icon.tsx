@@ -65,6 +65,10 @@ import {
   SlSocialLinkedin
  } from "react-icons/sl";
 
+ import { 
+  IoIosMail,
+  IoIosLock
+ } from "react-icons/io";
 
 /**
  * Central Icon System - Maps unified business names to Lucide components
@@ -118,7 +122,9 @@ const iconMap = {
   location: MapPin,
   phone: Phone,
   email: Mail,
+  emailfilled: IoIosMail,
   password: Lock,
+  lock: IoIosLock,
   camera: Camera,
 
   // Navigation & Communication

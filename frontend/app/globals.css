@@ -601,6 +601,12 @@
 /* === FORM FIELD CLASSES === */
 @layer components {
   /* +++ INPUT Fields +++ */
+  .input-field {
+    @apply relative flex items-center;
+  }
+  .input-field svg {
+    @apply absolute left-[var(--px-12)] z-10 pointer-events-none;
+  }
 
   /* +++ SEARCH Component +++ */
 
@@ -768,7 +774,8 @@
     min-height: 100vh;
     width: 100%;
     max-width: min(100vw, 90rem);
-    padding: 0 var(--px-16);
+    /* padding: 0 var(--px-16); */
+    padding: 0;
     @apply mx-auto;
   }
 
@@ -776,9 +783,12 @@
   .module-container {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     width: 100%;
     background-color: var(--color-background);
     color: var(--color-on-background);
+    min-height: 100vh;
+
   }
 
   /* +++ HEADER Component +++ */
@@ -888,16 +898,18 @@
   /* +++ FOOTER Component - responsive +++ */
 
   .footer {
-    padding: var(--px-4) 0;
+    padding: var(--px-4) var(--px-4);
     @apply flex flex-col gap-xs;
     @apply bg-background;
+    position: relative;
+    z-index: 10;
 
     @media (min-width: 768px) {
-      padding: var(--px-12) 0;
+      padding: var(--px-12) var(--px-12);
       gap: var(--px-12);
     }
     @media (min-width: 1024px) {
-      padding: var(--px-16) 0;
+      padding: var(--px-16) var(--px-16);
       gap: var(--px-12);
     }
   }
