@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import { Icon, Button } from "@/app/ui";
 
 export function CTASection() {
@@ -41,14 +41,15 @@ export function CTASection() {
               <Button
                 variant="tonal"
                 size="cta"
-                
                 className="w-full sm:w-auto bg-on-primary text-primary hover:bg-on-primary/90"
+                icon="arrowright"
+                asChild
               >
-                <Icon name="arrowright" className="icon-lg" />
-                Sign Up for Free
+                <Link href="/signup">
+                  Sign Up for Free
+                </Link>
               </Button>
               
-
             </div>
           </div>
         </div>

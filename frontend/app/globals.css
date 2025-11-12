@@ -552,7 +552,7 @@
   display: inline-flex;
   /* items-center */
   align-items: center;
-  align-self: center;
+  /* align-self: center; */
   /* justify-center */
   justify-content: center;
   /* gap-2 */
@@ -571,6 +571,47 @@
   border-radius: var(--px-8);
 }
 
+@utility input-base {
+  min-width: var(--width-input-min);
+  @apply w-full p-md;
+  @apply bg-surface-container-lowest border border-outline rounded-lg;
+  @apply single-line-base text-on-surface placeholder:text-on-surface-variant;
+  @apply transition-colors duration-200;
+
+  /* Apply max-width only to non-textarea inputs */
+  &:not(textarea) {
+    max-width: var(--width-input-max);
+  }
+
+  &:focus {
+    --tw-ring-color: color-mix(
+      in srgb,
+      var(--color-primary),
+      transparent 80%
+    );
+    @apply focus-ring-base border-primary;
+  }
+
+  /* Add left padding when icon is present */
+  &.has-icon {
+    padding-left: var(--px-44); /* Icon space + gap */
+  }
+}
+
+/* === FORM FIELD CLASSES === */
+@layer components {
+  /* +++ INPUT Fields +++ */
+
+  /* +++ SEARCH Component +++ */
+
+  .search {
+    @apply relative flex items-center;
+  }
+
+  .search svg {
+    @apply absolute left-[var(--px-12)] z-10 pointer-events-none;
+  }
+}
 /* === Dropdown Menu === */
 @layer components {
   /* +++ ICON BORDERED - Circular frame for icons +++ */
@@ -778,6 +819,11 @@
     }
   }
 
+  /* When inside mobile dropdown: show as flex-col, left-aligned */
+  .header__dropdown .header__links__container {
+    @apply flex flex-col items-start gap-sm w-full;
+  }
+
   /* Mobile hamburger button - hidden on desktop */
   .header__hamburger {
     @apply flex items-center justify-end;
@@ -800,7 +846,11 @@
       @apply flex items-center;
     }
   }
-
+  /* Mobile search inside dropdown - centered at top */
+  .header__dropdown .header__search {
+    @apply flex justify-center;
+    padding-bottom: var(--gap-md);
+  }
   /* Where will the mobile header_actions be displayed? Eg. if there are no links but there are buttons
      like the sign-out button? By default, on mobile buttons will always only display the icon, not the 
      label, but this does not need to be handled by the <Header > component. The child will pass on: "icon-only"*/
@@ -812,13 +862,26 @@
   }
 
   /* Mobile actions - used inside .header__dropdown */
+  /* 
   .header__actions-mobile {
     @apply flex flex-col gap-md;
-
+  */
     /* Tablet+: Horizontal centered layout */
+    /*
     @media (min-width: 640px) {
       @apply flex-row justify-center gap-md;
       @apply m-auto;
+    }
+  }
+  */
+
+  /* When inside mobile dropdown: show as flex-col centered, then flex-row centered on tablet+ */
+  .header__dropdown .header__actions {
+    @apply flex flex-col items-center gap-md;
+    
+    /* Tablet+: Horizontal centered layout */
+    @media (min-width: 640px) {
+      @apply flex-row justify-center gap-md m-auto;
     }
   }
 

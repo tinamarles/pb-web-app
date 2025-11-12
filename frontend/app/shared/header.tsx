@@ -156,36 +156,19 @@ export const Header = memo(function Header({
   };
 
   // LINKS RENDER
-  const renderLinks = (isMobile = false) => {
+  const renderLinks = () => {
     if (!hasLinks) return null;
 
     return links.map((link) => renderNavItem(link));
   };
 
   // BUTTONS RENDER
-  const renderButtons = (isMobile = false) => {
+  const renderButtons = () => {
     if (!hasButtons) return null;
 
     // For mobile: icon-only buttons with subtle variant
     // For desktop: full buttons with icon + label
-    if (isMobile) {
-      return (
-        <div className="header__actions-mobile">
-          {buttons.map((button, index) => (
-            <Button
-              key={index}
-              variant="subtle"
-              size={button.size || "md"}
-              onClick={button.onClick}
-              disabled={button.disabled}
-              icon={typeof button.icon === "string" ? button.icon : undefined}
-            />
-          ))}
-        </div>
-      );
-    }
-
-    // Desktop: return buttons directly with full icon + label
+    
     return buttons.map((button, index) => (
       <Button
         key={index}
@@ -200,33 +183,12 @@ export const Header = memo(function Header({
   };
 
   // NAVIGATION BUTTONS RENDER
-  const renderNavigationButtons = (isMobile = false) => {
+  const renderNavigationButtons = () => {
     if (!navigationButtons.length) return null;
 
     // For mobile: Button with asChild wrapping Link
     // For desktop: Button with asChild wrapping Link with full label
-    if (isMobile) {
-      return (
-        <div className="header__actions-mobile">
-          {navigationButtons.map((button, index) => (
-            <Button
-              key={index}
-              asChild
-              variant="subtle"
-              size={button.size || "md"}
-              iconOnly={!!button.icon && !button.label}
-            >
-              <Link href={button.href}>
-                {button.icon && <Icon name={button.icon} />}
-                {button.label && <span className="sr-only">{button.label}</span>}
-              </Link>
-            </Button>
-          ))}
-        </div>
-      );
-    }
 
-    // Desktop: Button with asChild wrapping Link - full icon + label
     return navigationButtons.map((button, index) => (
       <Button
         key={index}
@@ -247,9 +209,9 @@ export const Header = memo(function Header({
     if (!showHelp) return null;
 
     return (
-      <a href="/help">
+      <Link href="/help">
         <Button variant="subtle" size="md" icon="help" aria-label="Help" />
-      </a>
+      </Link>
     );
   };
 
@@ -258,9 +220,9 @@ export const Header = memo(function Header({
     if (!showSearch) return null;
 
     return (
-      <a href="/search">
+      <Link href="/search">
         <Button variant="subtle" size="md" icon="search" aria-label="Search" />
-      </a>
+      </Link>
     );
   };
 
@@ -320,20 +282,12 @@ export const Header = memo(function Header({
       >
         <MenuItem icon="user" label="Profile" href="/profile" />
         <MenuItem icon="settings" label="Settings" href="/settings" separator />
-
-        <MenuItem
-          icon="memberships"
-          label="Club Memberships"
-          href="/memberships"
-        />
+        <MenuItem icon="memberships" label="Club Memberships" href="/memberships"/>
         <MenuItem icon="performance" label="Performance" href="/performance" />
         <MenuItem icon="community" label="Community" href="/community" />
         <MenuItem icon="blog" label="Personal Blog" href="/blog" separator />
 
-        <MenuItem
-          icon="signout"
-          iconBordered={false}
-          label="Sign Out"
+        <MenuItem icon="signout" iconBordered={false} label="Sign Out"
           onClick={handleSignOut}
           className="text-primary"
         />
@@ -359,7 +313,9 @@ export const Header = memo(function Header({
 
         {/* Navigation Links - Desktop */}
         {hasLinks && (
-          <nav className="header__links__container">{renderLinks()}</nav>
+          <nav className="header__links__container">
+            {renderLinks()}
+          </nav>
         )}
       </div>
 
@@ -420,20 +376,24 @@ export const Header = memo(function Header({
       {/* Mobile Navigation Dropdown */}
       {hasLinks && isMenuOpen && (
         <div className="header__dropdown">
-          <nav className="flex flex-col gap-sm">
-            {/* Mobile Navigation Links */}
-            {renderLinks(true)}
-
-            {/* Mobile Search */}
-            {showSearch && (
-              <div className="pt-md">
-                <Search placeholder="Search..." />
-              </div>
-            )}
-
-            {/* Mobile Action Buttons */}
-            {renderButtons(true)}
+          {/* Mobile Search - uses .header__search (CSS makes it visible + centered in dropdown) */}
+          {showSearch && (
+            <div className="header__search">
+              <Search placeholder="Search..." />
+            </div>
+          )}
+          {/* Mobile Navigation Links - uses same .header__links__container (CSS makes it flex-col in dropdown) */}
+          <nav className="header__links__container">
+            {renderLinks()}
           </nav>
+
+          {/* Mobile Buttons (both Nav buttons and Action buttons) - uses same .header__actions (CSS makes it flex-col centered in dropdown) */}
+          {(navigationButtons.length > 0 || hasButtons) && (
+            <div className="header__actions">
+              {renderNavigationButtons()}
+              {renderButtons()}
+            </div>
+          )}
         </div>
       )}
     </header>

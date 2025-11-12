@@ -20,7 +20,7 @@ export default function RootLayout({
       className={`${inter.variable} ${outfit.variable} ${shadowsIntoLightTwo.variable}`}
       suppressHydrationWarning
     >
-      <body>
+      <body suppressHydrationWarning>
         <Providers>
           {children}
           <Toaster position="top-right" />  {/* ← REQUIRED for toast to show! */}
