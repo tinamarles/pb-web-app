@@ -27,13 +27,8 @@ export function HeroSection() {
                 className="inline-flex items-center gap-sm p-md bg-primary text-on-primary 
                               rounded-full border border-primary/20"
               >
-                <Icon
-                  name="default"
-                  className="icon-sm fill-current"
-                />
-                <span className="label-lg">
-                  #1 Pickleball App
-                </span>
+                <Icon name="default" className="icon-sm fill-current" />
+                <span className="label-lg">#1 Pickleball App</span>
               </div>
             </div>
 
@@ -54,11 +49,9 @@ export function HeroSection() {
               </h1>
 
               <p className="body-lg text-on-surface-variant max-w-2xl mx-auto lg:mx-0">
-                Join thousands of pickleball enthusiasts finding
-                games, tracking progress, and building
-                community. From casual matches to competitive
-                tournaments, your perfect game is just a tap
-                away.
+                Join thousands of pickleball enthusiasts finding games, tracking
+                progress, and building community. From casual matches to
+                competitive tournaments, your perfect game is just a tap away.
               </p>
             </div>
 
@@ -75,9 +68,7 @@ export function HeroSection() {
                 icon="arrowright"
                 asChild
               >
-                <Link href="/signup">
-                  Start Playing Today
-                </Link>
+                <Link href="/signup">Start Playing Today</Link>
               </Button>
 
               <Button
@@ -87,62 +78,54 @@ export function HeroSection() {
                 icon="signin"
                 asChild
               >
-                <Link href="/login">
-                  Sign In
-                </Link>
+                <Link href="/login">Sign In</Link>
               </Button>
             </div>
 
             {/* Quick Stats */}
-            <div className="flex gap-2xl lg:gap-4xl pt-xl">
-              <div className="flex items-center gap-sm">
+            <div className="flex justify-between gap-2xl pt-xl">
+              <div className="flex flex-col sm:flex-row items-center gap-sm">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
-                      className="w-6 h-6 rounded-full bg-primary border-2 border-background"
+                      className="w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-primary border-2 border-background"
                     ></div>
                   ))}
                 </div>
-                <span className="body-md text-on-surface-variant">
-                  <span className="emphasized text-primary">
-                    500+
-                  </span>{" "}
-                  active players
+                <span className="body-sm sm:body-md text-on-surface-variant">
+                  <span className="emphasized text-primary">500+</span> active
+                  players
                 </span>
               </div>
 
-              <div className="flex items-center gap-sm">
+              <div className="flex flex-col sm:flex-row items-center gap-sm">
                 <div className="flex -space-x-2">
                   {[1, 2].map((i) => (
                     <div
                       key={i}
-                      className="w-6 h-6 rounded-full bg-secondary border-2 border-background"
+                      className="w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-secondary border-2 border-background"
                     ></div>
                   ))}
                 </div>
-                <span className="body-md text-on-surface-variant">
-                  <span className="emphasized text-primary">
-                    20+
-                  </span>{" "}
-                  Partner Clubs
+                <span className="body-sm sm:body-md text-on-surface-variant">
+                  <span className="emphasized text-primary">20+</span> Partner
+                  Clubs
                 </span>
               </div>
 
-              <div className="flex items-center gap-sm">
+              <div className="flex flex-col sm:flex-row items-center gap-sm">
                 <div className="flex -space-x-2">
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="w-6 h-6 rounded-full bg-tertiary border-2 border-background"
+                      className="w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-tertiary border-2 border-background"
                     ></div>
                   ))}
                 </div>
-                <span className="body-md text-on-surface-variant">
-                  <span className="emphasized text-primary">
-                    100+
-                  </span>{" "}
-                  Active Leagues
+                <span className="body-sm sm:body-md text-on-surface-variant">
+                  <span className="emphasized text-primary">100+</span> Active
+                  Leagues
                 </span>
               </div>
             </div>

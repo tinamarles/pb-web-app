@@ -356,7 +356,7 @@ export const Header = memo(function Header({
       )}
       
       {/* Mobile Hamburger Menu Button */}
-      {hasLinks && (
+      {(hasLinks || navigationButtons.length) && (
         <div className="header__hamburger">
           <Button
             variant="subtle"
@@ -374,7 +374,7 @@ export const Header = memo(function Header({
       )}
 
       {/* Mobile Navigation Dropdown */}
-      {hasLinks && isMenuOpen && (
+      {(hasLinks || navigationButtons.length) && isMenuOpen && (
         <div className="header__dropdown">
           {/* Mobile Search - uses .header__search (CSS makes it visible + centered in dropdown) */}
           {showSearch && (
@@ -383,9 +383,11 @@ export const Header = memo(function Header({
             </div>
           )}
           {/* Mobile Navigation Links - uses same .header__links__container (CSS makes it flex-col in dropdown) */}
+          {hasLinks && (
           <nav className="header__links__container">
             {renderLinks()}
           </nav>
+          )}
 
           {/* Mobile Buttons (both Nav buttons and Action buttons) - uses same .header__actions (CSS makes it flex-col centered in dropdown) */}
           {(navigationButtons.length > 0 || hasButtons) && (
