@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatBackendErrors } from "@/app/lib/utils";
 import { useAutofillFix } from "@/app/lib/hooks";
-
-import { UserIcon, InformationCircleIcon } from "@heroicons/react/24/solid";
-import { Logo } from "@/app/ui/logo";
+import { Icon, Button } from "@/app/ui";
 
 export default function SignUpPage() {
   // Call the useAutoFillFix Hook to prevent the default browser behaviour for input fields
@@ -62,77 +60,70 @@ export default function SignUpPage() {
 
   return (
     <>
-      <Logo variant="app-icon" className="w-12 h-12 sm:hidden m-3" />
-      <div className="hidden sm:block">
-        <Logo variant="full" size="lg" className="m-3" />
-      </div>
+     
       <div
-        className="w-full min-h-2/3
-                  shrink-0
-                  p-4"
+        className="w-full p-4
+                  shrink-0 z-30
+                  bg-surface-container-low
+                  rounded-2xl
+                  border border-outline-variant
+                  min-h-5/6
+                  shadow-2xl
+                  "
       >
         <h1
-          className="text-3xl 
-                  my-8 
-                  tracking-wide"
+          className="headline-lg text-primary py-4"
         >
           Create your Pickle Hub account
         </h1>
         <form onSubmit={handleSubmit} noValidate className="space-y-2 text-md">
           {/* We now use the 'error' state from the AuthContext to display the message */}
           {error && (
-            <div className="mt-4 p-4 text-center rounded-md bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300">
+            <div className="mt-4 p-4 
+                            text-center 
+                            rounded-md
+                            bg-error text-on-error">
               {error}
             </div>
           )}
           <div>
             <label
               htmlFor="username"
-              className="block py-2
+              className="block py-2 body-md
                               after:ml-0.5
-                              after:text-red-500
+                              after:text-error
                               after:content-['*']"
             >
               Username
             </label>
-            <div className="relative">
+            <div className="input-field">
+              <Icon name="user" className="icon-lg text-on-surface-variant/60" />
               <input
                 type="text"
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                autoFocus
                 placeholder="Choose a username"
-                className="peer block w-full 
-                        invalid:[&:not(:placeholder-shown):not(:focus)]:border-red-500
-                        rounded-md 
-                        py-3 
-                        pl-10
-                        bg-gray-100 
-                        dark:text-gray-800
-                        placeholder:text-gray-400
-                        shadow-sm/20 inset-shadow-2xs/10"
-              />
-              <UserIcon
-                className="absolute left-3 top-1/2 
-                                    transform -translate-y-1/2 
-                                    h-5 w-5 
-                                    text-gray-400 
-                                    peer-focus:text-gray-500"
+                className="peer input-base has-icon
+                        invalid:[&:not(:placeholder-shown):not(:focus)]:border-error
+                        "
               />
             </div>
           </div>
           <div>
             <label
               htmlFor="email"
-              className="block py-2
+              className="block py-2 body-md
                               after:ml-0.5
-                              after:text-red-500
+                              after:text-error
                               after:content-['*']"
             >
               Email
             </label>
-            <div className="relative">
+            <div className="input-field">
+              <Icon name="emailfilled" className="icon-lg text-on-surface-variant/60" />
               <input
                 type="email"
                 id="email"
@@ -142,27 +133,13 @@ export default function SignUpPage() {
                 required
                 pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                 placeholder="example@mail.com"
-                className="peer block w-full 
-                        invalid:[&:not(:placeholder-shown):not(:focus)]:border-red-500
-                        rounded-md 
-                        py-3 
-                        pl-10
-                        bg-gray-100 
-                        dark:text-gray-800
-                        placeholder:text-gray-400
-                        shadow-sm/20 inset-shadow-2xs/10"
+                className="peer input-base has-icon
+                        invalid:[&:not(:placeholder-shown):not(:focus)]:border-error
+                        "
               />
-              <svg
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 peer-focus:text-gray-500"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
-                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
-              </svg>
-              <span className="mt-2 hidden text-sm text-red-500 peer-[&:not(:placeholder-shown):not(:focus):invalid]:block">
-                <InformationCircleIcon className="text-red w-5 h-5" /> Please
+              
+              <span className="mt-2 hidden text-sm text-error peer-[&:not(:placeholder-shown):not(:focus):invalid]:block">
+                <Icon name="warning" className="icon-md text-error" /> Please
                 enter a valid email address
               </span>
             </div>
@@ -170,14 +147,15 @@ export default function SignUpPage() {
           <div className="">
             <label
               htmlFor="password"
-              className="block py-2
+              className="block py-2 body-md
                               after:ml-0.5
-                              after:text-red-500 
+                              after:text-error 
                               after:content-['*']"
             >
               Set Password
             </label>
-            <div className="relative">
+            <div className="input-field">
+              <Icon name="lock" className="icon-lg text-on-surface-variant/60" />
               <input
                 type="password"
                 id="password"
@@ -186,33 +164,17 @@ export default function SignUpPage() {
                 required
                 placeholder="New Password"
                 pattern=".{8,}"
-                className="peer block w-full 
-                          invalid:[&:not(:placeholder-shown):not(:focus)]:border-red-500
-                          rounded-md 
-                          py-3 
-                          pl-10
-                          bg-gray-100 
-                          dark:text-gray-800
-                          placeholder:text-gray-400
-                          shadow-sm/20 inset-shadow-2xs/10"
+                className="peer input-base has-icon 
+                          invalid:[&:not(:placeholder-shown):not(:focus)]:border-error
+                          "
               />
-              <svg
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 peer-focus:text-gray-500"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
-                  clipRule="evenodd"
-                />
-              </svg>
             </div>
           </div>
           <div className="">
-            <label htmlFor="verifyPassword" className="block py-2"></label>
-            <div className="relative">
+            <label htmlFor="verifyPassword" 
+                  className="block py-2 body-md"></label>
+            <div className="input-field">
+              <Icon name="lock" className="icon-lg text-on-surface-variant/60" />
               <input
                 type="password"
                 id="verifyPassword"
@@ -220,71 +182,38 @@ export default function SignUpPage() {
                 onChange={(e) => setVerifyPassword(e.target.value)}
                 required
                 placeholder="Confirm password"
-                className="peer block w-full 
-                          rounded-md 
-                          py-3 
-                          pl-10
-                          bg-gray-100 
-                          dark:text-gray-800
-                          placeholder:text-gray-400
-                          shadow-sm/20 inset-shadow-2xs/10"
+                className="peer input-base has-icon"
               />
-              <svg
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 peer-focus:text-gray-500"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
-                  clipRule="evenodd"
-                />
-              </svg>
             </div>
           </div>
           {/* Conditional rendering: Show the error message if the state has a value */}
           {passwordError && (
-            <div className="flex justify-start gap-2 items-center text-sm text-red-500">
-              <InformationCircleIcon className="text-red w-5 h-5" />{" "}
+            <div className="flex justify-start gap-2 items-center text-sm text-error">
+              <Icon name="warning" className="icon-md text-error" />{" "}
               {passwordError}
             </div>
           )}
-          <div className="mt-8">
-            <button
-              type="submit"
-              className="w-full 
-                        flex 
-                        justify-center 
-                        py-2 
-                        border border-transparent 
-                        rounded-md 
-                        shadow-sm 
-                        text-white 
-                        bg-blue-600 
-                        hover:bg-blue-700 
-                        focus:outline-none 
-                        focus:ring-2 
-                        focus:ring-offset-2 
-                        focus:ring-blue-500 
-                        disabled:opacity-50"
-            >
-              Create Account
-            </button>
-          </div>
+          <Button 
+              type='submit'
+              variant='filled'
+              size='lg'
+              label='Create Account' 
+              className='w-full mt-6 body-lg' />
+          
         </form>
+        <div className="mt-4 text-center">
+          <p className="body-md">
+            Already a member?{" "}
+            <Link
+              href="/login"
+              className="body-md text-secondary hover:text-primary"
+            >
+              Sign In
+            </Link>
+          </p>
+        </div>
       </div>
-      <div className="mt-4 text-center">
-        <p className="">
-          Already a member?{" "}
-          <Link
-            href="/login"
-            className="font-semibold leading-6 text-blue-500 hover:text-indigo-500"
-          >
-            Sign In
-          </Link>
-        </p>
-      </div>
+     
     </>
   );
 }

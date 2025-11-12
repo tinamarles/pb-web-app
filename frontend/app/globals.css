@@ -575,7 +575,7 @@
   min-width: var(--width-input-min);
   @apply w-full p-md;
   @apply bg-surface-container-lowest border border-outline rounded-lg;
-  @apply single-line-base text-on-surface placeholder:text-on-surface-variant;
+  @apply single-line-base text-on-surface placeholder:text-on-surface-variant/60;
   @apply transition-colors duration-200;
 
   /* Apply max-width only to non-textarea inputs */
@@ -595,6 +595,7 @@
   /* Add left padding when icon is present */
   &.has-icon {
     padding-left: var(--px-44); /* Icon space + gap */
+    
   }
 }
 

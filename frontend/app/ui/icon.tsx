@@ -67,7 +67,8 @@ import {
 
  import { 
   IoIosMail,
-  IoIosLock
+  IoIosLock,
+  IoMdPerson
  } from "react-icons/io";
 
 /**
@@ -89,7 +90,7 @@ const iconMap = {
   dashboard: LayoutDashboard,
   home: Home,
   profile: User,
-  user: User,
+  user: IoMdPerson,
   settings: Settings,
   performance: ChartLine,
   memberships: BookUser,

@@ -81,7 +81,7 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="identifier"
-              className="block py-2 body-lg
+              className="block py-2 body-md
                               after:ml-0.5
                               after:text-error
                               after:content-['*']"
@@ -90,7 +90,7 @@ export default function LoginPage() {
             </label>
             
             <div className="input-field">
-              <Icon name="emailfilled" className="icon-lg text-on-surface-variant fill-current" />
+              <Icon name="emailfilled" className="icon-lg text-on-surface-variant/60" />
               <input
                 type="text"
                 id="identifier"
@@ -98,6 +98,7 @@ export default function LoginPage() {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
+                autoFocus
                 placeholder="Your Username or Email"
                 className="peer input-base has-icon"
               />
@@ -107,17 +108,17 @@ export default function LoginPage() {
             <div className="flex items-center justify-between">
               <label
                 htmlFor="password"
-                className="block body-lg
+                className="block body-md
                                 after:ml-0.5
                                 after:text-error 
                                 after:content-['*']"
               >
                 Password
               </label>
-              <p className="body-lg text-secondary py-2">Forgot password?</p>
+              <p className="body-md text-secondary py-2">Forgot password?</p>
             </div>
             <div className="input-field">
-              <Icon name="lock" className="icon-lg text-on-surface-variant fill-current" />
+              <Icon name="lock" className="icon-lg text-on-surface-variant/60 fill-current" />
               <input
                 type="password"
                 id="password"
@@ -136,14 +137,14 @@ export default function LoginPage() {
               variant='filled'
               size='lg'
               label='Sign In' 
-              className='w-full mt-6 body-lg' />
+              className='w-full mt-6 body-md' />
         </form>
         <div className="mt-6 p-lg text-center">
         <p className="body-md">
           Not a member?{" "}
           <Link
             href="/signup"
-            className="body-md text-secondary"
+            className="body-md text-secondary hover:text-primary"
           >
             Create an account
           </Link>
