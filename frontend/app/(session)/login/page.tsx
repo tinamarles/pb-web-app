@@ -64,7 +64,7 @@ export default function LoginPage() {
                   shadow-2xl"
       >
         <h1
-          className="headline-lg text-primary py-4"
+          className="headline-lg text-primary text-center py-4"
         >
           Sign in to Pickle Hub
         </h1>

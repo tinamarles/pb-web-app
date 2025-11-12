@@ -72,7 +72,7 @@ export default function SignUpPage() {
                   "
       >
         <h1
-          className="headline-lg text-primary py-4"
+          className="headline-lg text-center text-primary py-4"
         >
           Create your Pickle Hub account
         </h1>

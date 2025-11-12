@@ -91,9 +91,9 @@ export const Header = memo(function Header({
 
     if (logo.href) {
       return (
-        <a href={logo.href} className="">
+        <Link href={logo.href} className="">
           {logoElement}
-        </a>
+        </Link>
       );
     }
 

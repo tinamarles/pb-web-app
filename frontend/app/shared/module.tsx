@@ -110,7 +110,7 @@ export const Module = memo(function Module({
 
     // Build header configuration
     const headerProps: HeaderProps = {
-      logo: moduleData.showLogo ? { variant: "full", size: "md" } : undefined,
+      logo: moduleData.showLogo ? { variant: "full", size: "md", href:"/"} : undefined,
       title: title || moduleData.title || undefined,
       links,
       buttons,

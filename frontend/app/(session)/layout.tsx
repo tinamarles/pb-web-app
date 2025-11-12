@@ -11,7 +11,8 @@ export default function Layout({ children }: {children:React.ReactNode}) {
                     flex"
             >
             */}
-            <div className="flex">
+            <div className="flex justify-center">
+                <AnimatedBackground />
                 {/*
                 <div className="hidden sm:block 
                     sm:flex-1 
@@ -30,8 +31,8 @@ export default function Layout({ children }: {children:React.ReactNode}) {
                 >
                     {children}
                 </div>
-                <div className="hidden sm:block sm:flex-1">
-                    <AnimatedBackground />
+                <div className="hidden sm:block">
+                    
                 </div>
                 
             </div>
