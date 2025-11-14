@@ -362,6 +362,7 @@ export const Header = memo(function Header({
             variant="subtle"
             size="md"
             onClick={toggleMenu}
+            className="bg-surface-container/80"
             icon={isMenuOpen ? "close" : "menu"}
             aria-label="Toggle navigation menu"
           />

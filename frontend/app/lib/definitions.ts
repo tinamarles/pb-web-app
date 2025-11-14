@@ -217,5 +217,6 @@ export function isUser(data: unknown): data is User {
 export interface AuthUserContextType {
   user: User | null;
   logout: () => Promise<void>;
+  isMemberUser: () => boolean; // NEW
   
 }

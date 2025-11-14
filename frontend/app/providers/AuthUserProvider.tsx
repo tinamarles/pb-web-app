@@ -6,8 +6,9 @@ import {
   createContext,
   useContext,
   ReactNode,
+  useCallback, // NEW Added for isMemberUser wrapper
 } from "react";
-import { User, AuthUserContextType, isUser } from "@/app/lib/definitions"; // Import your defined User type
+import { User, AuthUserContextType, isUser, isMemberUser as isMemberUserGuard } from "@/app/lib/definitions"; // Import your defined User type
 import { snakeToCamel } from "@/app/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -26,6 +27,14 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
   const pathname = usePathname(); // Get the current path
+
+  // NEW - Wrapper for isMemberUser to use with context
+  // This wraps existing isMemberUser type guard so it can be called
+  // without parameters (uses the current user from context)
+  const isMemberUser = useCallback((): boolean => {
+    if (!user) return false;
+    return isMemberUserGuard(user); // Calls existing type guard from definitions
+  }, [user]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -66,7 +75,7 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
   };
 
   return (
-    <AuthUserContext.Provider value={{ user, logout }}>
+    <AuthUserContext.Provider value={{ user, logout, isMemberUser }}>
       {children}
     </AuthUserContext.Provider>
   );

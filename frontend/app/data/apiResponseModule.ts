@@ -66,11 +66,6 @@ export const apiResponseModule: ModuleConfig[] = [
     showLogo: true,
     navigation: [
       {
-        icon: "dashboard",
-        label: "Dashboard",
-        url: "/dashboard",
-      },
-      {
         icon: "sparkles",
         label: "Resources",
         url: "",

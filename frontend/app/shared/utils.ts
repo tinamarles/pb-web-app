@@ -3,7 +3,29 @@
  * 
  * All button click handlers are defined here to keep the Module component clean.
  * Each handler function should match the actionId from the module data.
+ * * DEPENDENCY INJECTION PATTERN:
+ * - This file uses dependency injection to access auth context
+ * - Providers.tsx calls setHandlerDependencies() to inject the isMemberUser function
+ * - Handlers can then use dependencies.isMemberUser() to check user type
  */
+
+// Type for creating handlers with dependencies (user, router, etc.)
+export type HandlerDependencies = { 
+  isMemberUser?: () => boolean; // Function to check if user has club affiliations
+};
+
+// Storage for injected dependencies
+let dependencies: HandlerDependencies = {};
+
+/**
+ * Inject dependencies from Providers.tsx
+ * This allows handlers to access auth context without circular imports
+ * 
+ * @param deps - Object containing isMemberUser function
+ */
+export const setHandlerDependencies = (deps: HandlerDependencies) => {
+  dependencies = deps;
+};
 
 // Type for handler functions
 export type ActionHandler = () => void;
@@ -79,7 +101,33 @@ export const actionHandlers: Record<string, ActionHandler> = {
   handleLeaveLeague: () => {
     console.log('🚪 Leave League');
     // Later: confirm and leave league
-  }
+  },
+
+  /**
+   * Navigate to Dashboard (conditional routing based on user type)
+   * - Member users (with club affiliations) → /dashboard/member
+   * - Public users (no affiliations) → /dashboard/public
+   */
+  handleNavigateToDashboard: () => {
+    console.log('📊 Navigate to Dashboard');
+    
+    // Check if we have the isMemberUser function (injected from Providers)
+    if (dependencies.isMemberUser) {
+      const isMember = dependencies.isMemberUser();
+      const route = isMember ? '/dashboard/member' : '/dashboard/public';
+      
+      console.log(`🎯 User type: ${isMember ? 'Member' : 'Public'} → Navigating to: ${route}`);
+      
+      // In Next.js, use router.push(route) from next/navigation
+      // For now, using window.location as placeholder
+      window.location.href = route;
+    } else {
+      // Fallback if dependency not injected yet
+      console.warn('⚠️ isMemberUser function not available. Make sure Providers.tsx is calling setHandlerDependencies()');
+      window.location.href = '/dashboard';
+    }
+  },
+
 };
 
 /**

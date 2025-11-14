@@ -833,6 +833,7 @@
   /* When inside mobile dropdown: show as flex-col, left-aligned */
   .header__dropdown .header__links__container {
     @apply flex flex-col items-start gap-sm w-full;
+    
   }
 
   /* Mobile hamburger button - hidden on desktop */
@@ -846,7 +847,8 @@
   /* Mobile dropdown - conditional rendering, positioned absolutely */
   .header__dropdown {
     @apply absolute top-full left-0 w-full;
-    @apply bg-background border-t border-outline-variant;
+    @apply bg-surface-container border-t border-outline-variant;
+    @apply shadow-md;
     @apply flex flex-col gap-sm p-container;
     @apply z-50;
   }
