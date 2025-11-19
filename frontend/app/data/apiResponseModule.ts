@@ -41,8 +41,10 @@ interface NavigationButtonItem {
 export interface ModuleConfig {
   id: number;
   type: string;
-  title: string | null; // "|" means "OR" - can be string OR null
-  showLogo: boolean;
+  title?: string | null; // "|" means "OR" - can be string OR null
+  showLogo: boolean; // Show logo in header (mutually exclusive with showBack)
+  showBack?: boolean; // Show back button in header (mutually exclusive with showLogo)
+  backHref?: string; // Where to navigate when back button is clicked
   navigation: NavigationItem[];
   search?: boolean;
   help?: boolean;
@@ -153,20 +155,85 @@ export const apiResponseModule: ModuleConfig[] = [
   {
     id: 2,
     type: "dashboard",
-    title: null,
+    title: "Dashboard",
     showLogo: true,
-    navigation: [],
-    search: false,
-    actions: [
+    showBack: true,  // Show back button on mobile/tablet instead of logo
+    navigation: [
       {
-        id: "signout",
-        label: "Sign Out",
-        variant: "subtle",
-        size: "md",
-        icon: "signout",
-        onClick: "handleSignOut",
+        icon: "dashboard",
+        label: "Dashboard",
+        url: "/dashboard",
+      },
+      {
+        icon: "sparkles",
+        label: "Resources",
+        url: "",
+        submenu: [
+          {
+            icon: "clubs",
+            label: "Clubs",
+            url: "/clubs",
+          },
+          {
+            icon: "courts",
+            label: "Courts",
+            url: "/courts",
+          },
+          {
+            icon: "leagues",
+            label: "Leagues",
+            url: "/leagues",
+          },
+          {
+            icon: "coaches",
+            label: "Coaches",
+            url: "/coaches",
+          },
+          {
+            icon: "library",
+            label: "Drill Library",
+            url: "/drills",
+          },
+          {
+            icon: "links",
+            label: "Useful Links",
+            url: "/links",
+          },
+        ],
+      },
+      {
+        icon: "zap",
+        label: "Quick Actions",
+        url: "",
+        submenu: [
+          {
+            icon: "calendar",
+            label: "View Your Schedule",
+            url: "/schedule",
+          },
+          {
+            icon: "book-court",
+            label: "Book a Court",
+            url: "/book_court",
+          },
+          {
+            icon: "matches",
+            label: "Record a Result",
+            url: "/add_result",
+          },
+          {
+            icon: "send",
+            label: "Contact a Member",
+            url: "/contact_member",
+          },
+        ],
       },
     ],
+    search: true,
+    help: true,
+    notifications: true,
+    avatar: true,
+    actions: [],
   },
   {
     id: 3,
@@ -190,10 +257,8 @@ export const apiResponseModule: ModuleConfig[] = [
   {
     id: 4,
     type: "profile",
-    title: "Profile",
     showLogo: true,
-    // showBack: true,  // Show back button on mobile/tablet instead of logo
-    // backHref: "/more", // Navigate back to More Menu
+    showBack: true,  // Show back button on mobile/tablet instead of logo
     navigation: [
       {
         icon: "dashboard",
@@ -406,6 +471,89 @@ export const apiResponseModule: ModuleConfig[] = [
     showLogo: true,
     navigation: [
       
+      {
+        icon: "sparkles",
+        label: "Resources",
+        url: "",
+        submenu: [
+          {
+            icon: "clubs",
+            label: "Clubs",
+            url: "/clubs",
+          },
+          {
+            icon: "courts",
+            label: "Courts",
+            url: "/courts",
+          },
+          {
+            icon: "leagues",
+            label: "Leagues",
+            url: "/leagues",
+          },
+          {
+            icon: "coaches",
+            label: "Coaches",
+            url: "/coaches",
+          },
+          {
+            icon: "library",
+            label: "Drill Library",
+            url: "/drills",
+          },
+          {
+            icon: "links",
+            label: "Useful Links",
+            url: "/links",
+          },
+        ],
+      },
+      {
+        icon: "zap",
+        label: "Quick Actions",
+        url: "",
+        submenu: [
+          {
+            icon: "calendar",
+            label: "View Your Schedule",
+            url: "/schedule",
+          },
+          {
+            icon: "book-court",
+            label: "Book a Court",
+            url: "/book_court",
+          },
+          {
+            icon: "matches",
+            label: "Record a Result",
+            url: "/add_result",
+          },
+          {
+            icon: "send",
+            label: "Contact a Member",
+            url: "/contact_member",
+          },
+        ],
+      },
+    ],
+    search: true,
+    help: true,
+    notifications: true,
+    avatar: true,
+    actions: [],
+  },
+  {
+    id: 9,
+    type: "moremenu",
+    title: "Menu",
+    showLogo: true,
+    showBack: false,
+    navigation: [
+      {
+        icon: "dashboard",
+        label: "Dashboard",
+        url: "/dashboard",
+      },
       {
         icon: "sparkles",
         label: "Resources",

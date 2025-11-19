@@ -1,10 +1,12 @@
 "use client";
-import { memo, ReactNode } from "react";
+import { memo, ReactNode, useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/app/providers/AuthUserProvider";
 import { Header, HeaderProps, LinkItem } from "./header";
+import { BottomNav, BottomNavItem } from "./bottomNav";
 import { Footer } from "./footer";
 import { ModuleConfig, apiResponseModule } from "@/app/data/apiResponseModule";
 import {
-  Icon,
   ButtonVariant,
   ButtonSize,
   ButtonItem,
@@ -26,25 +28,51 @@ export const Module = memo(function Module({
   children,
   title,
 }: ModuleProps) {
+
+  // Added functionality to ensure mobile versions use a bottomNav Bar
+
+  const { user, isMemberUser } = useAuth();
+  const pathname = usePathname();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport (< 1024px = lg breakpoint)
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // 🆕 ADD THIS: Dynamic title based on pathname
+  const getDynamicTitle = (): string | undefined => {
+    if (!isMobile) return undefined; // Title only on mobile
+    
+    // 1. Explicit title prop takes priority
+    if (title) return title;
+    
+    // 2. Pathname-based dynamic titles
+    if (pathname.startsWith('/dashboard')) return 'Dashboard';
+    if (pathname.startsWith('/profile')) return 'Profile';
+    
+    // 3. Fallback to moduleData.title
+    const moduleData = getModuleData(type);
+    return moduleData.title || undefined;
+  };
+  // Determine if we should show bottom nav
+  const shouldShowBottomNav = isMobile && !!user;
+
   // 1. Get data from TypeScript config based on type
   const getModuleData = (moduleType: string): ModuleConfig => {
-    console.log("🔍 Module: Looking for type:", moduleType);
-    console.log(
-      "📋 Available configs:",
-      apiResponseModule.map((c) => c.type)
-    );
 
     const config = apiResponseModule.find((m) => m.type === moduleType);
     if (config) {
-      console.log("✅ Found config for:", moduleType);
       return config;
     }
 
-    console.log(
-      "⚠️ Config not found for:",
-      moduleType,
-      "- falling back to landing"
-    );
     const fallbackConfig = apiResponseModule.find((m) => m.type === "landing");
 
     if (!fallbackConfig) {
@@ -108,33 +136,105 @@ export const Module = memo(function Module({
       href: navBtn.href,
     }));
 
+    // Determine logo configuration
+    // showLogo and showBack are mutually exclusive
+    let logoConfig: LogoConfig | undefined = undefined;
+    if (moduleData.showBack) {
+      // Show back button instead of logo on mobile/tablet (handled via back prop)
+      // Desktop still shows logo
+      logoConfig = { variant: isMobile ? "icon-only" : "full", size: "md", href: "/" };
+    } else if (moduleData.showLogo) {
+      // Show logo - mobile shows icon only, desktop shows full
+      logoConfig = { variant: isMobile ? "icon-only" : "full", size: "md", href: "/" };
+    }
+
     // Build header configuration
+    // MOBILE + LOGGED IN: No hamburger menu, no avatar dropdown (handled by bottom nav)
+    // Otherwise: Standard header
     const headerProps: HeaderProps = {
-      logo: moduleData.showLogo ? { variant: "full", size: "md", href:"/"} : undefined,
-      title: title || moduleData.title || undefined,
-      links,
-      buttons,
-      navigationButtons,
+      logo: logoConfig,
+      title: getDynamicTitle(), // ✅ Use dynamic title instead!
+      links: shouldShowBottomNav ? [] : links, // Mobile logged in: no nav links
+      buttons: shouldShowBottomNav ? [] : buttons, // Mobile logged in: no action buttons
+      navigationButtons: shouldShowBottomNav ? [] : navigationButtons, // Mobile logged in: no nav buttons
       showSearch: moduleData.search || false,
       showHelp: moduleData.help || false,
       showNotifications: moduleData.notifications || false,
-      showAvatar: moduleData.avatar || false,
+      showAvatar: shouldShowBottomNav ? false : (moduleData.avatar || false), // Mobile logged in: no avatar
+      back: moduleData.showBack || false, // Show back button (mobile/tablet only)
+      backHref: moduleData.backHref, // Where to navigate when back button is clicked
     };
 
     return headerProps;
   };
+  // Resolve dashboard href based on membership
+  const resolvedDashboardHref = isMemberUser ? '/dashboard/member' : '/dashboard/public';
 
-  // 4. Render Module with Header and Footer
+  // 4. Prep bottomNav props (only for mobile + logged in)
+  // Active state is detected here using pathname before passing to BottomNav
+  const buildBottomNavItems = (): BottomNavItem[] => {
+    
+    return [
+      {
+        type: "link",
+        id: "dashboard",
+        icon: "dashboard",
+        label: "Dashboard",
+        href: "/dashboard",
+        active: pathname === resolvedDashboardHref,
+      },
+      {
+        type: "link",
+        id: "leagues",
+        icon: "leagues",
+        label: "Leagues",
+        href: "/leagues",
+        active: pathname === "/leagues",
+      },
+      {
+        type: "fab",
+        id: "quick-actions",
+        icon: "add",
+        label: "Quick Actions",
+        onClick: () => {
+          // TODO: Open quick actions menu
+        },
+      },
+      {
+        type: "link",
+        id: "clubs",
+        icon: "clubs",
+        label: "Clubs",
+        href: "/clubs",
+        active: pathname === "/clubs",
+      },
+      {
+        type: "link",
+        id: "more",
+        icon: "menu", // This will be replaced with user avatar in BottomNav
+        label: "More",
+        href: "/more",
+        active: pathname === "/more",
+      },
+    ];
+  };
+
+  // 5. Render Module with Header and Footer
   const headerProps = prepHeaderProps();
-  console.log("🎯 Module: Rendering with headerProps:", headerProps);
-
+  const bottomNavItems = shouldShowBottomNav ? buildBottomNavItems() : [];
+  
   return (
     <div className="module-container">
       <Header {...headerProps} />
       <div className="flex-1">
         {children}
       </div>
-      <Footer />
+        {/* Mobile + Logged In: Show BottomNav instead of Footer */}
+        {shouldShowBottomNav ? (
+        <BottomNav items={bottomNavItems} />
+        ) : (
+          <Footer />
+        )}
     </div>
   );
 });

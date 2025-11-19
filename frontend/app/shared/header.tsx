@@ -2,6 +2,7 @@
 // frontend/app/shared/header.tsx
 // Figma Make components/layout/header.tsx
 import Link from "next/link";
+import { useRouter } from 'next/navigation'; // add to imports
 import { useState, memo, useCallback } from "react";
 import {
   Button,
@@ -29,6 +30,8 @@ export interface HeaderProps {
   showNotifications?: boolean; // Show notifications icon - OPTIONAL
   showAvatar?: boolean; // Show avatar with dropdown - OPTIONAL
   className?: string; // Additional CSS classes - OPTIONAL
+  back?: boolean;              // Show back button instead of logo on mobile/tablet - OPTIONAL
+  backHref?: string;           // Where to navigate when back button is clicked - OPTIONAL
 }
 
 export interface LinkItem {
@@ -57,6 +60,8 @@ export const Header = memo(function Header({
   showNotifications = false,
   showAvatar = false,
   className = "",
+  back = false,
+  backHref = "",
 }: HeaderProps) {
   // Only keep mobile menu state - Dropdown component handles its own state
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -81,6 +86,19 @@ export const Header = memo(function Header({
   const handleSignOut = useCallback(async () => {
     await logout();
   }, [logout]);
+
+  const router = useRouter();
+	
+	// Handle back button click  
+	const handleBack = useCallback(() => {  
+		if (backHref) {  
+			// Navigate to specific URL (client-side, no reload)  
+			router.push(backHref);  
+		} else {  
+			// Go back in browser history  
+			router.back();  
+		}  
+	}, [backHref, router]);
 
   // LOGO RENDER
   const renderLogo = () => {
@@ -299,9 +317,47 @@ export const Header = memo(function Header({
 
   return (
     <header className={`header ${className}`}>
-      {/* Logo Container */}
-      {logo && logo.variant && (
-        <div className="header__logo">{renderLogo()}</div>
+      {/* Logo Container - Desktop shows logo, Mobile/Tablet shows back button if back=true */}
+      {logo && logo.variant && !back && (
+        <div className="header__logo">
+          {renderLogo()}
+        </div>
+      )}
+
+      {/* Back Button - Mobile/Tablet only */}
+      {back && backHref && (
+        <div className="header__logo lg:hidden">
+          <Button
+            asChild
+            variant="subtle"
+            size="md"
+            aria-label="Go back"
+          >
+            <Link href={backHref}>
+              <Icon name="arrowleft" />
+            </Link>
+          </Button>
+        </div>
+      )}
+      
+      {/* Back Button fallback (no backHref) - Mobile/Tablet only */}
+      {back && !backHref && (
+        <div className="header__logo lg:hidden">
+          <Button
+            variant="subtle"
+            size="md"
+            onClick={handleBack}
+            icon="arrowleft"
+            aria-label="Go back"
+          />
+        </div>
+      )}
+      
+      {/* Logo for Desktop when back=true */}
+      {logo && logo.variant && back && (
+        <div className="header__logo hidden lg:flex">
+          {renderLogo()}
+        </div>
       )}
 
       {/* Links Container containing either Links or a Title */}
@@ -364,7 +420,7 @@ export const Header = memo(function Header({
       )}
       
       {/* Mobile Hamburger Menu Button */}
-      {(hasLinks || navigationButtons) && (
+      {(hasLinks || hasNavigationButtons) && (
         <div className="header__hamburger">
           <Button
             variant="subtle"

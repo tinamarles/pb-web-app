@@ -13,9 +13,9 @@ export function ProfileHeader () {
     const pathname = usePathname(); 
 
     const showEditAvatar =  
-		pathname === '/profile' ||  
-		pathname === '/profile/setup' ||
-        pathname === '/dashboard/member';  
+		pathname === '/profile/details' ||  
+		pathname === '/profile/setup';
+        
 
     // ✅ Step 1: Handle upload (save to backend)
     // Wrap saveAvatar to show user Feedback

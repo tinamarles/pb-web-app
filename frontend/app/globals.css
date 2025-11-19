@@ -1115,6 +1115,225 @@
     }
   }
 }
+/* === BOTTOM NAVIGATION BAR Component (Mobile) === */
+@layer components {
+/* Mobile-only bottom navigation bar - hidden on desktop */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 z-50;
+    @apply flex items-center justify-around;
+    @apply bg-surface border-t border-outline-variant;
+
+    /* Height + safe area for iOS notch/home indicator */
+    height: calc(64px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+
+    /* Shadow for elevation */
+    box-shadow: var(--elevation-md);
+
+    /* Hidden on desktop (1024px+) */
+    @media (min-width: 1024px) {
+      @apply hidden;
+    }
+  }
+  /* Individual navigation item */
+  .bottom-nav__item {
+    @apply flex flex-col items-center justify-center gap-xs;
+    @apply flex-1;
+    @apply text-on-surface-variant;
+    @apply transition-colors duration-200;
+
+    /* Clickable area */
+    min-height: 56px;
+    max-width: 80px;
+
+    /* Remove default button/link styles */
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+
+    /* Active state */
+    &.active {
+      @apply text-primary;
+    }
+
+    /* Hover/focus states */
+    &:hover,
+    &:focus {
+      @apply text-primary;
+      outline: none;
+    }
+  }
+  
+  /* FAB (Floating Action Button) - center item with elevation */
+  .bottom-nav__item--fab {
+    @apply relative;
+    @apply flex items-center justify-center;
+    @apply bg-primary text-on-primary;
+    @apply rounded-full;
+    /* Larger circular button */
+    width: 56px;
+    height: 56px;
+    min-height: 56px;
+
+    /* Elevated above bottom nav */
+    margin-top: -28px; /* Half of height to lift it up */
+    box-shadow: var(--elevation-lg);
+
+    /* Remove flex-col and gap for FAB */
+    flex-direction: row;
+    gap: 0;
+
+    /* Hover/focus states */
+    &:hover,
+    &:focus {
+      @apply bg-primary text-on-primary;
+    }
+    /* Active/pressed state */
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+  /* Label text under icon */
+  .bottom-nav__label {
+    @apply label-sm;
+    @apply text-center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  /* Notification badge (red dot with count) */
+  .bottom-nav__badge {
+    @apply absolute -top-1 -right-1;
+    @apply flex items-center justify-center;
+    @apply bg-error text-on-error;
+    @apply rounded-full;
+    @apply label-sm;
+
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+  }
+
+}
+/* === More Menu Component === */
+@layer components {
+  /* +++ MORE MENU (MOBILE) +++ */
+  
+  /* Top Section Container - Profile Card + Sign Out Button */
+  .more-menu__top-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--px-20);
+  }
+
+  /* Profile Card at Top */
+  .more-menu__profile-card {
+    @apply flex items-center gap-md;
+    @apply p-md rounded-lg;
+    @apply bg-surface-container-lowest border border-outline-variant;
+    @apply transition-colors duration-200;
+    min-width: 66.666667%; /* 2/3 width */
+    
+    &:hover {
+      @apply bg-surface-container;
+    }
+  }
+
+  /* Section Container */
+  .more-menu__section {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    gap: var(--px-12);
+    margin-bottom: var(--px-20);
+  }
+
+  /* Section Header (contains title) */
+  .more-menu__section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    height: var(--px-56);
+    @apply bg-surface-container border-b border-outline-variant;
+  }
+
+  /* Section Header Inner (for padding) */
+  .more-menu__section-header-inner {
+    padding-left: var(--px-16);
+    padding-right: var(--px-16);
+    padding-bottom: var(--px-8);
+  }
+
+  /* Section Title (Settings, Features, Resources, Learn) */
+  .more-menu__section-title {
+    @apply title-lg emphasized;
+    margin: 0;
+  }
+
+  /* Section Content (menu items container) */
+  .more-menu__section-content {
+    display: flex;
+    flex-direction: column;
+    padding-left: var(--px-16);
+    padding-right: var(--px-16);
+  }
+
+  /* Menu Item (sidebar-style hover) */
+  .more-menu__item {
+    @apply flex items-center;
+    gap: var(--px-12);
+    padding: var(--px-12) var(--px-16);
+    @apply text-on-surface;
+    @apply transition-colors duration-200;
+    @apply relative;
+    /* Border on left for hover state (like sidebar) */
+    @apply border-l-2 border-transparent;
+
+    &:hover {
+      @apply border-primary;
+      /* No background change on hover - just border */
+    }
+  }
+
+  /* Menu Item Icon */
+  .more-menu__item-icon {
+    @apply w-10 h-10 rounded-full;
+    @apply flex items-center justify-center;
+    @apply flex-shrink-0;
+    /* Icon border in primary color */
+    @apply border border-primary;
+    @apply text-primary;
+  }
+
+  /* Menu Item Label */
+  .more-menu__item-label {
+    @apply body-lg flex-1;
+  }
+
+  /* Menu Item Trailing Icon */
+  .more-menu__item-trailing {
+    @apply text-on-surface-variant;
+  }
+
+  /* Footer Links Section */
+  .more-menu__footer-links {
+    @apply flex flex-col gap-xs;
+    padding: var(--px-16);
+  }
+
+  .more-menu__footer-link {
+    @apply body-md text-primary;
+    @apply transition-colors duration-200;
+    
+    &:hover {
+      color: var(--color-hovered-primary);
+    }
+  }
+}
 /* === FORM FIELD CLASSES === */
 @layer components {
   /* +++ INPUT Fields +++ */
