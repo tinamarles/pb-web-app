@@ -20,7 +20,7 @@ export const Search = memo(function Search({
   className = "",
 }: SearchProps) {
   return (
-    <div className={`search ${className}`}>
+    <div className={`input-field ${className}`}>
       <Icon name="search" className="icon-lg text-on-surface-variant" />
       <input
         type="text"

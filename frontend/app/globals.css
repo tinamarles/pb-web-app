@@ -52,7 +52,6 @@
   /* +++ TYPOGRAPHY Primitives +++ */
   /* ============================= */
 
-
   /* ============================= */
   /* +++ SPACING Primitives    +++ */
   /* ============================= */
@@ -82,6 +81,7 @@
   --px-80: 5rem;
   --px-96: 6rem;
   --px-120: 7.5rem;
+  --px-130: 8.125rem;
   --px-160: 10rem;
   --px-192: 12rem;
   --px-240: 15rem;
@@ -93,15 +93,14 @@
 
 /* ===== COLOR DESIGN TOKENS ===== */
 @theme {
-
   /* Primary color - Purple */
   --color-primary: var(--purple-40);
   --color-on-primary: var(--neutral-100);
- 
+
   /* Secondary color - Teal */
   --color-secondary: var(--teal-50);
   --color-on-secondary: var(--neutral-100);
- 
+
   /* Tertiary color - Yellow */
   --color-tertiary: var(--yellow-90);
   --color-on-tertiary: var(--neutral-30);
@@ -187,7 +186,7 @@
   --color-scrim: var(--neutral-0);
 }
 @theme inline {
-/* Gap sizes */
+  /* Gap sizes */
   --gap-xs: var(--px-4);
   --gap-sm: var(--px-8);
   --gap-md: var(--px-12);
@@ -217,47 +216,32 @@
   /* Avatar sizes: xl, lg, md for the avatar; sm, xs, 2xs for the upload-button on top */
   --avatar-xl: var(--px-96);
   --avatar-lg: var(--px-64);
-  --avatar-md: var(
-    --px-48
-  ); /* this avatar currently has no image upload button as too small */
+  --avatar-md: var(--px-48); /* this avatar currently has no image upload button as too small */
   --avatar-sm: var(--px-40);
-  --avatar-btn-xl: var(
-    --px-40
-  ); /* container button-xl on avatar-xl*/
-  --avatar-btn-lg: var(
-    --px-36
-  ); /* container button-lg currently not used */
-  --avatar-btn-md: var(
-    --px-28
-  ); /* container button-md on avatar-lg */
+  --avatar-btn-xl: var(--px-40); /* container button-xl on avatar-xl*/
+  --avatar-btn-lg: var(--px-36); /* container button-lg currently not used */
+  --avatar-btn-md: var(--px-28); /* container button-md on avatar-lg */
 
   /* Icon sizes - used within buttons, input fields, navigation items */
   --icon-sm: var(--px-16);
   --icon-md: var(--px-18);
-  --icon-lg: var(
-    --px-20
-  ); /* used for inputField icons like email, phone, password lock, location */
+  --icon-lg: var(--px-20); /* used for inputField icons like email, phone, password lock, location */
   --icon-xl: var(--px-24);
   --icon-2xl: var(--px-32);
 
   /* Icon bordered sizes - icon size + 8px padding (var(--px-8)) for circular frame */
-  --icon-bordered-sm: var(
-    --px-24
-  ); /* 1rem + 0.5rem = 1.5rem (24px) */
-  --icon-bordered-md: var(
-    --px-26
-  ); /* 1.125rem + 0.5rem = 1.625rem (26px) */
-  --icon-bordered-lg: var(
-    --px-28
-  ); /* 1.25rem + 0.5rem = 1.75rem (28px) */
-  --icon-bordered-xl: var(
-    --px-32
-  ); /* 1.5rem + 0.5rem = 2rem (32px) */
+  --icon-bordered-sm: var(--px-24); /* 1rem + 0.5rem = 1.5rem (24px) */
+  --icon-bordered-md: var(--px-26); /* 1.125rem + 0.5rem = 1.625rem (26px) */
+  --icon-bordered-lg: var(--px-28); /* 1.25rem + 0.5rem = 1.75rem (28px) */
+  --icon-bordered-xl: var(--px-32); /* 1.5rem + 0.5rem = 2rem (32px) */
 
   --icon-av-xl: var(--px-60); /* icon for generic avatar-xl */
   --icon-av-lg: var(--px-40); /* icon for generic avatar-lg */
   --icon-av-md: var(--px-28); /* icon for generic avatar-md */
   --icon-av-sm: var(--px-24); /* icon for generic avatar-sm */
+
+  --w-sidebar: var(--px-240);
+  --w-sidebar-tablet: var(--px-130);
 }
 
 /* ===================================================================== */
@@ -286,8 +270,52 @@
 @utility p-* {
   padding: --value(--p-*);
 }
+@utility pt-* {
+  padding-top: --value(--p-*);
+}
+@utility pb-* {
+  padding-bottom: --value(--p-*);
+}
+@utility pl-* {
+  padding-left: --value(--p-*);
+}
+@utility pr-* {
+  padding-right: --value(--p-*);
+}
+@utility px-* {
+  padding-left: --value(--p-*);
+  padding-right: --value(--p-*);
+}
+@utility py-* {
+  padding-top: --value(--p-*);
+  padding-bottom: --value(--p-*);
+}
 @utility gap-* {
-  gap: --value(--gap-*);
+  gap: --value(--p-*);
+}
+
+@utility m-* {
+  margin: --value(--p-*);
+}
+@utility mt-* {
+  margin-top: --value(--p-*);
+}
+@utility mb-* {
+  margin-bottom: --value(--p-*);
+}
+@utility ml-* {
+  margin-left: --value(--p-*);
+}
+@utility mr-* {
+  margin-right: --value(--p-*);
+}
+@utility mx-* {
+  margin-left: --value(--p-*);
+  margin-right: --value(--p-*);
+}
+@utility my-* {
+  margin-top: --value(--p-*);
+  margin-bottom: --value(--p-*);
 }
 
 /* +++ TYPOGRAPHY +++ */
@@ -358,7 +386,7 @@
 @utility title-lg {
   font-family: var(--font-base);
   /* font-size: var(--text-22px); */
-  font-size: clamp(1.00rem, calc(0.851rem + 0.732vw), 1.40rem);
+  font-size: clamp(1rem, calc(0.851rem + 0.732vw), 1.4rem);
   line-height: var(--line-height-25);
   letter-spacing: var(--spacing-normal);
   @apply font-normal;
@@ -366,7 +394,7 @@
 @utility title-md {
   font-family: var(--font-base);
   /* font-size: var(--text-18px); */
-  font-size: clamp(1.00rem, calc(0.940rem + 0.286vw), 1.16rem);
+  font-size: clamp(1rem, calc(0.94rem + 0.286vw), 1.16rem);
   line-height: var(--line-height-30);
   letter-spacing: var(--spacing-relaxed);
   @apply font-normal;
@@ -374,7 +402,7 @@
 @utility title-sm {
   font-family: var(--font-base);
   /* font-size: var(--text-14px); */
-  font-size: clamp(0.88rem, calc(0.830rem + 0.223vw), 1.00rem);
+  font-size: clamp(0.88rem, calc(0.83rem + 0.223vw), 1rem);
   line-height: var(--line-height-45);
   letter-spacing: var(--spacing-relaxed);
   @apply font-normal;
@@ -382,7 +410,7 @@
 @utility body-lg {
   font-family: var(--font-base);
   /* font-size: var(--text-18px); */
-  font-size: clamp(1.00rem, calc(0.940rem + 0.286vw), 1.16rem);
+  font-size: clamp(1rem, calc(0.94rem + 0.286vw), 1.16rem);
   line-height: var(--line-height-50);
   letter-spacing: var(--spacing-wider);
   @apply font-normal;
@@ -390,7 +418,7 @@
 @utility body-md {
   font-family: var(--font-base);
   /* font-size: var(--text-16px); */
-  font-size: clamp(0.88rem, calc(0.830rem + 0.223vw), 1.00rem);
+  font-size: clamp(0.88rem, calc(0.83rem + 0.223vw), 1rem);
   line-height: var(--line-height-45);
   letter-spacing: var(--spacing-wide);
   @apply font-normal;
@@ -439,7 +467,7 @@
 @utility single-line-medium {
   font-family: var(--font-base);
   /* font-size: var(--text-16px); */
-  font-size: clamp(0.88rem, calc(0.830rem + 0.223vw), 1.00rem); 
+  font-size: clamp(0.88rem, calc(0.83rem + 0.223vw), 1rem);
   line-height: var(--line-height-00);
   letter-spacing: var(--spacing-normal);
   @apply font-normal;
@@ -464,7 +492,7 @@
 @utility logo-text-lg {
   font-family: var(--font-base);
   /* font-size: var(--text-24px); */
-  font-size: clamp(1.09rem, calc(0.938rem + 0.780vw), 1.52rem);
+  font-size: clamp(1.09rem, calc(0.938rem + 0.78vw), 1.52rem);
   line-height: var(--line-height-00);
   letter-spacing: var(--spacing-normal);
   @apply font-normal;
@@ -480,7 +508,7 @@
 @utility logo-text-sm {
   font-family: var(--font-base);
   /* font-size: var(--text-18px); */
-  font-size: clamp(1.00rem, calc(0.940rem + 0.286vw), 1.16rem);
+  font-size: clamp(1rem, calc(0.94rem + 0.286vw), 1.16rem);
   line-height: var(--line-height-00);
   letter-spacing: var(--spacing-normal);
   @apply font-normal;
@@ -489,7 +517,7 @@
 @utility logo-text-xs {
   font-family: var(--font-base);
   /* font-size: var(--text-16px); */
-  font-size: clamp(0.88rem, calc(0.830rem + 0.223vw), 1.00rem); 
+  font-size: clamp(0.88rem, calc(0.83rem + 0.223vw), 1rem);
   line-height: var(--line-height-00);
   letter-spacing: var(--spacing-normal);
   @apply font-normal;
@@ -497,7 +525,7 @@
 @utility logo-text-xl {
   font-family: var(--font-base);
   /* font-size: var(--text-30px); */
-  font-size: clamp(1.40rem, calc(1.219rem + 0.907vw), 1.90rem);
+  font-size: clamp(1.4rem, calc(1.219rem + 0.907vw), 1.9rem);
   line-height: var(--line-height-00);
   letter-spacing: var(--spacing-normal);
   @apply font-normal;
@@ -521,7 +549,7 @@
 @utility slogan-sm {
   font-family: var(--font-slogan);
   /* font-size: var(--text-40px); */
-  font-size: clamp(1.75rem, calc(1.480rem + 1.352vw), 2.49rem);
+  font-size: clamp(1.75rem, calc(1.48rem + 1.352vw), 2.49rem);
   line-height: var(--line-height-20);
   letter-spacing: var(--spacing-wider);
   @apply font-normal;
@@ -537,9 +565,7 @@
 @utility focus-ring-base {
   outline: 2px solid transparent;
   outline-offset: 2px;
-  box-shadow:
-    0 0 0 2px
-      var(--tw-ring-offset-color, var(--color-on-surface)),
+  box-shadow: 0 0 0 2px var(--tw-ring-offset-color, var(--color-on-surface)),
     0 0 0 4px var(--tw-ring-color);
 }
 @utility disabled-btn {
@@ -584,189 +610,16 @@
   }
 
   &:focus {
-    --tw-ring-color: color-mix(
-      in srgb,
-      var(--color-primary),
-      transparent 80%
-    );
+    --tw-ring-color: color-mix(in srgb, var(--color-primary), transparent 80%);
     @apply focus-ring-base border-primary;
   }
 
   /* Add left padding when icon is present */
   &.has-icon {
     padding-left: var(--px-44); /* Icon space + gap */
-    
   }
 }
 
-/* === FORM FIELD CLASSES === */
-@layer components {
-  /* +++ INPUT Fields +++ */
-  .input-field {
-    @apply relative flex items-center;
-  }
-  .input-field svg {
-    @apply absolute left-[var(--px-12)] z-10 pointer-events-none;
-  }
-
-  /* +++ SEARCH Component +++ */
-
-  .search {
-    @apply relative flex items-center;
-  }
-
-  .search svg {
-    @apply absolute left-[var(--px-12)] z-10 pointer-events-none;
-  }
-}
-/* === Dropdown Menu === */
-@layer components {
-  /* +++ ICON BORDERED - Circular frame for icons +++ */
-  /* Note: Sizing handled by @utility icon-bordered-* (see UTILITIES section) */
-  .icon-bordered {
-    @apply inline-flex items-center justify-center;
-    @apply text-primary;
-    @apply rounded-full;
-    @apply border border-primary;
-    @apply flex-shrink-0;
-    @apply icon-bordered-lg;
-  }
-
-  /* +++ DROPDOWN Container +++ */
-  .dropdown-container {
-    @apply relative;
-    width: min-content;
-  }
-
-  .dropdown-trigger {
-    @apply cursor-pointer;
-
-    /* Hover ring for button wrapper (not avatar directly) 
-    &:hover button {
-      @apply text-primary bg-transparent;
-      @apply transition-all duration-200;
-    } */
-  }
-
-  /* +++ DROPDOWN Menu +++ */
-  .dropdown-menu {
-    @apply absolute top-full;
-    @apply mt-2;
-    @apply bg-surface;
-    @apply border border-outline-variant;
-    @apply shadow-md;
-    @apply z-50;
-    @apply flex flex-col gap-md;
-    padding: var(--px-8);
-    border-radius: var(--radius);
-    /* Animation */
-    animation: dropdown-slide-in 150ms ease-out;
-    width: min-content;
-    height: min-content;
-    white-space: nowrap;
-    box-shadow: 0px 10px 20px 0px rgba(0, 0, 0, 0.2);
-    overflow: var(--overflow-clip-fallback, clip);
-  }
-
-  .dropdown-align-left {
-    left: 0;
-  }
-
-  .dropdown-align-right {
-    right: 0;
-  }
-
-  @keyframes dropdown-slide-in {
-    from {
-      opacity: 0;
-      transform: translateY(-4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* +++ MENU ITEM +++ */
-  .menu-item-wrapper {
-    @apply w-full;
-  }
-
-  .menu-item-separator {
-    border-bottom: 1px solid var(--color-outline-variant);
-    padding-bottom: var(--px-8);
-    margin-bottom: var(--px-8);
-  }
-
-  .menu-item {
-    @apply w-full;
-    @apply flex items-center gap-sm;
-    @apply single-line-small text-on-surface;
-    @apply transition-colors duration-200;
-    @apply text-left;
-    @apply border-l-2 border-transparent;
-    padding: var(--px-4) var(--px-8);
-    width: min-content;
-    white-space: nowrap;
-    height: 28px;
-    flex-direction: row;
-    justify-content: center;
-    align-content: center;
-    flex-wrap: nowrap;
-
-    &:hover:not(:disabled) {
-      @apply border-primary;
-    }
-
-    &:focus-visible {
-      --tw-ring-color: color-mix(
-        in srgb,
-        var(--color-secondary),
-        transparent 80%
-      );
-      @apply focus-ring-base;
-    }
-
-    &:disabled {
-      @apply opacity-40 cursor-not-allowed;
-    }
-  }
-
-  .menu-item-danger {
-    @apply text-error;
-
-    &:hover:not(:disabled) {
-      @apply bg-error/20;
-    }
-
-    &:focus-visible {
-      --tw-ring-color: color-mix(
-        in srgb,
-        var(--color-error),
-        transparent 80%
-      );
-      @apply focus-ring-base;
-    }
-  }
-
-  .menu-item-icon {
-    @apply flex items-center justify-center flex-shrink-0;
-  }
-
-  .menu-item-label {
-    @apply flex-grow;
-  }
-
-  .menu-item-trailing {
-    @apply flex items-center justify-center flex-shrink-0;
-    @apply ml-auto;
-  }
-
-  .menu-item-active {  
-    @apply bg-secondary/80;  
-    opacity: 0.4;  
-}
-}
 /* === LAYOUT CONTAINER CLASSES === */
 @layer components {
   /* +++ Master page wrapper that wraps around the entire app +++ */
@@ -789,7 +642,6 @@
     background-color: var(--color-background);
     color: var(--color-on-background);
     min-height: 100vh;
-
   }
 
   /* +++ HEADER Component +++ */
@@ -815,9 +667,15 @@
 
   .header__logo {
     @apply flex items-center justify-start flex-shrink-0;
-    width: var(--w-sidebar);
   }
-
+  /* Mobile title - shown on mobile, centered, hidden on desktop */
+  .header__title {
+    @apply flex items-start justify-start flex-1 title-lg emphasized;
+    padding-left: var(--20px);
+    @media (min-width: 1024px) {
+      @apply hidden;
+    }
+  }
   .header__links {
     @apply flex items-center justify-center grow;
   }
@@ -830,10 +688,19 @@
     }
   }
 
+  
+  /* Mobile dropdown - conditional rendering, positioned absolutely */
+  .header__dropdown {
+    @apply absolute top-full left-0 w-full;
+    @apply bg-surface-container border-t border-outline-variant;
+    @apply shadow-md;
+    @apply flex flex-col gap-sm p-container;
+    @apply z-50;
+  }
+
   /* When inside mobile dropdown: show as flex-col, left-aligned */
   .header__dropdown .header__links__container {
     @apply flex flex-col items-start gap-sm w-full;
-    
   }
 
   /* Mobile hamburger button - hidden on desktop */
@@ -842,15 +709,6 @@
     @media (min-width: 1024px) {
       @apply hidden;
     }
-  }
-
-  /* Mobile dropdown - conditional rendering, positioned absolutely */
-  .header__dropdown {
-    @apply absolute top-full left-0 w-full;
-    @apply bg-surface-container border-t border-outline-variant;
-    @apply shadow-md;
-    @apply flex flex-col gap-sm p-container;
-    @apply z-50;
   }
 
   .header__search {
@@ -874,24 +732,10 @@
     }
   }
 
-  /* Mobile actions - used inside .header__dropdown */
-  /* 
-  .header__actions-mobile {
-    @apply flex flex-col gap-md;
-  */
-    /* Tablet+: Horizontal centered layout */
-    /*
-    @media (min-width: 640px) {
-      @apply flex-row justify-center gap-md;
-      @apply m-auto;
-    }
-  }
-  */
-
   /* When inside mobile dropdown: show as flex-col centered, then flex-row centered on tablet+ */
   .header__dropdown .header__actions {
     @apply flex flex-col items-center gap-md;
-    
+
     /* Tablet+: Horizontal centered layout */
     @media (min-width: 640px) {
       @apply flex-row justify-center gap-md m-auto;
@@ -973,6 +817,731 @@
     @apply text-primary transition-colors;
   }
 }
+/* +++ PROFILE PAGE Component +++ */
+@layer components {
+
+  /* Refactor: Step 1 - classes */
+  .page {  
+    @apply block w-full;
+    @apply pb-24; /* Account for bottom nav: 96px or 6rem */
+  }
+  @media (min-width: 640px) {
+	.page {
+	    @apply flex;
+	    @apply gap-lg;
+	}
+  }
+  @media (min-width: 1024px) {
+	.page {
+		@apply pb-0;    /* no bottom padding */
+    }
+  }
+  /* Refactor: Step 2 - classes */
+  /* NEW: Sidebar classes */
+  .sidebar {
+	  @apply hidden; /* just to make sure mobile does not show it */
+  }
+  /* tablet */
+  @media (min-width: 640px) {
+    .sidebar {
+      width: var(--w-sidebar-tablet);
+      @apply flex flex-col flex-shrink-0;
+      @apply bg-surface-container; /* Match tablet tabs background */
+      @apply border-r border-outline-variant;
+      padding-top: var(--px-12); /* alternatively: @apply py-md */
+      padding-bottom: var(--px-12);
+    }
+  }
+  /* desktop */
+  @media (min-width: 1024px) {
+    .sidebar {
+	    width: var(--w-sidebar);
+	  }
+  }
+  
+  .sidebar nav {
+      @apply flex flex-col;
+      padding: 0;
+      gap: 0;
+  }
+
+  .sidebar__item {
+	@apply hidden; /* making sure it's not shown on mobile */
+  }
+  /* tablet */
+  @media (min-width: 640px) {
+    .sidebar__item {
+      @apply flex flex-col items-center justify-center;
+      @apply gap-xs;
+      @apply py-sm px-xs; 
+      @apply border-l-0;
+      @apply relative;
+      @apply text-on-surface;
+      @apply text-center;
+	    @apply text-on-surface label-lg;
+	    white-space: normal;
+	    word-wrap: break-word;
+	    max-width: 100%;
+	    @apply transition-colors duration-200;
+	    /* Border on left for hover state (like header menu items) */
+	    @apply border-l-2 border-transparent;
+		  margin: var(--px-8);
+      &:hover:not(.active) {
+        @apply border-primary;
+        /* No background change on hover - just border */
+      }
+
+      &.active {
+        @apply text-primary;
+        /* Active state: primary text color, no border unless hovering */
+        /* Border stays transparent for active items to avoid permanent left border */
+      }
+    }
+  }
+  /* desktop */
+  @media (min-width: 1024px) {
+    .sidebar__item {
+      @apply flex-row justify-start;
+      @apply text-left;
+        gap: var(--px-8); /* @apply gap-sm */
+        padding: var(--px-8); /* @apply p-sm */
+        margin: 0 0 0 var(--px-12); /* reset the margin from tablet */
+    }
+  }
+
+  .sidebar__icon {
+	@apply hidden; /* not shown on mobile */
+  }
+  @media (min-width: 640px) {
+    .sidebar__icon {
+	    @apply w-10 h-10 rounded-full;
+	    @apply flex items-center justify-center;
+	    @apply flex-shrink-0;
+	    /* Icon border in primary color */
+	    @apply border border-primary;
+	    @apply text-primary;
+	
+	    /* For active state: reverse colors (filled circle with icon in on-primary) */
+	    .active & {
+	      @apply bg-primary text-on-primary;
+	      @apply border-primary;
+	    }
+	}
+  }
+  /* NOTE: there is no need for a .profile-page__sidebar__alert class! 
+    Simply use the badge and overwrite with bg-error text-on-error */
+  .sidebar__badge {
+	  @apply hidden; /* not shown on mobile */
+  }
+  @media (min-width: 640px) {
+    .sidebar__badge {
+      @apply absolute;
+      top: -4px;
+      right: -4px;
+      border: 2px solid var(--color-on-secondary);
+      @apply flex items-center justify-center;
+      @apply min-w-[20px] h-[20px];
+      @apply px-xs;
+      @apply rounded-full;
+      @apply bg-secondary text-on-secondary;
+      @apply label-sm emphasized;
+    } 
+  }
+  
+  .sidebar__trailing {
+	  @apply hidden;
+  }
+  @media (min-width: 1024px) {
+    .sidebar__trailing {
+	    @apply ml-auto;
+	    @apply text-on-surface-variant;
+    }
+  }
+  /* Refactor: Step 3 - classes */
+  /* NEW: Page Content classes */
+  .page__content {
+      @apply flex flex-col;
+      @apply gap-md;
+      @apply p-lg; /* this will ensure the safety margin */
+  }
+  @media (min-width: 640px) {
+    .page__content {
+      @apply flex-1;
+      @apply gap-lg;
+    }
+  }
+
+  /* Refactor: Step 4 - classes */
+  /* NEW: Profile Page Header classes */
+  
+  .profile-page__header {
+    @apply flex items-start;
+    @apply gap-md p-md;
+    @apply bg-surface;
+  }
+  @media (min-width: 640px) {
+    .profile-page__header {
+      @apply rounded-lg;
+    }
+  }
+  /* Change the avatar size for mobile - override the utility directly */
+  @media (max-width: 639px) {
+    .profile-page__header .avatar-xl {
+      /* height: var(--avatar-lg);
+      width: var(--avatar-lg); */
+      @apply av-lg;
+    }
+    .profile-page__header .avatar-xl .avatar-icon {
+      /* height: var(--icon-av-lg);
+      width: var(--icon-av-lg); */
+      @apply icon-av-lg;
+    }
+  }
+  
+  /* Refactor: Step 5 - classes */
+  /* NEW: Form Container classes */
+  .profile-page__form {
+    @apply p-lg;
+    @apply flex-1;
+  }
+  @media (min-width: 1024px) {
+    .profile-page__form {
+      @apply bg-surface border border-outline-variant rounded-lg;
+    }
+  }
+
+  .profile-page__form__grid {
+	  @apply grid grid-cols-1 gap-sm;
+  }
+  @media (min-width: 640px) {
+    .profile-page__form__grid {
+      @apply grid-cols-2 gap-lg;
+    }
+  }
+  @media (min-width: 1024px) {
+    .profile-page__form__grid {
+      @apply grid-cols-3;
+    }
+  }
+
+  /* Refactor: Step 6 - classes */
+  /* NEW: Modify form-field for mobile so it is display only */
+  /* NEW: add .form-field--bio so it always spans the entire width
+  
+  /* Mobile: Make fields display-only */  
+  @media (max-width: 639px) {  
+    .profile-page__mobile__list-item input,
+    .profile-page__mobile__list-item select,  
+    .profile-page__mobile__list-item textarea,
+    .profile-page__mobile__list-item button:not(.profile-page__formField__button),  /* Disable buttons but NOT edit button */
+    .profile-page__mobile__list-item .input-base {  /* Disable CustomSelect trigger div */
+      pointer-events: none; /* Can't click/focus */  
+      outline: none;
+      cursor: default; /* No text cursor */  
+      background: transparent; /* No input styling */  
+      border: none;  
+    /* Make it look like plain text */  
+    }
+    
+    /* Remove FormField container border and background on mobile */
+    .profile-page__mobile__list-item .form-field-input,
+    .profile-page__mobile__list-item .input-base {  /* Also remove from CustomSelect trigger */
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;  /* Remove padding so text aligns left */
+    }
+  } 
+  /* Mobile List Item */
+  .profile-page__mobile__list-item {  	
+      @apply flex items-center gap-md;  /* Remove justify-between, add gap */
+      @apply px-md pt-md pb-0;
+      @apply bg-surface border border-outline-variant rounded-lg;
+      @apply hover:bg-surface-container;
+      @apply transition-colors duration-200;
+  }
+  @media (max-width: 639px) {
+    .profile-page__mobile__list-item > div:first-child {
+      @apply flex-1;  /* FormField takes full width on mobile */
+    }
+  }
+  @media (min-width: 640px) {
+    .profile-page__mobile__list-item {
+      all: revert;
+      @apply hover:bg-transparent
+    }
+  }
+
+  /* Mobile: Increase field content text size */
+  @media (max-width: 639px) {
+    .profile-page__mobile__list-item .form-field__content {
+      /* Override body-md with title-sm emphasized on mobile */
+      @apply title-md emphasized;
+    }
+    .profile-page__mobile__list-item .form-field__top-label {
+      @apply body-sm;
+    
+    }
+  }
+  
+  .form-field--bio {
+    grid-column: 1 / -1; /* Bio spans full width on all breakpoints */
+  }
+
+  .profile-page__form__button {
+    @apply hidden;
+  }
+  @media (min-width: 640px) {
+    .profile-page__form__button {
+      @apply block;
+      @apply mt-lg;
+    }
+  }
+
+  .profile-page__formField__button {
+    @apply p-sm rounded-full hover:bg-surface-container;
+  }
+  @media (min-width: 640px) {
+    .profile-page__formField__button {
+      @apply hidden;
+    }
+  }
+}
+/* === FORM FIELD CLASSES === */
+@layer components {
+  /* +++ INPUT Fields +++ */
+  .input-field {
+    @apply relative flex items-center;
+  }
+  .input-field svg {
+    @apply absolute left-[var(--px-12)] z-10 pointer-events-none;
+  }
+/* +++ FORM FIELD INPUT - Container focus styling +++ */
+  .form-field-input {
+    transition: border-color 200ms, box-shadow 200ms;
+    
+    &:focus-within {
+      outline: none;
+      --tw-ring-color: color-mix(in srgb, var(--color-primary), transparent 80%);
+      box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--tw-ring-color);
+      @apply border-primary;
+    }
+  }
+
+  .form-field__top-label {
+    @apply body-lg emphasized text-on-surface-variant;
+  }
+  .form-field__sub-label {
+    @apply label-sm text-on-surface-variant;
+  }
+  .form-field__content {
+    @apply body-md;
+  }
+  
+  /* +++ CUSTOM CHECKBOX - Unified design using primary color +++ */
+  .custom-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-outline);
+    background-color: var(--color-surface-container-lowest);
+    cursor: pointer;
+    transition: all 200ms ease;
+    flex-shrink: 0;
+    
+    &:hover:not(:checked) {
+      border-color: var(--color-primary);
+    }
+    
+    &:focus {
+      outline: none;
+      --tw-ring-color: color-mix(in srgb, var(--color-primary), transparent 80%);
+      box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--tw-ring-color);
+    }
+    
+    &:checked {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+      
+      &::after {
+        content: "✓";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: var(--color-on-primary);
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 1;
+      }
+    }
+    
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+  
+  /* +++ CUSTOM RADIO BUTTON +++ */
+  .custom-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    flex-shrink: 0;
+    
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    
+    &:focus {
+      outline: none;
+    }
+  }
+  
+  /* Radio wrapper and label */
+  .radio-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &:has(input:disabled) .radio-label {
+      cursor: not-allowed;
+    }
+    
+    &:has(input:focus) .radio-label {
+      outline: none;
+      --tw-ring-color: color-mix(in srgb, var(--color-primary), transparent 80%);
+      box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--tw-ring-color);
+    }
+  }
+  
+  .radio-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 200ms ease;
+  }
+  
+  /* +++ CUSTOM TOGGLE +++ */
+  .custom-toggle {
+    position: relative;
+    width: 40px;
+    height: 24px;
+    border-radius: 9999px; /* rounded-full */
+    padding: 2px;
+    cursor: pointer;
+    transition: background-color 200ms ease;
+    flex-shrink: 0;
+    
+    &[data-state="unchecked"] {
+      background-color: color-mix(in srgb, var(--color-on-surface-variant) 50%, transparent);
+      
+      .custom-toggle-knob {
+        left: 2px;
+        background-color: var(--color-on-surface-variant);
+      }
+    }
+    
+    &[data-state="checked"] {
+      background-color: var(--color-primary);
+      
+      .custom-toggle-knob {
+        left: 18px;
+        background-color: var(--color-on-surface);
+      }
+    }
+    
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    
+    &:focus {
+      outline: none;
+      --tw-ring-color: color-mix(in srgb, var(--color-primary), transparent 80%);
+      box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--tw-ring-color);
+    }
+  }
+  
+  /* Toggle knob */
+  .custom-toggle-knob {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 9999px;
+    top: 2px;
+    transition: left 200ms ease, background-color 200ms ease;
+    box-shadow: 
+      0 3px 8px 0 rgba(0, 0, 0, 0.15),
+      0 3px 1px 0 rgba(0, 0, 0, 0.06);
+  }
+  
+  /* +++ CUSTOM SELECT COMPONENT - CSS-driven dropdown styling +++ */
+  
+  /* --- Dropdown Container ---
+   * Positioned below the trigger button, full width of parent
+   * Small gap (4px) from trigger for breathing room
+   * Elevated z-index to appear above other content
+   * Shadow and border create depth and definition
+   */
+  .select-dropdown {
+    @apply absolute top-full left-0 right-0 z-50;
+    @apply bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg overflow-hidden;
+    margin-top: var(--px-4);
+  }
+  
+  /* --- Options List Container ---
+   * Scrollable container for dropdown options
+   * Max height prevents excessive dropdown size
+   * Smooth scrolling for keyboard navigation
+   */
+  .select-options-list {
+    overflow-y: auto;
+    max-height: var(--px-240); /* ~15rem - fits ~8-10 options */
+  }
+  
+  /* --- Individual Option Item ---
+   * Base styling for each selectable option
+   * Uses p-md via @apply for consistent padding
+   * Single-line text prevents wrapping, truncates if needed
+   * Smooth color transitions for hover/highlight states
+   */
+  .select-option {
+    @apply p-md single-line-base;
+    @apply cursor-pointer transition-colors duration-150;
+    @apply flex items-center justify-between;
+    padding-inline: var(--px-16); /* Override p-md for horizontal padding */
+    padding-block: var(--px-12);  /* Override p-md for vertical padding */
+    color: var(--color-on-surface);
+    
+    &:hover {
+      background-color: var(--color-secondary);
+      color: var(--color-on-secondary);
+    }
+  }
+  
+  /* --- Option Highlighted State ---
+   * Applied via keyboard navigation (ArrowUp/ArrowDown)
+   * Same styling as hover for consistency
+   * Takes precedence over default state
+   */
+  .select-option--highlighted {
+    background-color: var(--color-secondary);
+    color: var(--color-on-secondary);
+  }
+  
+  /* --- Option Selected State ---
+   * Font weight indicates currently selected value
+   * Can be combined with highlighted state
+   */
+  .select-option--selected {
+    font-weight: 500; /* Medium weight for subtle emphasis */
+  }
+
+  /* +++ DATE INPUT Custom styling - Hide native calendar icon but keep functionality +++ */
+  .date-input-custom {
+    /* Force same height as other inputs to prevent layout shift */
+    line-height: var(--line-height-50);
+    height: auto;
+    min-height: fit-content;
+    /* Position relative so the calendar picker indicator positions relative to THIS input */
+    position: relative;
+    
+    /* Chrome/Safari date input styling */
+    &::-webkit-calendar-picker-indicator {
+      /* Make it invisible but CLICKABLE and cover the entire input area */
+      opacity: 0;
+      pointer-events: auto; /* MUST be clickable! */
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      cursor: pointer;
+    }
+    
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    /* Firefox date input styling */
+    &::-moz-calendar-picker-indicator {
+      /* Make it invisible but CLICKABLE and cover the entire input area */
+      opacity: 0;
+      pointer-events: auto; /* MUST be clickable! */
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      cursor: pointer;
+    }
+  }
+
+}
+/* === Dropdown Menu === */
+@layer components {
+  /* +++ ICON BORDERED - Circular frame for icons +++ */
+  /* Note: Sizing handled by @utility icon-bordered-* (see UTILITIES section) */
+  .icon-bordered {
+    @apply inline-flex items-center justify-center;
+    @apply text-primary;
+    @apply rounded-full;
+    @apply border border-primary;
+    @apply flex-shrink-0;
+    @apply icon-bordered-lg;
+  }
+
+  /* +++ DROPDOWN Container +++ */
+  .dropdown-container {
+    @apply relative;
+    /* width: min-content; */
+  }
+
+  .dropdown-trigger {
+    @apply cursor-pointer;
+
+    /* Hover ring for button wrapper (not avatar directly) 
+    &:hover button {
+      @apply text-primary bg-transparent;
+      @apply transition-all duration-200;
+    } */
+  }
+
+  /* +++ DROPDOWN Menu +++ */
+  .dropdown-menu {
+    @apply absolute top-full;
+    @apply mt-2;
+    @apply bg-surface;
+    @apply border border-outline-variant;
+    @apply shadow-md;
+    @apply z-50;
+    @apply flex flex-col gap-md;
+    padding: var(--px-8);
+    border-radius: var(--radius);
+    /* Animation */
+    animation: dropdown-slide-in 150ms ease-out;
+    width: min-content;
+    height: min-content;
+    white-space: nowrap;
+    box-shadow: 0px 10px 20px 0px rgba(0, 0, 0, 0.2);
+    overflow: var(--overflow-clip-fallback, clip);
+  }
+
+  .dropdown-align-left {
+    left: 0;
+  }
+
+  .dropdown-align-right {
+    right: 0;
+  }
+
+  @keyframes dropdown-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* +++ MENU ITEM +++ */
+  .menu-item-wrapper {
+    @apply w-full;
+  }
+
+  .menu-item-separator {
+    border-bottom: 1px solid var(--color-outline-variant);
+    padding-bottom: var(--px-8);
+    margin-bottom: var(--px-8);
+  }
+
+  .menu-item {
+    @apply w-full;
+    @apply flex items-center gap-sm;
+    @apply single-line-small text-on-surface;
+    @apply transition-colors duration-200;
+    @apply text-left;
+    @apply border-l-2 border-transparent;
+    padding: var(--px-4) var(--px-8);
+    /* width: min-content; */
+    white-space: nowrap;
+    height: 28px;
+    flex-direction: row;
+    justify-content: center;
+    align-content: center;
+    flex-wrap: nowrap;
+
+    &:hover:not(:disabled) {
+      @apply border-primary;
+    }
+
+    &:focus {
+      --tw-ring-color: color-mix(
+        in srgb,
+        var(--color-secondary),
+        transparent 80%
+      );
+      @apply focus-ring-base;
+    }
+
+    &:disabled {
+      @apply opacity-40 cursor-not-allowed;
+      pointer-events: none;
+    }
+
+    /* Disabled state for links (using aria-disabled) */
+    &[aria-disabled="true"] {
+      @apply opacity-40 cursor-not-allowed;
+      pointer-events: none;
+    }
+  }
+
+  .menu-item-danger {
+    @apply text-error;
+
+    &:hover:not(:disabled) {
+      @apply bg-error/20;
+    }
+
+    &:focus {
+      --tw-ring-color: color-mix(in srgb, var(--color-error), transparent 80%);
+      @apply focus-ring-base;
+    }
+  }
+
+  .menu-item-icon {
+    @apply flex items-center justify-center flex-shrink-0;
+  }
+
+  .menu-item-label {
+    @apply flex-grow;
+  }
+
+  .menu-item-trailing {
+    @apply flex items-center justify-center flex-shrink-0;
+    @apply ml-auto;
+  }
+}
+
 /* === BUTTON COMPONENT CLASSES === */
 @layer components {
   /* +++ BUTTON Component +++ */
@@ -1072,11 +1641,7 @@
       @apply bg-error/80;
     }
     &:focus-visible {
-      --tw-ring-color: color-mix(
-        in srgb,
-        var(--color-error),
-        transparent 80%
-      );
+      --tw-ring-color: color-mix(in srgb, var(--color-error), transparent 80%);
       @apply focus-ring-base;
     }
   }
@@ -1116,77 +1681,125 @@
   }
 }
 /* Custom animations for background */
-@keyframes spotlight-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(100px, -50px) scale(1.1); }
-  50% { transform: translate(-50px, 100px) scale(0.9); }
-  75% { transform: translate(50px, 50px) scale(1.05); }
-}
+@layer components {
+  @keyframes spotlight-1 {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    25% {
+      transform: translate(100px, -50px) scale(1.1);
+    }
+    50% {
+      transform: translate(-50px, 100px) scale(0.9);
+    }
+    75% {
+      transform: translate(50px, 50px) scale(1.05);
+    }
+  }
 
-@keyframes spotlight-2 {
-  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  33% { transform: translate(-80px, 60px) scale(1.2) rotate(120deg); }
-  66% { transform: translate(60px, -40px) scale(0.8) rotate(240deg); }
-}
+  @keyframes spotlight-2 {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+    33% {
+      transform: translate(-80px, 60px) scale(1.2) rotate(120deg);
+    }
+    66% {
+      transform: translate(60px, -40px) scale(0.8) rotate(240deg);
+    }
+  }
 
-@keyframes spotlight-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  20% { transform: translate(40px, -30px) scale(1.1); }
-  40% { transform: translate(-30px, 40px) scale(0.9); }
-  60% { transform: translate(60px, 20px) scale(1.05); }
-  80% { transform: translate(-20px, -40px) scale(0.95); }
-}
+  @keyframes spotlight-3 {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    20% {
+      transform: translate(40px, -30px) scale(1.1);
+    }
+    40% {
+      transform: translate(-30px, 40px) scale(0.9);
+    }
+    60% {
+      transform: translate(60px, 20px) scale(1.05);
+    }
+    80% {
+      transform: translate(-20px, -40px) scale(0.95);
+    }
+  }
 
-@keyframes spotlight-4 {
-  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  50% { transform: translate(-40px, 80px) scale(1.3) rotate(180deg); }
-}
+  @keyframes spotlight-4 {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+    50% {
+      transform: translate(-40px, 80px) scale(1.3) rotate(180deg);
+    }
+  }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(180deg); }
-}
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(180deg);
+    }
+  }
 
-@keyframes float-pin {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-8px) scale(1.1); }
-}
+  @keyframes float-pin {
+    0%,
+    100% {
+      transform: translateY(0px) scale(1);
+    }
+    50% {
+      transform: translateY(-8px) scale(1.1);
+    }
+  }
 
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
 
-.animate-spotlight-1 {
-  animation: spotlight-1 25s ease-in-out infinite;
-}
+  .animate-spotlight-1 {
+    animation: spotlight-1 25s ease-in-out infinite;
+  }
 
-.animate-spotlight-2 {
-  animation: spotlight-2 30s ease-in-out infinite;
-}
+  .animate-spotlight-2 {
+    animation: spotlight-2 30s ease-in-out infinite;
+  }
 
-.animate-spotlight-3 {
-  animation: spotlight-3 20s ease-in-out infinite;
-}
+  .animate-spotlight-3 {
+    animation: spotlight-3 20s ease-in-out infinite;
+  }
 
-.animate-spotlight-4 {
-  animation: spotlight-4 35s ease-in-out infinite;
-}
+  .animate-spotlight-4 {
+    animation: spotlight-4 35s ease-in-out infinite;
+  }
 
-.animate-float {
-  animation: float 15s ease-in-out infinite;
-}
+  .animate-float {
+    animation: float 15s ease-in-out infinite;
+  }
 
-.animate-spin-slow {
-  animation: spin-slow 20s linear infinite;
-}
+  .animate-spin-slow {
+    animation: spin-slow 20s linear infinite;
+  }
 
-.animate-float-pin {
-  animation: float-pin 3s ease-in-out infinite;
-}
+  .animate-float-pin {
+    animation: float-pin 3s ease-in-out infinite;
+  }
 
-.bg-gradient-radial {
-  background: radial-gradient(circle, var(--tw-gradient-stops));
+  .bg-gradient-radial {
+    background: radial-gradient(circle, var(--tw-gradient-stops));
+  }
 }
 @layer base {
   html {
@@ -1197,7 +1810,12 @@
     @apply font-base;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-header;
   }
 }

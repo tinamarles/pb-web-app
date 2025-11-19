@@ -218,5 +218,6 @@ export interface AuthUserContextType {
   user: User | null;
   logout: () => Promise<void>;
   isMemberUser: () => boolean; // NEW
+  refetchUser: () => Promise<void>; // NEW
   
 }

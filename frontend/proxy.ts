@@ -23,7 +23,7 @@ const DASHBOARD_ROUTES = {
 const PUBLIC_ROUTES = ['/login', '/signup', '/'];
 
 // Define the post-signup redirect page
-const PROFILE_SETUP_ROUTE = '/profile-setup';
+const PROFILE_SETUP_ROUTE = '/profile/setup';
 
 // Type guard to check if a role is a valid key of DASHBOARD_ROUTES
 function isDashboardRouteKey(role: string): role is keyof typeof DASHBOARD_ROUTES {
@@ -90,5 +90,5 @@ export async function proxy(request: NextRequest) {
 
 // Specify which paths the middleware should run on
 export const config = {
-  matcher: ['/', '/login', '/signup', '/dashboard/:path*', '/profile-setup', '/testavatar'],
+  matcher: ['/', '/login', '/signup', '/dashboard/:path*', '/profile/setup', '/testavatar'],
 };

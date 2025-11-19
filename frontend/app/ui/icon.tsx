@@ -7,7 +7,7 @@ import {
   BookUser,
   Users,
   Trophy,
-  Bell,
+  Bell, BellPlus,
   Search,
   Menu,
   X,
@@ -27,7 +27,7 @@ import {
   ChevronUp,
   ChevronRight,
   ChevronLeft,
-  ArrowRight,
+  ArrowRight, ArrowLeft,
   Star,
   Calendar,
   MapPin,
@@ -56,6 +56,9 @@ import {
   Link,
   NotebookPen,
   MessageCircleQuestionMark,
+  ShieldUser,
+  UserLock,
+  CalendarCog
 } from "lucide-react";
 
 import { 
@@ -68,7 +71,9 @@ import {
  import { 
   IoIosMail,
   IoIosLock,
-  IoMdPerson
+  IoMdPerson,
+  IoMdRadioButtonOn,
+  IoMdRadioButtonOff
  } from "react-icons/io";
 
 /**
@@ -100,9 +105,15 @@ const iconMap = {
   clubs: Goal,
   leagues: Sword,
   coaches: Rocket,
+  privacy: ShieldUser,
+  'account-settings': UserLock,
+  'add-notification': BellPlus,
 
   // Default fallback
   default: Star,
+  // Form Controls - Radio Buttons
+  'radio-checked': IoMdRadioButtonOn,
+  'radio-unchecked': IoMdRadioButtonOff,
 
   // Actions & Interface
   notifications: Bell,
@@ -144,6 +155,7 @@ const iconMap = {
 
   // Quick Actions
   bookcourt: CalendarClock,
+  'court-schedule': CalendarCog,
   matches: Swords,
 
   // Visibility & State
@@ -159,6 +171,7 @@ const iconMap = {
   chevronright: ChevronRight,
   chevronleft: ChevronLeft,
   arrowright: ArrowRight,
+  arrowleft: ArrowLeft,
 
   // Media Controls
   play: Play,
@@ -173,6 +186,7 @@ const iconMap = {
   sun: Sun,
   moon: Moon,
   palette: Palette,
+
 } as const;
 
 /**
@@ -183,7 +197,7 @@ export type IconName = keyof typeof iconMap;
 /**
  * Icon sizes - matches design system tokens
  */
-export type IconSize = "sm" | "md" | "lg" | "xl";
+export type IconSize = "sm" | "md" | "lg" | "xl" | "2xl";
 
 /**
  * Icon component props
@@ -197,6 +211,8 @@ export interface IconProps {
   size?: IconSize;
   /** Wrap icon in circular border frame - uses .icon-bordered class from globals.css */
   bordered?: boolean;
+  /** Click handler for interactive icons */
+  onClick?: () => void;
 }
 
 /**
@@ -222,6 +238,7 @@ export function Icon({
   className = "",
   size,
   bordered = false,
+  onClick
 }: IconProps) {
   // Smart normalization: convert any casing to lowercase for lookup
   const normalizedName = name.toLowerCase() as keyof typeof iconMap;
@@ -231,6 +248,32 @@ export function Icon({
   const sizeClass = size ? `icon-${size}` : "";
   const iconClasses = [sizeClass, className].filter(Boolean).join(" ");
 
+  // Check if this is a Material Design icon (from react-icons/md)
+  const isMaterialDesignIcon = normalizedName.startsWith('radio-');
+  
+  // Extract icon size from className for Material Design icons
+  // MD icons need numeric size prop, Lucide icons use CSS classes
+  let numericSize = 24; // default
+  if (isMaterialDesignIcon) {
+    // Check size prop first, then className
+    const sizeToCheck = size || iconClasses;
+    if (sizeToCheck.includes('icon-2xl')) numericSize = 32;
+    else if (sizeToCheck.includes('icon-xl')) numericSize = 24;
+    else if (sizeToCheck.includes('icon-lg')) numericSize = 20;
+    else if (sizeToCheck.includes('icon-md')) numericSize = 18;
+    else if (sizeToCheck.includes('icon-sm')) numericSize = 16;
+  }
+  
+  // Radio icons from react-icons have ~20x20 paths in 24x24 viewBox, so scale them up
+  // to fill the space and make focus rings tight (scale 1.2x: 20px → 24px)
+  const radioScaleClass = normalizedName.startsWith('radio-') ? 'scale-[1.2]' : '';
+  const finalIconClasses = [iconClasses, radioScaleClass].filter(Boolean).join(' ');
+  
+  // Material Design icons need size prop (number), Lucide icons use strokeWidth
+  const iconProps = isMaterialDesignIcon 
+    ? { size: numericSize, className: finalIconClasses }
+    : { strokeWidth: 1.5, className: iconClasses };
+  
   // Safety check - fallback to a default icon if the component is undefined
   if (!IconComponent) {
     console.warn(
@@ -242,11 +285,20 @@ export function Icon({
       // const borderedClass = size ? `icon-bordered icon-bordered-${size}` : 'icon-bordered';
       const borderedClass = "icon-bordered";
       return (
-        <div className={borderedClass}>
+        <div className={borderedClass} onClick={onClick}>
           <FallbackIcon strokeWidth={1.5} className={iconClasses} />
         </div>
       );
     }
+    // If onClick provided, wrap in clickable container
+    if (onClick) {
+      return (
+        <span onClick={onClick} className="inline-flex cursor-pointer" role="button" tabIndex={0}>
+          <FallbackIcon strokeWidth={1.5} className={iconClasses} />
+        </span>
+      );
+    }
+
     return <FallbackIcon strokeWidth={1.5} className={iconClasses} />;
   }
 
@@ -257,11 +309,20 @@ export function Icon({
       ? `icon-bordered icon-bordered-${size}`
       : "icon-bordered";
     return (
-      <div className={borderedClass}>
-        <IconComponent strokeWidth={1.5} className={iconClasses} />
+      <div className={borderedClass} onClick={onClick}>
+        <IconComponent {...iconProps} />
       </div>
     );
   }
 
-  return <IconComponent strokeWidth={1.5} className={iconClasses} />;
+  // If onClick provided, wrap in clickable container for better click handling
+  if (onClick) {
+    return (
+      <span onClick={onClick} className="inline-flex cursor-pointer" role="button" tabIndex={0}>
+        <IconComponent {...iconProps} />
+      </span>
+    );
+  }
+
+  return <IconComponent {...iconProps} />;
 }

@@ -3,6 +3,7 @@
 
 import { CldUploadWidget } from "next-cloudinary";
 import { useRef } from "react";
+import { MenuItem } from "@/app/ui";
 
 interface AvatarUploaderProps {
   onUploadSuccess: (url: string) => void;
@@ -34,18 +35,17 @@ export function AvatarUploader({ onUploadSuccess, onWidgetClose }: AvatarUploade
       }}
 
       options={{
-        singleUploadAutoClose: false, // Let user click "Done" manually
+        singleUploadAutoClose: false,
       }}
     >
       {({ open }) => {
         return (
-          <button
-            type="button"
-            onClick={() => open()}
-            className="rounded-md bg-indigo-600 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            Upload Avatar
-          </button>
+          <MenuItem 
+            label="Upload Image" 
+            icon="upload" 
+            iconBordered={false}
+            onClick={() => open()} 
+          />
         );
       }}
     </CldUploadWidget>

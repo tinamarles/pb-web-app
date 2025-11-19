@@ -131,7 +131,9 @@ export const Module = memo(function Module({
   return (
     <div className="module-container">
       <Header {...headerProps} />
-      {children}
+      <div className="flex-1">
+        {children}
+      </div>
       <Footer />
     </div>
   );

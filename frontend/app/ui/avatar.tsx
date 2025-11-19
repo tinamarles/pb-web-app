@@ -18,9 +18,20 @@ import Image from "next/image";
  * <Avatar name="John Doe" /> // Shows "JD"
  * <Avatar /> // Shows generic icon
  */
+
+// Map size prop to pixel values (must match your globals.css!)  
+const AVATAR_SIZES = {   
+  sm: 40, // Match your --avatar-sm in CSS  
+  md: 48, // Match your --avatar-md in CSS  
+  lg: 64, // Match your --avatar-lg in CSS  
+  xl: 96, // Match your --avatar-xl in CSS  
+} as const;
+
+export type AvatarSize = keyof typeof AVATAR_SIZES;
+
 export interface AvatarProps {
   /** Avatar size variants */
-  size?: "xl" | "lg" | "md" | "sm";
+  size?: AvatarSize;
   /** Avatar image source URL - takes priority if provided */
   src?: string;
   /** User name for initials generation - used if no src */
@@ -30,13 +41,17 @@ export interface AvatarProps {
 }
 
 export const Avatar = memo(function Avatar({
-  size = "lg",
+  size = "sm",
   src,
   name,
   className = "",
 }: AvatarProps) {
+  
+  const pixelSize = AVATAR_SIZES[size]; // ← Get numeric value!
+  
   // Clean size class mapping - all styling handled in CSS
   const avatarSizeClass = `avatar-${size}`;
+
 
   // Generate initials from name (2 characters max)
   const getInitials = (fullName: string): string => {
@@ -58,9 +73,11 @@ export const Avatar = memo(function Avatar({
     if (src) {
       return (
         <Image
+          width={pixelSize}
+          height={pixelSize}
           src={src}
           alt={name ? `${name}'s avatar` : "User avatar"}
-          className="w-full h-full object-cover"
+          className="object-cover"
         />
       );
     }

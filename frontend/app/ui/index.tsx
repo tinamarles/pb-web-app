@@ -10,9 +10,11 @@ export {
 } from "./button";
 export { Icon, type IconProps, type IconName, type IconSize } from "./icon";
 export { Logo, type LogoProps } from "./logo";
-//export { CustomSelect, type CustomSelectProps } from './customSelect';
-//export { FormField, type FormFieldProps } from './formField';
-export { Avatar, type AvatarProps } from "./avatar";
+export { Badge, type BadgeProps, type BadgeVariant } from "./badge";
+export { Sidebar, type SidebarProps, type SidebarItem } from "./sidebar";
+export { CustomSelect, type CustomSelectProps } from "./customSelect";
+export { FormField, type FormFieldProps } from "./formField";
+export { Avatar, type AvatarProps, type AvatarSize } from "./avatar";
 //export { UploadImageButton, type UploadImageButtonProps } from './uploadImageButton';
 //export { AvatarWithUpload, type AvatarWithUploadProps } from './avatarWithUpload';
 export { Search, type SearchProps } from "./search";
@@ -22,7 +24,7 @@ export { Search, type SearchProps } from "./search";
 //export { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 
 //export { ThemeSelector, type ThemeSelectorProps } from './themeSelector';
-export { ThemeToggle } from './ThemeToggle';
+export { ThemeToggle } from "./ThemeToggle";
 export { Dropdown, type DropdownProps } from "./dropdown";
 export { MenuItem, type MenuItemProps } from "./menuItem";
 

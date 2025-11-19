@@ -28,6 +28,35 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
   const router = useRouter();
   const pathname = usePathname(); // Get the current path
 
+  // EXTRACTED fetchUser function using useCallback
+  const fetchUser = useCallback(async () => {
+    const res = await fetch("/api/auth/user");
+    
+    if (res.ok) {
+      // The API response contains all keys in snake_case format (eg. {'first_name': 'Sam'})
+      // that need to be converted to camelCase keys to fit standard
+      // JavaScript conventions
+      const snakeCaseData = await res.json();
+      // convert the snake_case keys of Django into camelCase
+      const camelCaseData = snakeToCamel(snakeCaseData);
+      // Using typeguard check if camelCaseData has the correct format
+      let userData: User | null = null;
+      if (isUser(camelCaseData)) {
+        userData = camelCaseData;
+      } else {
+        // Handle the case where the data is not a User
+        console.error("Received data does not conform to User interface.");
+      }
+      setUser(userData);
+    } else {
+      console.log('fetch to api/auth/user did not return ok', res);
+      setUser(null);
+      if (PROTECTED_ROUTES.some((route) => pathname.startsWith(route))) {
+        router.push("/");
+      }
+    }
+  }, [pathname, router]); // Dependencies for useCallback
+
   // NEW - Wrapper for isMemberUser to use with context
   // This wraps existing isMemberUser type guard so it can be called
   // without parameters (uses the current user from context)
@@ -36,6 +65,7 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
     return isMemberUserGuard(user); // Calls existing type guard from definitions
   }, [user]);
 
+  /*
   useEffect(() => {
     const fetchUser = async () => {
       const res = await fetch("/api/auth/user");
@@ -67,6 +97,12 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
     };
     fetchUser(); // this will load the current authorized user's data into the context
   }, [pathname, router]);
+  */
+
+  // Initial fetch on mount
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -75,7 +111,7 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
   };
 
   return (
-    <AuthUserContext.Provider value={{ user, logout, isMemberUser }}>
+    <AuthUserContext.Provider value={{ user, logout, isMemberUser, refetchUser: fetchUser }}>
       {children}
     </AuthUserContext.Provider>
   );

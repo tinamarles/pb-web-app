@@ -1,4 +1,4 @@
-"use client";
+'use client';
 // Button Component frontend/app/ui/button.tsx
 
 import { Slot } from "@radix-ui/react-slot";

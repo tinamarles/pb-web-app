@@ -73,6 +73,7 @@ export const Header = memo(function Header({
 
   const hasLinks = links.length > 0;
   const hasButtons = buttons.length > 0;
+  const hasNavigationButtons = navigationButtons.length > 0;
   const hasRightIcons =
     showSearch || showHelp || showNotifications || showAvatar;
 
@@ -234,7 +235,7 @@ export const Header = memo(function Header({
     const unreadCount = user?.unreadNotifications || 0;
     const hasUnread = unreadCount > 0;
     */
-    const hasUnread = 0;
+    const hasUnread = false;
     const unreadCount = 0;
 
     return (
@@ -304,19 +305,21 @@ export const Header = memo(function Header({
 
       {/* Links Container containing either Links or a Title */}
       <div className="header__links">
-        {/* Title - not currently used*/}
+        {/* Title - Mobile only, centered */}
         {title && (
-          <div className="header__links__container">
-            <h1 className="display-sm emphasized">{title}</h1>
+          <div className="header__title">
+            <h1 className="">
+              {title}
+            </h1>
           </div>
         )}
-
+        
         {/* Navigation Links - Desktop */}
         {hasLinks && (
           <nav className="header__links__container">
             {renderLinks()}
           </nav>
-        )}
+        )}      
       </div>
 
       {/* Right Side Icons Container */}
@@ -346,17 +349,21 @@ export const Header = memo(function Header({
       )}
 
       {/* Action Buttons - Desktop - show alongside right icons OR alone */}
-      {hasButtons && <div className="header__actions">{renderButtons()}</div>}
+      {hasButtons && (
+        <div className="header__actions">
+          {renderButtons()}
+        </div>
+      )}
 
       {/* Navigation Buttons - Desktop - show alongside right icons OR alone */}
-      {navigationButtons.length && (
+      {navigationButtons && (
         <div className="header__actions">
           {renderNavigationButtons()}
         </div>
       )}
       
       {/* Mobile Hamburger Menu Button */}
-      {(hasLinks || navigationButtons.length) && (
+      {(hasLinks || navigationButtons) && (
         <div className="header__hamburger">
           <Button
             variant="subtle"
@@ -371,11 +378,13 @@ export const Header = memo(function Header({
 
       {/* Mobile Actions (when no links) */}
       {!hasLinks && hasButtons && (
-        <div className="lg:hidden ml-auto">{renderButtons()}</div>
+        <div className="lg:hidden ml-auto">
+          {renderButtons()}
+        </div>
       )}
 
       {/* Mobile Navigation Dropdown */}
-      {(hasLinks || navigationButtons.length) && isMenuOpen && (
+      {(hasLinks || navigationButtons) && isMenuOpen && (
         <div className="header__dropdown">
           {/* Mobile Search - uses .header__search (CSS makes it visible + centered in dropdown) */}
           {showSearch && (
@@ -391,7 +400,7 @@ export const Header = memo(function Header({
           )}
 
           {/* Mobile Buttons (both Nav buttons and Action buttons) - uses same .header__actions (CSS makes it flex-col centered in dropdown) */}
-          {(navigationButtons.length > 0 || hasButtons) && (
+          {(navigationButtons || hasButtons) && (
             <div className="header__actions">
               {renderNavigationButtons()}
               {renderButtons()}

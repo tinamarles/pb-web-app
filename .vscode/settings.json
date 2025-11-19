@@ -2,12 +2,25 @@
   "python-envs.defaultEnvManager": "ms-python.python:system",
   "python-envs.pythonProjects": [],
   "cSpell.words": [
+    "arrowleft",
     "arrowright",
     "behaviour",
+    "bookcourt",
     "Borel",
     "chevrondown",
+    "chevronleft",
+    "chevronright",
+    "chevronup",
     "emailfilled",
     "hrefs",
     "pickleball"
-  ]
+  ],
+  "workbench.colorCustomizations": {
+    "editorBracketHighlight.foreground1": "#FFD700",
+    "editorBracketHighlight.foreground2": "#DA70D6",
+    "editorBracketHighlight.foreground3": "#87CEFA",
+    "editorBracketHighlight.foreground4": "#FF6347",
+    "editorBracketHighlight.foreground5": "#90EE90",
+    "editorBracketHighlight.foreground6": "#FFA500"
+  }
 }

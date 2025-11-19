@@ -153,7 +153,7 @@ export const apiResponseModule: ModuleConfig[] = [
   {
     id: 2,
     type: "dashboard",
-    title: "Dashboard",
+    title: null,
     showLogo: true,
     navigation: [],
     search: false,
@@ -190,20 +190,86 @@ export const apiResponseModule: ModuleConfig[] = [
   {
     id: 4,
     type: "profile",
-    title: "My Profile",
+    title: "Profile",
     showLogo: true,
-    navigation: [],
-    search: false,
-    actions: [
+    // showBack: true,  // Show back button on mobile/tablet instead of logo
+    // backHref: "/more", // Navigate back to More Menu
+    navigation: [
       {
-        id: "signout",
-        label: "Sign Out",
-        variant: "subtle",
-        size: "md",
-        icon: "signout",
-        onClick: "handleSignOut",
+        icon: "dashboard",
+        label: "Dashboard",
+        url: "/dashboard",
+      },
+      {
+        icon: "sparkles",
+        label: "Resources",
+        url: "",
+        submenu: [
+          {
+            icon: "clubs",
+            label: "Clubs",
+            url: "/clubs",
+          },
+          {
+            icon: "courts",
+            label: "Courts",
+            url: "/courts",
+          },
+          {
+            icon: "leagues",
+            label: "Leagues",
+            url: "/leagues",
+          },
+          {
+            icon: "coaches",
+            label: "Coaches",
+            url: "/coaches",
+          },
+          {
+            icon: "library",
+            label: "Drill Library",
+            url: "/drills",
+          },
+          {
+            icon: "links",
+            label: "Useful Links",
+            url: "/links",
+          },
+        ],
+      },
+      {
+        icon: "zap",
+        label: "Quick Actions",
+        url: "",
+        submenu: [
+          {
+            icon: "calendar",
+            label: "View Your Schedule",
+            url: "/schedule",
+          },
+          {
+            icon: "book-court",
+            label: "Book a Court",
+            url: "/book_court",
+          },
+          {
+            icon: "matches",
+            label: "Record a Result",
+            url: "/add_result",
+          },
+          {
+            icon: "send",
+            label: "Contact a Member",
+            url: "/contact_member",
+          },
+        ],
       },
     ],
+    search: true,
+    help: true,
+    notifications: true,
+    avatar: true,
+    actions: [],
   },
   {
     id: 5,
@@ -339,11 +405,7 @@ export const apiResponseModule: ModuleConfig[] = [
     title: null,
     showLogo: true,
     navigation: [
-      {
-        icon: "dashboard",
-        label: "Dashboard",
-        url: "/dashboard",
-      },
+      
       {
         icon: "sparkles",
         label: "Resources",

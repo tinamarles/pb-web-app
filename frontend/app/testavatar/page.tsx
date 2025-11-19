@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { AvatarUploader } from "../ui/avatar-uploader";
 import { toast } from "sonner";
+import { Button } from "@/app/ui";
+import Link from "next/link";
+
 
 export default function TestAvatar() {
   const { user } = useAuth();
@@ -67,6 +70,11 @@ export default function TestAvatar() {
       <h1 className="text-4xl font-bold my-12">
         Welcome back, {user?.firstName}
       </h1>
+      <Button variant="filled" size="md" icon="dashboard" asChild>
+        <Link href="/">Dashboard</Link>
+      </Button>
+
+      
       <div className="flex flex-col items-center space-y-4">
         {user?.profilePictureUrl ? (
           <Image
