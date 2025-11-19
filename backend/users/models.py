@@ -23,6 +23,7 @@ class CustomUser(AbstractUser):
     work_phone = models.CharField(max_length=20, blank=True, null=True)
     dob = models.DateField(null=True, blank=True)
     gender = models.IntegerField(choices=Gender, default=Gender.UNSPECIFIED)
+    bio = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

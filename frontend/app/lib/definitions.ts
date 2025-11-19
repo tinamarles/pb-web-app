@@ -150,6 +150,7 @@ export interface ClubMembership {
     'work_phone',
     'dob',
     'gender',
+    'bio',
 */
 export interface PublicUser {
   id?: number;
@@ -220,5 +221,4 @@ export interface AuthUserContextType {
   logout: () => Promise<void>;
   isMemberUser: () => boolean; // NEW
   refetchUser: () => Promise<void>; // NEW
-  
 }

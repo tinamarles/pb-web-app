@@ -74,6 +74,7 @@ class CustomUserUpdateSerializer(serializers.ModelSerializer):
                   'work_phone',
                   'dob',
                   'gender',
+                  'bio',
                 )
         read_only_fields = ('username', )
 
@@ -133,5 +134,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
                   'work_phone',
                   'dob',
                   'gender',
+                  'bio',
                   ]
         read_only_fields = ['email']
