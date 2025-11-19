@@ -82,6 +82,7 @@ export function ProfileHeader () {
             size="xl"
             src={user.profilePictureUrl ?? undefined}
             name={`${user.firstName} ${user.lastName}`}
+            className="avatar-container"
         />
         <div className="flex-1 flex flex-col justify-between h-[64px] sm:h-[96px]">
             <h1 className="title-lg emphasized">

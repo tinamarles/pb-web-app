@@ -11,7 +11,7 @@
 
 // Type for creating handlers with dependencies (user, router, etc.)
 export type HandlerDependencies = { 
-  isMemberUser?: () => boolean; // Function to check if user has club affiliations
+  isMemberUser?: boolean; 
 };
 
 // Storage for injected dependencies
@@ -111,9 +111,9 @@ export const actionHandlers: Record<string, ActionHandler> = {
   handleNavigateToDashboard: () => {
     console.log('📊 Navigate to Dashboard');
     
-    // Check if we have the isMemberUser function (injected from Providers)
-    if (dependencies.isMemberUser) {
-      const isMember = dependencies.isMemberUser();
+    // Check if we have the isMemberUser value (injected from Providers)
+    if (dependencies.isMemberUser !== undefined) {
+      const isMember = dependencies.isMemberUser; // ← Changed: Now it's a value, not a function call
       const route = isMember ? '/dashboard/member' : '/dashboard/public';
       
       console.log(`🎯 User type: ${isMember ? 'Member' : 'Public'} → Navigating to: ${route}`);
@@ -123,7 +123,7 @@ export const actionHandlers: Record<string, ActionHandler> = {
       window.location.href = route;
     } else {
       // Fallback if dependency not injected yet
-      console.warn('⚠️ isMemberUser function not available. Make sure Providers.tsx is calling setHandlerDependencies()');
+      console.warn('⚠️ isMemberUser value not available. Make sure Providers.tsx is calling setHandlerDependencies()');
       window.location.href = '/dashboard';
     }
   },

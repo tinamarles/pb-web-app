@@ -6,9 +6,15 @@ import {
   createContext,
   useContext,
   ReactNode,
+  useMemo,
   useCallback, // NEW Added for isMemberUser wrapper
 } from "react";
-import { User, AuthUserContextType, isUser, isMemberUser as isMemberUserGuard } from "@/app/lib/definitions"; // Import your defined User type
+import {
+  User,
+  AuthUserContextType,
+  isUser,
+  isMemberUser as isMemberUserGuard,
+} from "@/app/lib/definitions"; // Import your defined User type
 import { snakeToCamel } from "@/app/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -31,7 +37,7 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
   // EXTRACTED fetchUser function using useCallback
   const fetchUser = useCallback(async () => {
     const res = await fetch("/api/auth/user");
-    
+
     if (res.ok) {
       // The API response contains all keys in snake_case format (eg. {'first_name': 'Sam'})
       // that need to be converted to camelCase keys to fit standard
@@ -49,7 +55,7 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
       }
       setUser(userData);
     } else {
-      console.log('fetch to api/auth/user did not return ok', res);
+      console.log("fetch to api/auth/user did not return ok", res);
       setUser(null);
       if (PROTECTED_ROUTES.some((route) => pathname.startsWith(route))) {
         router.push("/");
@@ -60,7 +66,7 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
   // NEW - Wrapper for isMemberUser to use with context
   // This wraps existing isMemberUser type guard so it can be called
   // without parameters (uses the current user from context)
-  const isMemberUser = useCallback((): boolean => {
+  const isMemberUser = useMemo(() => {
     if (!user) return false;
     return isMemberUserGuard(user); // Calls existing type guard from definitions
   }, [user]);
@@ -107,11 +113,13 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
-    router.push('/');
+    router.push("/");
   };
 
   return (
-    <AuthUserContext.Provider value={{ user, logout, isMemberUser, refetchUser: fetchUser }}>
+    <AuthUserContext.Provider
+      value={{ user, logout, isMemberUser, refetchUser: fetchUser }}
+    >
       {children}
     </AuthUserContext.Provider>
   );

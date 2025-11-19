@@ -198,7 +198,7 @@ export interface ClubFormValues {
 
 // Custom type guard to determine if the user is a member
 export function isMemberUser(user: User): user is MemberUser {
-  return "club_memberships" in user;
+  return "clubMemberships" in user;
 }
 
 export function isUser(data: unknown): data is User {
@@ -219,6 +219,6 @@ export function isUser(data: unknown): data is User {
 export interface AuthUserContextType {
   user: User | null;
   logout: () => Promise<void>;
-  isMemberUser: () => boolean; // NEW
+  isMemberUser: boolean; // NEW
   refetchUser: () => Promise<void>; // NEW
 }

@@ -269,6 +269,7 @@ export const Header = memo(function Header({
           >
             <Avatar
               size="sm"
+              className="avatar-container"
               src={user.profilePictureUrl || undefined}
               name={
                 user.firstName && user.lastName
