@@ -165,6 +165,7 @@ export interface PublicUser {
   workPhone?: string | null;
   dob?: string | null;
   gender?: 1 | 2 | 3;
+  bio?: string | null;
 }
 
 export interface MemberUser extends PublicUser {

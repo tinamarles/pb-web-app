@@ -22,22 +22,22 @@ export const PROFILE_NAV_ITEMS: NavItem[] = [
   { 
     label: 'Memberships', 
     href: '/profile/memberships', 
-    icon: 'Users' 
+    icon: 'memberships' 
   },
   { 
     label: 'Performance', 
     href: '/profile/performance', 
-    icon: 'TrendingUp' 
+    icon: 'performance' 
   },
   { 
     label: 'Community', 
     href: '/profile/community', 
-    icon: 'MessageSquare' 
+    icon: 'community' 
   },
   { 
-    label: 'Blog', 
+    label: 'Personal Blog', 
     href: '/profile/blog', 
-    icon: 'FileText' 
+    icon: 'blog' 
   },
   { 
     label: 'Settings', 

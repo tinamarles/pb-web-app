@@ -77,7 +77,7 @@ export function ProfileForm({
     phoneNumber: user?.mobilePhone || "",
     skillLevel: user?.skillLevel ? String(user.skillLevel) : "", // ← Convert number to string
     isCertifiedInstructor: user?.isCoach || false,
-    bio: "",
+    bio: user?.bio || "",
   });
 
   // Sync formData with user data when user loads
@@ -93,7 +93,7 @@ export function ProfileForm({
         phoneNumber: user.mobilePhone || '',
         skillLevel: user.skillLevel ? String(user.skillLevel) : '',  // ← Convert number to string
         isCertifiedInstructor: user.isCoach || false,
-        bio: '',
+        bio: user.bio || '',
       });
     }
   }, [user]);
