@@ -2,7 +2,6 @@
 
 import { Module } from "@/app/shared";
 import { ProfileHeader } from "@/app/components/ProfileHeader";
-import { ProfileSidebar } from "@/app/components/ProfileSidebar";
 
 export default function SidebarLayout({
   children,
@@ -15,7 +14,7 @@ export default function SidebarLayout({
     <Module type='profile'>
       <main>
         <div className='page'>
-          <ProfileSidebar />
+          {sidebar}
           <div className='page__content'>
             <ProfileHeader />
             {children}

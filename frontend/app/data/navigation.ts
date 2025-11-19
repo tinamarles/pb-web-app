@@ -16,7 +16,7 @@ export interface NavigationConfig {
 export const PROFILE_NAV_ITEMS: NavItem[] = [
   { 
     label: 'Profile', 
-    href: '/profile', 
+    href: '/profile/details', 
     icon: 'User' 
   },
   { 
