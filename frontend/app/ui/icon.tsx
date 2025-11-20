@@ -58,7 +58,8 @@ import {
   MessageCircleQuestionMark,
   ShieldUser,
   UserLock,
-  CalendarCog
+  CalendarCog,
+  Wrench
 } from "lucide-react";
 
 import { 
@@ -106,6 +107,7 @@ const iconMap = {
   leagues: Sword,
   coaches: Rocket,
   privacy: ShieldUser,
+  preferences: Wrench,
   'account-settings': UserLock,
   'add-notification': BellPlus,
 
@@ -273,7 +275,19 @@ export function Icon({
   const iconProps = isMaterialDesignIcon 
     ? { size: numericSize, className: finalIconClasses }
     : { strokeWidth: 1.5, className: iconClasses };
-  
+  // Helper function at the top of the component (or outside it)
+  const getBorderedClasses = (size?: IconSize): string => {
+    if (!size) return 'icon-bordered';
+    
+    switch (size) {
+      case 'sm': return 'icon-bordered icon-bordered-sm';
+      case 'md': return 'icon-bordered icon-bordered-md';
+      case 'lg': return 'icon-bordered icon-bordered-lg';
+      case 'xl': return 'icon-bordered icon-bordered-xl';
+      case '2xl': return 'icon-bordered icon-bordered-2xl';
+      default: return 'icon-bordered';
+    }
+  };
   // Safety check - fallback to a default icon if the component is undefined
   if (!IconComponent) {
     console.warn(
@@ -283,9 +297,10 @@ export function Icon({
 
     if (bordered) {
       // const borderedClass = size ? `icon-bordered icon-bordered-${size}` : 'icon-bordered';
-      const borderedClass = "icon-bordered";
+      const borderedClass = getBorderedClasses(size);
+      const finalBorderedClass = [borderedClass, className].filter(Boolean).join(' ');
       return (
-        <div className={borderedClass} onClick={onClick}>
+        <div className={finalBorderedClass} onClick={onClick}>
           <FallbackIcon strokeWidth={1.5} className={iconClasses} />
         </div>
       );
@@ -305,11 +320,10 @@ export function Icon({
   // Render with border frame if requested
   if (bordered) {
     // Apply size-specific border frame class if size prop provided
-    const borderedClass = size
-      ? `icon-bordered icon-bordered-${size}`
-      : "icon-bordered";
+    const borderedClass = getBorderedClasses(size);
+    const finalBorderedClass = [borderedClass, className].filter(Boolean).join(' ');
     return (
-      <div className={borderedClass} onClick={onClick}>
+      <div className={finalBorderedClass} onClick={onClick}>
         <IconComponent {...iconProps} />
       </div>
     );

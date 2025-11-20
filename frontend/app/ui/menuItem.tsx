@@ -170,8 +170,8 @@ export function MenuItem({
       <>
         {/* Leading Icon with Badge/Alert positioned on it */}
         {icon && (
-          <div className="sidebar__icon relative">
-            <Icon name={icon} className="icon-xl" />
+          <div className="relative">
+            <Icon name={icon} size="xl" bordered={iconBordered} />
             {/* Badge (notification count) - positioned on icon */}
             {badgeCount !== undefined && badgeCount > 0 && (
               <span className="sidebar__badge">{badgeCount}</span>
@@ -199,8 +199,8 @@ export function MenuItem({
       <>
         {/* Leading Icon with Badge/Alert positioned on it */}
         {icon && (
-          <div className="more-menu__item-icon relative">
-            <Icon name={icon} className="icon-md" />
+          <div className="relative">
+            <Icon name={icon} size="xl" bordered={iconBordered} />
             {/* Badge (notification count) - positioned on icon */}
             {badgeCount !== undefined && badgeCount > 0 && (
               <span className="more-menu__badge">{badgeCount}</span>
@@ -227,8 +227,8 @@ export function MenuItem({
       // DROPDOWN CONTEXT: icon + label + optional trailingItem
       <>
         {icon && (
-          <div className="menu-item-icon">
-            <Icon name={icon} size="lg" bordered={iconBordered} />
+          <div className="relative">
+            <Icon name={icon} size="lg" bordered={iconBordered}/>
           </div>
         )}
         <span className="menu-item-label">{label}</span>

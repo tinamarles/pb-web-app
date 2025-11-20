@@ -1,10 +1,8 @@
-
+import { ProfileForm } from "@/app/components/ProfileForm";
 
 export default function ProfileSetupPage() {
  
   return (
-    <div>
-      <h2 className="title-lg">PROFILE SETUP PAGE</h2>
-    </div>
+    <ProfileForm mode="setup" />
   );
 }

@@ -238,11 +238,12 @@
   --icon-xl: var(--px-24);
   --icon-2xl: var(--px-32);
 
-  /* Icon bordered sizes - icon size + 8px padding (var(--px-8)) for circular frame */
-  --icon-bordered-sm: var(--px-24); /* 1rem + 0.5rem = 1.5rem (24px) */
-  --icon-bordered-md: var(--px-26); /* 1.125rem + 0.5rem = 1.625rem (26px) */
-  --icon-bordered-lg: var(--px-28); /* 1.25rem + 0.5rem = 1.75rem (28px) */
-  --icon-bordered-xl: var(--px-32); /* 1.5rem + 0.5rem = 2rem (32px) */
+  /* Icon bordered sizes - icon size + 4px padding (var(--px-4)) for circular frame */
+  --icon-bordered-sm: var(--px-24); 
+  --icon-bordered-md: var(--px-28); 
+  --icon-bordered-lg: var(--px-32); 
+  --icon-bordered-xl: var(--px-40); 
+  --icon-bordered-2xl: var(--px-48);
 
   --icon-av-xl: var(--px-60); /* icon for generic avatar-xl */
   --icon-av-lg: var(--px-40); /* icon for generic avatar-lg */
@@ -570,7 +571,6 @@
 @utility strong {
   @apply font-bold;
 }
-
 @utility focus-ring-base {
   outline: 2px solid transparent;
   outline-offset: 2px;
@@ -1154,7 +1154,7 @@
 
     /* Active state */
     &.active {
-      @apply text-primary;
+      @apply text-primary border-t-2 border-primary;
     }
 
     /* Hover/focus states */
@@ -1227,6 +1227,7 @@
     flex-direction: column;
     align-items: center;
     padding: var(--px-20);
+    @apply gap-lg;
   }
 
   /* Profile Card at Top */
@@ -1623,7 +1624,7 @@
   }
 
 }
-/* === Dropdown Menu === */
+/* === ICON component === */
 @layer components {
   /* +++ ICON BORDERED - Circular frame for icons +++ */
   /* Note: Sizing handled by @utility icon-bordered-* (see UTILITIES section) */
@@ -1633,8 +1634,11 @@
     @apply rounded-full;
     @apply border border-primary;
     @apply flex-shrink-0;
-    @apply icon-bordered-lg;
+    /* @apply icon-bordered-xl; */
   }
+}
+/* === Dropdown Menu === */
+@layer components {
 
   /* +++ DROPDOWN Container +++ */
   .dropdown-container {
@@ -1769,7 +1773,63 @@
     @apply ml-auto;
   }
 }
+/* === AVATAR COMPONENT CLASSES === */
+@layer components {
+  /* Avatar display styles - ONLY for avatar display */
+  .avatar-xl {
+    @apply av-xl avatar-container;
+    @apply transition-all duration-200;
+    
+    .avatar-text {
+      @apply display-md text-on-primary;
+    }
+    
+    .avatar-icon {
+      @apply icon-av-xl;
+      @apply text-on-primary;
+    }
+  }
 
+  .avatar-lg {
+    @apply av-lg avatar-container;
+    @apply transition-all duration-200;
+    
+    .avatar-text {
+      @apply headline-md text-on-primary;
+    }
+    
+    .avatar-icon {
+      @apply icon-av-lg;
+      @apply text-on-primary;
+    }
+  }
+
+  .avatar-md {
+    @apply av-md avatar-container;
+    @apply transition-all duration-200;
+    
+    .avatar-text {
+      @apply title-lg text-on-primary;
+    }
+    
+    .avatar-icon {
+      @apply icon-av-md text-on-primary;
+    }
+  }
+
+  .avatar-sm {
+    @apply av-sm avatar-container;
+    @apply transition-all duration-200;
+    
+    .avatar-text {
+      @apply title-sm text-on-primary;
+    }
+    
+    .avatar-icon {
+      @apply icon-av-sm text-on-primary;
+    }
+  }
+}
 /* === BUTTON COMPONENT CLASSES === */
 @layer components {
   /* +++ BUTTON Component +++ */
@@ -1908,6 +1968,7 @@
     }
   }
 }
+
 /* Custom animations for background */
 @layer components {
   @keyframes spotlight-1 {

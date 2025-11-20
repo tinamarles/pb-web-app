@@ -544,7 +544,7 @@ export const apiResponseModule: ModuleConfig[] = [
   },
   {
     id: 9,
-    type: "moremenu",
+    type: "more",
     title: "Menu",
     showLogo: true,
     showBack: false,

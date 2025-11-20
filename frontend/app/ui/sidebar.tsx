@@ -5,12 +5,12 @@
 // Purpose: Unified sidebar navigation for desktop and tablet layouts
 // ========================
 
-import { MenuItem } from './menuItem';
+import { MenuItem } from "./menuItem";
 
 export interface SidebarItem {
   icon: string;
   label: string;
-  href: string;
+  href?: string | undefined;
   active?: boolean;
   badgeCount?: number;
   showAlert?: boolean;
@@ -22,7 +22,7 @@ export interface SidebarProps {
   className?: string;
 }
 
-export function Sidebar({ items, className = '' }: SidebarProps) {
+export function Sidebar({ items, className = "" }: SidebarProps) {
   return (
     <aside className={`sidebar ${className}`}>
       <nav>

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { FormField, Button, Icon } from "@/app/ui";
 import { useAuth } from "@/app/providers/AuthUserProvider";
 import { toast } from "sonner";
@@ -61,7 +62,8 @@ export function ProfileForm({
 }: ProfileFormProps) {
 
   const { user } = useAuth();
-  console.log('Profile Form User Name:', user?.firstName);
+  const router = useRouter();
+
   const [isSaving, setIsSaving] = useState(false);
   useAutofillFix;
 
@@ -153,6 +155,10 @@ export function ProfileForm({
 
       // 3. ✅ SUCCESS! Show feedback
       toast.success("Profile updated successfully!");
+
+      if (mode === 'setup') {
+        router.push('/dashboard/public');
+      }
 
       // 4. Notify parent AFTER successful save (no false promises!)
       if (onSaveSuccess) {
