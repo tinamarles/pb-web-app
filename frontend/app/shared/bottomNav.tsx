@@ -1,6 +1,7 @@
 'use client';
 
-import { Button, Icon, Avatar } from '@/app/ui';
+import { useState, useRef, useEffect } from 'react';
+import { Button, Icon, Avatar, MenuItem } from '@/app/ui';
 import Link from 'next/link';
 import { useAuth } from '@/app/providers/AuthUserProvider';
 
@@ -32,13 +33,35 @@ export interface BottomNavProps {
  * USAGE:
  * <BottomNav items={[
  *   { type: 'link', id: 'dashboard', icon: 'dashboard', label: 'Dashboard', href: '/dashboard' },
- *   { type: 'fab', id: 'quick', icon: 'add', label: 'Quick', onClick: handleFAB },
+ *   { type: 'fab', id: 'quick', icon: 'chevronup', label: 'Quick', onClick: handleFAB },
  *   { type: 'more', id: 'more', icon: 'menu', label: 'More', onClick: handleMore },
  * ]} />
  */
 export function BottomNav({ items = [], className = '' }: BottomNavProps) {
   
   const { user } = useAuth();
+  const [fabMenuOpen, setFabMenuOpen] = useState(false);
+  const fabMenuRef = useRef<HTMLDivElement>(null);
+
+  // Quick Actions menu items (same as header dropdown)
+  const quickActionsItems = [
+    { icon: 'calendar', label: 'View Your Schedule', href: '/schedule' },
+    { icon: 'book-court', label: 'Book a Court', href: '/book_court' },
+    { icon: 'matches', label: 'Record a Result', href: '/add_result' },
+    { icon: 'send', label: 'Contact a Member', href: '/contact_member' },
+  ];
+
+  // Close FAB menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (fabMenuOpen && fabMenuRef.current && !fabMenuRef.current.contains(event.target as Node)) {
+        setFabMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [fabMenuOpen]);
 
   // RENDER INDIVIDUAL NAV ITEM
   const renderNavItem = (item: BottomNavItem) => {
@@ -61,7 +84,11 @@ export function BottomNav({ items = [], className = '' }: BottomNavProps) {
               className="avatar-container"
             />
           ) : (
-            <Icon name={item.icon} className="icon-lg" />
+            // For FAB: show dynamic icon based on menu state
+            <Icon 
+              name={isFAB ? (fabMenuOpen ? 'close' : 'chevronup') : item.icon} 
+              className={isFAB ? 'icon-2xl': 'icon-lg'}  
+            />
           )}
           {/* Badge */}
           {item.badge && item.badge > 0 && (
@@ -74,6 +101,21 @@ export function BottomNav({ items = [], className = '' }: BottomNavProps) {
       </>
     );
     
+    // For FAB: Render as button with menu toggle
+    if (isFAB) {
+      return (
+        <button
+          key={item.id}
+          className={`${baseClasses} ${fabClasses}`}
+          onClick={() => setFabMenuOpen(!fabMenuOpen)}
+          aria-label={item.label}
+          aria-expanded={fabMenuOpen}
+        >
+          {content}
+        </button>
+      );
+    }
+
     // For 'link' or 'more' with href: Render as Link
     if (item.href) {
       return (
@@ -101,8 +143,33 @@ export function BottomNav({ items = [], className = '' }: BottomNavProps) {
   };
 
   return (
-    <nav className={`bottom-nav ${className}`}>
-      {items.map((item) => renderNavItem(item))}
-    </nav>
+    <>
+    {/* FAB Dropdown Menu - Positioned above bottom nav */}
+      {fabMenuOpen && (
+        
+        <div 
+          ref={fabMenuRef}
+          className="fixed flex flex-col gap-md bottom-[88px] left-1/2 -translate-x-1/2 z-50 bg-surface-container rounded-2xl shadow-lg min-w-content p-sm"
+        >
+          {quickActionsItems.map((action) => (
+            <MenuItem
+              key={action.href}
+              icon={action.icon}
+              iconBordered={true}
+              label={action.label}
+              href={action.href}
+              context="dropdown"
+              onClick={() => setFabMenuOpen(false)}
+            />
+          ))}
+        </div>
+       
+      )}
+
+      {/* Bottom Navigation Bar */}
+      <nav className={`bottom-nav ${fabMenuOpen ? 'opacity-80' : ''} ${className}`}>
+        {items.map((item) => renderNavItem(item))}
+      </nav>
+    </>
   );
 }

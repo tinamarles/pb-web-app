@@ -101,6 +101,7 @@ const iconMap = {
   performance: ChartLine,
   memberships: BookUser,
   community: Users,
+  members: Users,
   achievements: Trophy,
   courts: LandPlot,
   clubs: Goal,

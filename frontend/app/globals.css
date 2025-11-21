@@ -1635,6 +1635,12 @@
     @apply border border-primary;
     @apply flex-shrink-0;
     /* @apply icon-bordered-xl; */
+
+    /* For active state: reverse colors (filled circle with icon in on-primary) */
+    .active & {
+      @apply bg-primary text-on-primary;
+      @apply border-primary;
+    }
   }
 }
 /* === Dropdown Menu === */
@@ -1682,6 +1688,25 @@
 
   .dropdown-align-right {
     right: 0;
+  }
+
+  
+  .dropdown-align-center {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Dropdown Position Modifiers */
+  .dropdown-position-bottom {
+    top: 100%;
+    bottom: auto;
+    margin-top: var(--px-8);
+  }
+
+  .dropdown-position-top {
+    bottom: 100%;
+    top: auto;
+    margin-bottom: var(--px-8);
   }
 
   @keyframes dropdown-slide-in {

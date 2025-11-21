@@ -196,9 +196,7 @@ export const Module = memo(function Module({
         id: "quick-actions",
         icon: "add",
         label: "Quick Actions",
-        onClick: () => {
-          // TODO: Open quick actions menu
-        },
+        // onClick removed - BottomNav component now handles FAB menu toggle internally
       },
       {
         type: "link",

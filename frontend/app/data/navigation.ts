@@ -62,7 +62,7 @@ export const PROFILE_NAV_ITEMS: NavItem[] = [
   { 
     label: 'Profile', 
     href: '/profile/details', 
-    icon: 'User' 
+    icon: 'profile' 
   },
   { 
     label: 'Memberships', 
@@ -119,7 +119,7 @@ export const DASHBOARD_NAV_ITEMS: NavItem[] = [
   { 
     label: 'Club Members', 
     href: '/dashboard/members', 
-    icon: 'Users' 
+    icon: 'members' 
   },
   { 
     label: 'Club Details', 
