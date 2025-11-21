@@ -25,7 +25,7 @@ export { Search, type SearchProps } from "./search";
 
 //export { ThemeSelector, type ThemeSelectorProps } from './themeSelector';
 export { ThemeToggle } from "./ThemeToggle";
-export { Dropdown, type DropdownProps } from "./dropdown";
+export { Dropdown, type DropdownProps, type TriggerRenderFunction } from "./dropdown";
 export { MenuItem, type MenuItemProps } from "./menuItem";
 
 // TYPES

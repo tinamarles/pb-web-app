@@ -11,22 +11,53 @@
 import { ReactNode, useState, useRef, useEffect } from 'react';
 
 /**
+ * Render function type for trigger prop
+ */
+export type TriggerRenderFunction = (isOpen: boolean) => ReactNode;
+/**
  * Dropdown Props
  */
 export interface DropdownProps {
   /** The trigger element (button, avatar, etc.) */
-  trigger: ReactNode;
+  trigger: ReactNode | ((isOpen: boolean) => ReactNode);
   /** Menu items to display in dropdown */
   children: ReactNode;
   /** Alignment of dropdown menu relative to trigger */
-  align?: 'left' | 'right';
+  align?: 'left' | 'right' | 'center';
+  /** Position of dropdown menu relative to trigger */
+  position?: 'bottom' | 'top';
   /** Enable hover to open (in addition to click) */
   hoverEnabled?: boolean;
   /** Delay in ms before opening on hover */
   hoverOpenDelay?: number;
   /** Delay in ms before closing on hover leave */
   hoverCloseDelay?: number;
+  /** Additional CSS classes for the dropdown menu */
+  menuClassName?: string;
 }
+
+/**
+ * Get align class using switch pattern (Tailwind v4 JIT compatible)
+ */
+const getAlignClass = (align: 'left' | 'right' | 'center'): string => {
+  switch (align) {
+    case 'left': return 'dropdown-align-left';
+    case 'right': return 'dropdown-align-right';
+    case 'center': return 'dropdown-align-center';
+    default: return 'dropdown-align-left';
+  }
+};
+
+/**
+ * Get position class using switch pattern (Tailwind v4 JIT compatible)
+ */
+const getPositionClass = (position: 'bottom' | 'top'): string => {
+  switch (position) {
+    case 'top': return 'dropdown-position-top';
+    case 'bottom': return 'dropdown-position-bottom';
+    default: return 'dropdown-position-bottom';
+  }
+};
 
 /**
  * Dropdown Component
@@ -53,14 +84,31 @@ export interface DropdownProps {
  *   <MenuItem icon="settings" label="Settings" />
  * </Dropdown>
  * ```
- */
+ * 
+ * @example
+ * 
+ * Usage for FAB 
+ * ```
+ * <Dropdown
+ *  trigger={<Button icon="chevronup" variant="fab" />}
+ *  position="top"          // Opens ABOVE trigger
+ *  align="center"          // Centered horizontally
+ *  hoverEnabled={false}    // Mobile - click only
+ * >
+ *
+ *     <MenuItem icon="calendar" label="View Schedule" />
+ *     <MenuItem icon="court" label="Book Court" />
+ *  </Dropdown>
+*/
 export function Dropdown({
   trigger,
   children,
   align = 'left',
+  position = 'bottom',
   hoverEnabled = true,
   hoverOpenDelay = 150,
   hoverCloseDelay = 300,
+  menuClassName,
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -156,12 +204,12 @@ export function Dropdown({
         onClick={handleClick}
         className="dropdown-trigger"
       >
-        {trigger}
+        {typeof trigger === 'function' ? trigger(isOpen) : trigger}
       </div>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className={`dropdown-menu dropdown-align-${align}`}>
+        <div className={`dropdown-menu ${getAlignClass(align)} ${getPositionClass(position)} ${menuClassName || ''}`}>
           {children}
         </div>
       )}

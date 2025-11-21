@@ -300,7 +300,7 @@ export const Header = memo(function Header({
         align="right"
         hoverEnabled={true}
       >
-        <MenuItem icon="user" label="Profile" href="/profile/details" />
+        <MenuItem icon="profile" label="Profile" href="/profile/details" />
         <MenuItem icon="settings" label="Settings" href="/settings" separator />
         <MenuItem icon="memberships" label="Club Memberships" href="/memberships"/>
         <MenuItem icon="performance" label="Performance" href="/performance" />

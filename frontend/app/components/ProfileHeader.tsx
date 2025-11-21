@@ -89,7 +89,7 @@ export function ProfileHeader () {
                 {user.firstName} {user.lastName}
             </h1>
             <div className="flex items-center gap-xs text-on-surface-variant">
-                <Icon name="user" className="icon-lg" />
+                <Icon name="profile" className="icon-lg" />
                 <span className="body-lg">@{user.username}</span>
             </div>
             <div className="flex items-center gap-xs text-on-surface-variant">
