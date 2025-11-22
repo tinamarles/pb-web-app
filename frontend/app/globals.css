@@ -234,11 +234,10 @@
   /* Icon sizes - used within buttons, input fields, navigation items */
   --icon-sm: var(--px-16);
   --icon-md: var(--px-18);
-  --icon-lg: var(
-    --px-20
-  ); /* used for inputField icons like email, phone, password lock, location */
+  --icon-lg: var(--px-20); /* used for inputField icons like email, phone, password lock, location */
   --icon-xl: var(--px-24);
   --icon-2xl: var(--px-32);
+  --icon-5xl: var(--px-80);
 
   /* Icon bordered sizes - icon size + 4px padding (var(--px-4)) for circular frame */
   --icon-bordered-sm: var(--px-24);

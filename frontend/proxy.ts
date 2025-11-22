@@ -90,5 +90,5 @@ export async function proxy(request: NextRequest) {
 
 // Specify which paths the middleware should run on
 export const config = {
-  matcher: ['/', '/login', '/signup', '/dashboard/:path*', '/profile/setup', '/testavatar'],
+  matcher: ['/', '/login', '/signup', '/dashboard/:path*', '/profile/:path*', '/profile/setup', '/testavatar'],
 };

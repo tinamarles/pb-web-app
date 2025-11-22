@@ -19,7 +19,7 @@ import {
   Eye,
   EyeOff,
   Check,
-  AlertCircle,
+  AlertCircle, AlertTriangle,
   Info,
   LogOut,
   LogIn,
@@ -59,7 +59,9 @@ import {
   ShieldUser,
   UserLock,
   CalendarCog,
-  Wrench
+  Wrench,
+  RotateCw,
+
 } from "lucide-react";
 
 import { 
@@ -166,7 +168,9 @@ const iconMap = {
   hide: EyeOff,
   success: Check,
   warning: AlertCircle,
+  error: AlertTriangle,
   info: Info,
+  reset: RotateCw,
 
   // Navigation Arrows
   chevrondown: ChevronDown,
@@ -200,7 +204,7 @@ export type IconName = keyof typeof iconMap;
 /**
  * Icon sizes - matches design system tokens
  */
-export type IconSize = "sm" | "md" | "lg" | "xl" | "2xl";
+export type IconSize = "sm" | "md" | "lg" | "xl" | "2xl" | "5xl";
 
 /**
  * Icon component props
@@ -254,13 +258,16 @@ export function Icon({
   // Check if this is a Material Design icon (from react-icons/md)
   const isMaterialDesignIcon = normalizedName.startsWith('radio-');
   
+  const iconStrokeWidth = size === '5xl' ? 3 : 1.5;
+
   // Extract icon size from className for Material Design icons
   // MD icons need numeric size prop, Lucide icons use CSS classes
   let numericSize = 24; // default
   if (isMaterialDesignIcon) {
     // Check size prop first, then className
     const sizeToCheck = size || iconClasses;
-    if (sizeToCheck.includes('icon-2xl')) numericSize = 32;
+    if (sizeToCheck.includes('icon-5xl')) numericSize = 80;
+    else if (sizeToCheck.includes('icon-2xl')) numericSize = 32;
     else if (sizeToCheck.includes('icon-xl')) numericSize = 24;
     else if (sizeToCheck.includes('icon-lg')) numericSize = 20;
     else if (sizeToCheck.includes('icon-md')) numericSize = 18;
@@ -275,7 +282,7 @@ export function Icon({
   // Material Design icons need size prop (number), Lucide icons use strokeWidth
   const iconProps = isMaterialDesignIcon 
     ? { size: numericSize, className: finalIconClasses }
-    : { strokeWidth: 1.5, className: iconClasses };
+    : { strokeWidth: iconStrokeWidth, className: iconClasses };
   // Helper function at the top of the component (or outside it)
   const getBorderedClasses = (size?: IconSize): string => {
     if (!size) return 'icon-bordered';
@@ -286,6 +293,7 @@ export function Icon({
       case 'lg': return 'icon-bordered icon-bordered-lg';
       case 'xl': return 'icon-bordered icon-bordered-xl';
       case '2xl': return 'icon-bordered icon-bordered-2xl';
+      case '5xl': return 'icon-bordered icon-bordered-5xl';
       default: return 'icon-bordered';
     }
   };
@@ -323,6 +331,9 @@ export function Icon({
     // Apply size-specific border frame class if size prop provided
     const borderedClass = getBorderedClasses(size);
     const finalBorderedClass = [borderedClass, className].filter(Boolean).join(' ');
+    
+  
+
     return (
       <div className={finalBorderedClass} onClick={onClick}>
         <IconComponent {...iconProps} />
