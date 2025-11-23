@@ -23,9 +23,6 @@ export interface RadioButtonProps {
 
 export const RadioButton = React.forwardRef<HTMLInputElement, RadioButtonProps>(
   ({ id, name, value, checked, onChange, disabled, className = '', ...props }, ref) => {
-    const colorClass = disabled 
-      ? 'text-on-surface/50' 
-      : 'text-primary';
 
     return (
       <div className={`radio-wrapper ${className}`}>
@@ -40,20 +37,16 @@ export const RadioButton = React.forwardRef<HTMLInputElement, RadioButtonProps>(
           onChange={(e) => onChange?.(e.target.checked)}
           disabled={disabled}
           className="custom-radio"
-          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
           {...props}
         />
         
         {/* Material Design icon via centralized Icon component - 24x24 */}
-        <label
-          htmlFor={id}
-          className="radio-label"
-        >
+        <label htmlFor={id} className="radio-label">
           <Icon 
             name={checked ? 'radio-checked' : 'radio-unchecked'} 
-            className={colorClass}
           />
         </label>
+        
       </div>
     );
   }

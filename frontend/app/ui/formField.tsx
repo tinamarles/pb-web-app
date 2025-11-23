@@ -134,8 +134,6 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
               className="cursor-pointer"
             />
           </div>
-          
-          
         </div>
       );
     }
@@ -143,31 +141,31 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
     // VARIANT: radio
     if (props.variant === 'radio') {
       return (
-        <div className="form-field-input flex items-center gap-[var(--px-8)] p-[var(--px-12)] bg-surface-container-lowest rounded-[var(--radius-md)] border border-outline">
+        <div className="input-field">
           {/* Leading icon (optional) */}
           {icon && (
             <Icon 
               name={icon} 
-              className="icon-lg text-on-surface-variant flex-shrink-0" 
+              size="lg" 
             />
           )}
           
           {/* Main content - label */}
-          <div className="flex-1 min-w-0">
+          <div className={`input-base ${icon ? 'has-icon' : ''}`}>
             <label htmlFor={generatedId} className="form-field__content text-on-surface cursor-pointer">
               {label}
             </label>
-          </div>
           
-          {/* Trailing radio button */}
-          <RadioButton
-            id={generatedId}
-            name={props.name}
-            value={props.value}
-            checked={props.checked}
-            onChange={props.onChange}
-            disabled={disabled}
-          />
+            {/* Trailing radio button */}
+            <RadioButton
+              id={generatedId}
+              name={props.name}
+              value={props.value}
+              checked={props.checked}
+              onChange={props.onChange}
+              disabled={disabled}
+            />
+          </div>
         </div>
       );
     }

@@ -1076,7 +1076,7 @@
     .profile-page__mobile__list-item .input-base.has-icon {
       padding-left: var(--px-32) !important;
     }
-    .profile-page__mobile__list-item .input-field svg {
+    .profile-page__mobile__list-item .input-field > svg {
       @apply left-0;
     }
 
@@ -1361,7 +1361,7 @@
   .input-field {
     @apply relative flex items-center;
   }
-  .input-field svg {
+  .input-field > svg {
     @apply absolute left-[var(--px-12)] z-10 pointer-events-none;
   }
   /* +++ FORM FIELD INPUT - Container focus styling +++ */
@@ -1445,21 +1445,17 @@
   .custom-radio {
     appearance: none;
     -webkit-appearance: none;
-    position: relative;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    flex-shrink: 0;
-
-    &:disabled {
-      cursor: not-allowed;
-      opacity: 0.5;
-    }
-
+    position: absolute;      /* ← OUT of flow, no space taken */
+    opacity: 0;              /* ← Invisible */
+    width: 1px;              /* ← Minimal size (accessibility) */
+    height: 1px;
+    pointer-events: none;    /* ← Clicks pass through */
+    
     &:focus {
       outline: none;
-    }
   }
+}
+  
 
   /* Radio wrapper and label */
   .radio-wrapper {
@@ -1470,6 +1466,8 @@
 
     &:has(input:disabled) .radio-label {
       cursor: not-allowed;
+      opacity: 0.5; 
+      color: color-mix(in srgb, var(--color-on-surface), transparent 50%);
     }
 
     &:has(input:focus) .radio-label {
@@ -1483,14 +1481,19 @@
     }
   }
 
+
   .radio-label {
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    width: 24px;              /* ← Add explicit size */
+    height: 24px;             /* ← Match your icon size */
     border-radius: 9999px;
+    color: var(--color-primary);
     cursor: pointer;
     transition: all 200ms ease;
+
   }
 
   /* +++ CUSTOM TOGGLE +++ */
