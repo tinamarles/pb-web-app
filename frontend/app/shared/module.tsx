@@ -222,11 +222,12 @@ export const Module = memo(function Module({
   const bottomNavItems = shouldShowBottomNav ? buildBottomNavItems() : [];
   
   return (
+   
     <div className="module-container">
       <Header {...headerProps} />
-      <div className="flex-1">
+      <main className="page">
         {children}
-      </div>
+      </main>
         {/* Mobile + Logged In: Show BottomNav instead of Footer */}
         {shouldShowBottomNav ? (
         <BottomNav items={bottomNavItems} />
@@ -234,5 +235,6 @@ export const Module = memo(function Module({
           <Footer />
         )}
     </div>
+   
   );
 });

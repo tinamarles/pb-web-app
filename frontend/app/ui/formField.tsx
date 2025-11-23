@@ -106,45 +106,36 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
   // Ref for date input to trigger calendar picker programmatically
   const dateInputRef = useRef<HTMLInputElement>(null);
 
-   // 🔍 DEBUG: Check what props we received
-  if (props.label === "First Name") {
-    console.log('===== FormField (First Name) RENDER =====');
-    console.log('props:', props);
-    if (!props.variant || props.variant === 'default') {
-      const defaultProps = props as DefaultVariantProps;
-      console.log('defaultProps.value:', defaultProps.value);
-      console.log('defaultProps.value || "":', defaultProps.value || '');
-    }
-    console.log('=========================================');
-  }
-
   const renderField = () => {
     // VARIANT: checkbox
     if (props.variant === 'checkbox') {
       return (
-        <div className="form-field-input flex items-center gap-[var(--px-8)] p-[var(--px-12)] bg-surface-container-lowest rounded-[var(--radius-md)] border border-outline">
+        <div className="input-field">
           {/* Leading icon (optional) */}
           {icon && (
             <Icon 
-              name={icon} 
-              className="icon-lg text-on-surface-variant flex-shrink-0" 
+              name={icon}
+              size="lg" 
             />
           )}
           
           {/* Main content - use placeholder if provided, otherwise use label */}
-          <div className="flex-1 min-w-0">
-            <label htmlFor={generatedId} className="form-field__content text-on-surface cursor-pointer">
+          <div className={`input-base ${icon ? 'has-icon' : ''}`}>
+            <label htmlFor={generatedId} >
               {props.placeholder || label}
             </label>
+
+            {/* Trailing checkbox */}
+            <Checkbox
+              id={generatedId}
+              checked={props.checked}
+              onChange={props.onChange}
+              disabled={disabled}
+              className="cursor-pointer"
+            />
           </div>
           
-          {/* Trailing checkbox */}
-          <Checkbox
-            id={generatedId}
-            checked={props.checked}
-            onChange={props.onChange}
-            disabled={disabled}
-          />
+          
         </div>
       );
     }
@@ -257,9 +248,9 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
               size="sm"
               onClick={props.onEdit}
               aria-label="Edit field"
-            >
-              <Icon name="pencil" className="icon-sm" />
-            </Button>
+              icon="edit"
+            />
+             
           )}
         </div>
       );
@@ -268,8 +259,6 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
     // VARIANT: default (editable inputs - text, email, password, tel, date, number, textarea)
     const defaultProps = props as DefaultVariantProps;
     
-   
-
     // TEXTAREA
     if (defaultProps.type === 'textarea') {
       return (
@@ -298,12 +287,6 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
 
     // ALL OTHER INPUT TYPES (text, email, password, tel, date, number)
     const isDateInput = defaultProps.type === 'date';
-    
-    // 🔍 DEBUG: Check the actual input value
-    const inputValue = defaultProps.value || '';
-    if (label === "First Name") {
-      console.log('📥 FormField rendering input with value:', inputValue);
-    }
 
     return (
       <div className="form-field-input flex items-center gap-[var(--px-8)] p-[var(--px-12)] bg-surface-container-lowest rounded-[var(--radius-md)] border border-outline">

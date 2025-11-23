@@ -280,6 +280,7 @@ export function ProfileForm({
           {/* Certified Instructor Checkbox */}
           <FormField
             variant="checkbox"
+            icon='coaches'
             label="Certification" // Shows at TOP (aligns with grid)
             placeholder="Certified Instructor" // Shows INSIDE the box
             checked={formData.isCertifiedInstructor}

@@ -93,6 +93,8 @@
   --px-192: 12rem;
   --px-240: 15rem;
   --px-256: 16rem;
+  --px-320: 20rem;
+  --px-480: 30rem;
 
   /* Height sizes */
   --h-header-sm: var(--px-64);
@@ -253,6 +255,8 @@
 
   --w-sidebar: var(--px-240);
   --w-sidebar-tablet: var(--px-130);
+  --w-auth-form: var(--px-320);
+  --w-auth-form-tablet: var(--px-480);
 }
 
 /* ===================================================================== */
@@ -448,6 +452,7 @@
   font-size: clamp(0.77rem, calc(0.732rem + 0.191vw), 0.88rem);
   line-height: var(--line-height-45);
   letter-spacing: var(--spacing-relaxed);
+  color: var(--color-on-surface-variant);
   @apply font-normal;
 }
 @utility label-md {
@@ -456,6 +461,7 @@
   font-size: clamp(0.61rem, calc(0.565rem + 0.239vw), 0.74rem);
   line-height: var(--line-height-30);
   letter-spacing: var(--spacing-wider);
+  color: var(--color-on-surface-variant);
   @apply font-normal;
 }
 @utility label-sm {
@@ -464,6 +470,7 @@
   /* font-size: clamp(0.52rem, calc(0.475rem + 0.207vw), 0.63rem); */
   line-height: var(--line-height-45);
   letter-spacing: var(--spacing-normal);
+  color: var(--color-on-surface-variant);
   @apply font-normal;
 }
 
@@ -609,6 +616,8 @@
 
 @utility input-base {
   min-width: var(--width-input-min);
+  /* add to unify the form-fields */
+  @apply flex items-center justify-between;
   @apply w-full p-md;
   @apply bg-surface-container-lowest border border-outline rounded-lg;
   @apply single-line-base text-on-surface placeholder:text-on-surface-variant/60;
@@ -622,6 +631,11 @@
   &:focus {
     --tw-ring-color: color-mix(in srgb, var(--color-primary), transparent 80%);
     @apply focus-ring-base border-primary;
+    box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--tw-ring-color);
+  }
+
+  &:disabled {
+    @apply opacity-50 cursor-not-allowed;
   }
 
   /* Add left padding when icon is present */
@@ -632,30 +646,18 @@
 
 /* === LAYOUT CONTAINER CLASSES === */
 @layer components {
-  /* +++ Master page wrapper that wraps around the entire app +++ */
-  .page-container {
-    /* Global page wrapper - foundation for all layouts */
-    min-height: 100vh;
-    width: 100%;
-    max-width: min(100vw, 90rem);
-    /* padding: 0 var(--px-16); */
-    padding: 0;
-    @apply mx-auto;
-  }
-
   /* +++ Module container responsible for creating the header props, render the header and the footer +++ */
   .module-container {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     width: 100%;
+    max-width: min(100vw, 90rem);
     background-color: var(--color-background);
     color: var(--color-on-background);
-    min-height: 100vh;
+    min-height: 100vh; 
   }
-
   /* +++ HEADER Component +++ */
-
   .header {
     @apply sticky top-0 z-50;
     @apply flex items-center w-full gap-sm px-2;
@@ -826,11 +828,11 @@
     @apply text-primary transition-colors;
   }
 }
-/* +++ PROFILE PAGE Component +++ */
+/* +++ PAGE Layout +++ */
 @layer components {
   /* Refactor: Step 1 - classes */
   .page {
-    @apply block w-full;
+    @apply block w-full flex-1;
     @apply pb-24; /* Account for bottom nav: 96px or 6rem */
   }
   @media (min-width: 640px) {
@@ -844,6 +846,25 @@
       @apply pb-0; /* no bottom padding */
     }
   }
+  
+  /* Refactor: Step 3 - classes */
+  /* NEW: Page Content classes */
+  .page__content {
+    @apply flex flex-col;
+    @apply gap-md;
+    @apply p-lg; /* this will ensure the safety margin */
+  }
+  @media (min-width: 640px) {
+    .page__content {
+      @apply flex-1;
+      @apply gap-lg;
+    }
+  }
+
+}
+
+/* +++ SIDEBAR Layout +++ */
+@layer components {
   /* Refactor: Step 2 - classes */
   /* NEW: Sidebar classes */
   .sidebar {
@@ -917,28 +938,6 @@
     }
   }
 
-  /*
-  .sidebar__icon {
-    @apply hidden; ** not shown on mobile **
-  }
-  /*
-  @media (min-width: 640px) {
-    .sidebar__icon {
-      @apply w-10 h-10 rounded-full;
-      @apply flex items-center justify-center;
-      @apply flex-shrink-0;
-      ** Icon border in primary color **
-      @apply border border-primary;
-      @apply text-primary;
-
-     ** For active state: reverse colors (filled circle with icon in on-primary) **
-      .active & {
-        @apply bg-primary text-on-primary;
-        @apply border-primary;
-      }
-    }
-  }
-  */
   /* NOTE: there is no need for a .profile-page__sidebar__alert class! 
     Simply use the badge and overwrite with bg-error text-on-error */
   .sidebar__badge {
@@ -968,20 +967,30 @@
       @apply text-on-surface-variant;
     }
   }
-  /* Refactor: Step 3 - classes */
-  /* NEW: Page Content classes */
-  .page__content {
-    @apply flex flex-col;
-    @apply gap-md;
-    @apply p-lg; /* this will ensure the safety margin */
-  }
-  @media (min-width: 640px) {
-    .page__content {
-      @apply flex-1;
-      @apply gap-lg;
-    }
-  }
+}
 
+/* +++ AUTH Pages +++ */
+@layer components {
+  .authForm-wrapper {
+    @apply z-50 max-w-xl m-auto;
+    min-width: var(--w-auth-form);
+    @media (min-width: 640px) {
+      min-width: var(--w-auth-form-tablet);
+    }
+
+    /* 
+    w-full p-4 
+                  shrink-0 z-30
+                  bg-surface-container-low 
+                  rounded-2xl 
+                  border border-outline-variant 
+                  min-h-5/6
+                  shadow-2xl
+    */
+  }
+}
+/* +++ PROFILE PAGE Component +++ */
+@layer components {
   /* Refactor: Step 4 - classes */
   /* NEW: Profile Page Header classes */
 
@@ -1063,6 +1072,14 @@
       border: none !important;
       padding: 0 !important; /* Remove padding so text aligns left */
     }
+
+    .profile-page__mobile__list-item .input-base.has-icon {
+      padding-left: var(--px-32) !important;
+    }
+    .profile-page__mobile__list-item .input-field svg {
+      @apply left-0;
+    }
+
   }
   /* Mobile List Item */
   .profile-page__mobile__list-item {
@@ -1380,7 +1397,7 @@
     position: relative;
     width: 24px;
     height: 24px;
-    border-radius: var(--radius-sm);
+    border-radius: 4px; /* var(--radius-sm); */
     border: 1px solid var(--color-outline);
     background-color: var(--color-surface-container-lowest);
     cursor: pointer;
@@ -2270,7 +2287,7 @@
   }
 
   body {
-    @apply font-base;
+    @apply body-md text-on-background;
   }
 
   h1,

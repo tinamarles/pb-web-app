@@ -48,12 +48,6 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* Mobile: small app-icon, Tablet: medium full logo, Desktop: large full logo */}
-
-      {/* <Logo variant="app-icon" className="w-12 h-12 sm:hidden m-3" /> 
-      <div className="hidden sm:block">
-        <Logo variant="full" size="lg" className="m-3" />
-      </div> */}
       <div
         className="w-full p-4 
                   shrink-0 z-30
@@ -63,18 +57,18 @@ export default function LoginPage() {
                   min-h-5/6
                   shadow-2xl"
       >
-        <h1
-          className="headline-lg text-primary text-center py-4"
-        >
+        <h1 className="headline-lg text-primary text-center py-4">
           Sign in to Pickle Hub
         </h1>
         <form onSubmit={handleSubmit} className="space-y-8 text-md">
           {/* We now use the 'error' state from the AuthContext to display the message */}
           {error && (
-            <div className="mt-4 p-4 
+            <div
+              className="mt-4 p-4 
                             text-center 
                             rounded-md 
-                            bg-error text-on-error">
+                            bg-error text-on-error"
+            >
               {error}
             </div>
           )}
@@ -88,9 +82,13 @@ export default function LoginPage() {
             >
               Username or Email
             </label>
-            
+
             <div className="input-field">
-              <Icon name="emailfilled" className="icon-lg text-on-surface-variant/60" />
+              <Icon
+                name="emailfilled"
+                size="lg"
+                className="text-on-surface-variant/60"
+              />
               <input
                 type="text"
                 id="identifier"
@@ -118,7 +116,10 @@ export default function LoginPage() {
               <p className="body-md text-secondary py-2">Forgot password?</p>
             </div>
             <div className="input-field">
-              <Icon name="lock" className="icon-lg text-on-surface-variant/60 fill-current" />
+              <Icon
+                name="lock"
+                className="icon-lg text-on-surface-variant/60 fill-current"
+              />
               <input
                 type="password"
                 id="password"
@@ -129,29 +130,28 @@ export default function LoginPage() {
                 placeholder="*************"
                 className="peer input-base has-icon"
               />
-              
             </div>
           </div>
-          <Button 
-              type='submit'
-              variant='filled'
-              size='lg'
-              label='Sign In' 
-              className='w-full mt-6 body-md' />
+          <Button
+            type="submit"
+            variant="filled"
+            size="lg"
+            label="Sign In"
+            className="w-full mt-6 body-md"
+          />
         </form>
         <div className="mt-6 p-lg text-center">
-        <p className="body-md">
-          Not a member?{" "}
-          <Link
-            href="/signup"
-            className="body-md text-secondary hover:text-primary"
-          >
-            Create an account
-          </Link>
-        </p>
+          <p className="body-md">
+            Not a member?{" "}
+            <Link
+              href="/signup"
+              className="body-md text-secondary hover:text-primary"
+            >
+              Create an account
+            </Link>
+          </p>
+        </div>
       </div>
-      </div>
-      
     </>
   );
 }

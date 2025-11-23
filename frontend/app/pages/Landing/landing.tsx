@@ -1,4 +1,4 @@
-'use client';
+
 import { Module } from "@/app/shared";
 import { HeroSection } from "./HeroSection";
 import { FeaturesSection } from "./FeaturesSection";
@@ -14,11 +14,13 @@ export function LandingPage() {
       <div className="fixed top-20 right-12 z-40">
         <ThemeToggle />
       </div>
-      <HeroSection />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <TestimonialsSection />
-      <CTASection />
+      <div className='page__content gap-0'>
+        <HeroSection />
+        <FeaturesSection />
+        <HowItWorksSection />
+        <TestimonialsSection />
+        <CTASection />
+      </div>
     </Module>
   );
 }

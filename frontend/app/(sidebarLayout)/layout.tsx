@@ -11,16 +11,14 @@ export default function SidebarLayout({
   sidebar: React.ReactNode;
 }) {
   return (
-    <Module type='profile'>
-      <main>
-        <div className='page'>
-          {sidebar}
-          <div className='page__content'>
-            <ProfileHeader />
-            {children}
-          </div>
+    <Module type="profile">
+      <>
+        {sidebar}
+        <div className="page__content">
+          <ProfileHeader />
+          {children}
         </div>
-      </main>
+      </>
     </Module>
   );
 }

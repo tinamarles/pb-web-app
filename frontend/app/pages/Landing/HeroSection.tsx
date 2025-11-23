@@ -28,7 +28,7 @@ export function HeroSection() {
                               rounded-full border border-primary/20"
               >
                 <Icon name="default" className="icon-sm fill-current" />
-                <span className="label-lg">#1 Pickleball App</span>
+                <span className="label-lg text-on-primary">#1 Pickleball App</span>
               </div>
             </div>
 
@@ -46,6 +46,7 @@ export function HeroSection() {
                 <span className="slogan-sm text-secondary lg:slogan-md">
                   Connect & Compete
                 </span>
+                
               </h1>
 
               <p className="body-lg text-on-surface-variant max-w-2xl mx-auto lg:mx-0">

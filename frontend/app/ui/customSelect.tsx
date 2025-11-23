@@ -153,7 +153,7 @@ export const CustomSelect = memo(function CustomSelect({
 
       {/* Custom select trigger */}
          <div
-        className={`input-base ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${icon ? 'has-icon' : ''}`}
+        className={`input-base cursor-pointer ${icon ? 'has-icon' : ''}`}
         onClick={handleToggle}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -168,7 +168,7 @@ export const CustomSelect = memo(function CustomSelect({
         aria-label="Select an option"
         aria-disabled={disabled}
       >
-        <div className="flex items-center justify-between">
+        
           <span className={`form-field__content ${value ? "text-on-surface" : "text-on-surface-variant"}`}>
             {value || placeholder}
           </span>
@@ -177,7 +177,7 @@ export const CustomSelect = memo(function CustomSelect({
               isOpen ? "rotate-180" : ""
             }`} 
           />
-        </div>
+        
       </div>
 
       {/* Custom dropdown options */}
