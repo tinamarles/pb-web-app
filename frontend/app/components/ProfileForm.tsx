@@ -57,7 +57,7 @@ export interface ProfileFormData {
 }
 
 export function ProfileForm({
-  mode = "view",
+  mode,
   onSaveSuccess,
   onSaveError,
 }: ProfileFormProps) {
@@ -110,10 +110,6 @@ export function ProfileForm({
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
-  const handleEdit = () => {
-    alert('Clicked Edit');
-  }
 
   // Convert form data to API format (string → number conversions)
   const prepareDataForAPI = (data: ProfileFormData) => {
@@ -186,7 +182,7 @@ export function ProfileForm({
   };
 
   return (
-    <div className="page__form">
+    <div className="page__form" data-mode={mode}>
       <h2 className="title-lg emphasized mb-lg">Personal Details</h2>
 
       <div className="grid-3">

@@ -1071,73 +1071,84 @@
 /* +++ PROFILE PAGE Component +++ */
 @layer components {
 
-  /* Mobile: Make fields display-only */
+  /* ========================================
+    MOBILE VIEW MODE ONLY
+    ======================================== */
+
+  /* View mode: Card styling */
   @media (max-width: 639px) {
-    .profile-page__mobile-item input,
-    .profile-page__mobile-item select,  
-    .profile-page__mobile-item textarea,
-    .profile-page__mobile-item button:not(.profile-page__mobile-item__button),  /* Disable buttons but NOT edit button */
-    .profile-page__mobile-item .input-base {
-      /* Disable CustomSelect trigger div */
-      pointer-events: none; /* Can't click/focus */
-      outline: none;
-      cursor: default; /* No text cursor */
-      background: transparent; /* No input styling */
-      border: none;
-      /* Make it look like plain text */
-    }
-
-    /* Remove FormField container border and background on mobile */
-    .profile-page__mobile-item .input-base {
-      /* Also remove from CustomSelect trigger */
-      background: transparent !important;
-      border: none !important;
-      padding: 0 !important; /* Remove padding so text aligns left */
-    }
-
-    .profile-page__mobile-item .input-base.has-icon {
-      padding-left: var(--px-32) !important;
-    }
-    .profile-page__mobile-item .input-field > svg,
-    .profile-page__mobile-item .input-field > span > svg {
-      @apply left-0;
-    }
-
-  }
-  /* Mobile List Item */
-  @media (max-width: 639px) {
-    .profile-page__mobile-item {
-      @apply flex items-start gap-xs; /* Remove justify-between, add gap */
+    .page__form[data-mode="view"] .profile-page__mobile-item {
+      @apply flex items-start gap-xs;
       @apply px-md pt-md pb-0;
       @apply bg-surface border border-outline-variant rounded-lg;
       @apply hover:bg-surface-container;
       @apply transition-colors duration-200;
     }
-  }
-  @media (max-width: 639px) {
-    .profile-page__mobile-item > div:first-child {
-      @apply flex-1; /* FormField takes full width on mobile */
+    
+    .page__form[data-mode="view"] .profile-page__mobile-item > div:first-child {
+      @apply flex-1;
     }
   }
 
-  /* Mobile: Increase field content text size 
+  /* View mode: Display-only fields */
   @media (max-width: 639px) {
-    .profile-page__mobile-item .form-field__content {
-     
-      @apply title-md emphasized;
+    .page__form[data-mode="view"] .profile-page__mobile-item input,
+    .page__form[data-mode="view"] .profile-page__mobile-item select,  
+    .page__form[data-mode="view"] .profile-page__mobile-item textarea,
+    .page__form[data-mode="view"] .profile-page__mobile-item button:not(.profile-page__mobile-item__button),
+    .page__form[data-mode="view"] .profile-page__mobile-item .input-base {
+      pointer-events: none;
+      outline: none;
+      cursor: default;
+      background: transparent;
+      border: none;
     }
-    .profile-page__mobile-item .form-field__top-label {
-      @apply body-sm;
+
+    .page__form[data-mode="view"] .profile-page__mobile-item .input-base {
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+    }
+
+    .page__form[data-mode="view"] .profile-page__mobile-item .input-base.has-icon {
+      padding-left: var(--px-32) !important;
+    }
+    
+    .page__form[data-mode="view"] .profile-page__mobile-item .input-field > svg,
+    .page__form[data-mode="view"] .profile-page__mobile-item .input-field > span > svg {
+      @apply left-0;
     }
   }
-  */
-  
-  .profile-page__mobile-item__button {
-    @apply rounded-full hover:bg-surface-container;
+
+  /* View mode: Show edit buttons */
+  @media (max-width: 639px) {
+    .page__form[data-mode="view"] .profile-page__mobile-item__button {
+      @apply flex rounded-full hover:bg-surface-container;
+    }
   }
-  @media (min-width: 640px) {
-    .profile-page__mobile-item__button {
-      @apply hidden;
+
+  /* View mode: Hide save button */
+  @media (max-width: 639px) {
+    .page__form[data-mode="view"] .page__form__button {
+      display: none;
+    }
+  }
+
+  /* ========================================
+    MOBILE SETUP MODE ONLY
+    ======================================== */
+
+  /* Setup mode: Hide edit buttons (not needed - fields are editable) */
+  @media (max-width: 639px) {
+    .page__form[data-mode="setup"] .profile-page__mobile-item__button {
+      display: none;
+    }
+  }
+
+  /* Setup mode: Show save button */
+  @media (max-width: 639px) {
+    .page__form[data-mode="setup"] .page__form__button {
+      display: block;
     }
   }
  
