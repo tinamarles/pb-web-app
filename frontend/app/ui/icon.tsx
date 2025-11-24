@@ -220,6 +220,8 @@ export interface IconProps {
   bordered?: boolean;
   /** Click handler for interactive icons */
   onClick?: () => void;
+  /** tabIndex - so tab behaviour can be controlled from the Caller whether the icon is tab-able */
+  tabIndex?: number;
 }
 
 /**
@@ -245,7 +247,8 @@ export function Icon({
   className = "",
   size,
   bordered = false,
-  onClick
+  onClick,
+  tabIndex,
 }: IconProps) {
   // Smart normalization: convert any casing to lowercase for lookup
   const normalizedName = name.toLowerCase() as keyof typeof iconMap;
@@ -317,7 +320,10 @@ export function Icon({
     // If onClick provided, wrap in clickable container
     if (onClick) {
       return (
-        <span onClick={onClick} className="inline-flex items-center cursor-pointer" role="button" tabIndex={0}>
+        <span onClick={onClick} 
+            className="inline-flex items-center cursor-pointer" 
+            role="button" 
+            tabIndex={tabIndex ?? -1}>
           <FallbackIcon strokeWidth={1.5} className={iconClasses} />
         </span>
       );
@@ -344,7 +350,10 @@ export function Icon({
   // If onClick provided, wrap in clickable container for better click handling
   if (onClick) {
     return (
-      <span onClick={onClick} className="inline-flex items-center cursor-pointer" role="button" tabIndex={0}>
+      <span onClick={onClick} 
+          className="inline-flex items-center cursor-pointer" 
+          role="button" 
+          tabIndex={tabIndex ?? -1}>
         <IconComponent {...iconProps} />
       </span>
     );

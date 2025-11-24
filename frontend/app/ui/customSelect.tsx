@@ -1,5 +1,5 @@
 "use client";
-import { memo, useState, useRef, useEffect } from "react";
+import { memo, useState, useRef, useEffect, useCallback } from "react";
 import { Icon } from "./icon";
 
 // === MODIFICATION LOG ===
@@ -38,6 +38,7 @@ export const CustomSelect = memo(function CustomSelect({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
+  const listboxId = useRef(`listbox-${Math.random().toString(36).substr(2, 9)}`).current;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -54,6 +55,13 @@ export const CustomSelect = memo(function CustomSelect({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleOptionSelect = useCallback((option: string) => {
+    if (disabled) return;
+    onChange?.(option);
+    setIsOpen(false);
+    setHighlightedIndex(-1);
+  }, [disabled, onChange]); // only recreates if these change
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -103,7 +111,7 @@ export const CustomSelect = memo(function CustomSelect({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, highlightedIndex, options]);
+  }, [isOpen, highlightedIndex, options, handleOptionSelect]);
 
   // Scroll highlighted option into view
   useEffect(() => {
@@ -127,13 +135,6 @@ export const CustomSelect = memo(function CustomSelect({
       const currentIndex = options.indexOf(value);
       setHighlightedIndex(currentIndex >= 0 ? currentIndex : -1);
     }
-  };
-
-  const handleOptionSelect = (option: string) => {
-    if (disabled) return;
-    onChange?.(option);
-    setIsOpen(false);
-    setHighlightedIndex(-1);
   };
 
   return (
@@ -172,14 +173,13 @@ export const CustomSelect = memo(function CustomSelect({
         tabIndex={disabled ? -1 : 0}
         role="combobox"
         aria-expanded={isOpen}
+        aria-controls={listboxId}
         aria-haspopup="listbox"
         aria-label="Select an option"
         aria-disabled={disabled}
       >
         <span
-          className={`form-field__content ${
-            value ? "text-on-surface" : "text-on-surface-variant"
-          }`}
+          className={`${value ? "text-on-surface" : "text-on-surface-variant"}`}
         >
           {value || placeholder}
         </span>
@@ -206,6 +206,7 @@ export const CustomSelect = memo(function CustomSelect({
             {/* Scrollable options list - uses CSS class .select-options-list */}
             <div
               ref={optionsRef}
+              id={listboxId}
               className="select-options-list"
               role="listbox"
             >

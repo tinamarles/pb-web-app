@@ -13,7 +13,9 @@
     "chevronup",
     "emailfilled",
     "hrefs",
-    "pickleball"
+    "pickleball",
+    "sonner",
+    "sublabel"
   ],
   "workbench.colorCustomizations": {
     "editorBracketHighlight.foreground1": "#FFD700",

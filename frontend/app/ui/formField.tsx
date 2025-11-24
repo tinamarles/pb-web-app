@@ -1,4 +1,4 @@
-'use client';
+"use client";
 // === MODIFICATION LOG ===
 // Date: 2025-01-15 17:00 UTC
 // Modified by: Assistant
@@ -15,28 +15,28 @@
 // ========================
 
 import { memo, useId, useRef } from "react";
-import { CustomSelect, CustomSelectProps } from './customSelect';
-import { Icon } from './icon';
-import { Checkbox, CheckboxProps } from './checkbox';
-import { RadioButton, RadioButtonProps } from './radioButton';
-import { CustomToggle, CustomToggleProps } from './customToggle';
-import { Button } from './button';
+import { CustomSelect, CustomSelectProps } from "./customSelect";
+import { Icon } from "./icon";
+import { Checkbox, CheckboxProps } from "./checkbox";
+import { RadioButton, RadioButtonProps } from "./radioButton";
+import { CustomToggle, CustomToggleProps } from "./customToggle";
+import { Button } from "./button";
 import { useAutofillFix } from "@/app/lib/hooks";
 
 // Base props shared by all variants
 interface BaseFormFieldProps {
-  label: string;                    // Field label text
-  sublabel?: string;                 // Optional secondary label
-  icon?: string;                     // Leading icon (lucide icon name)
-  error?: string;                    // Error message to display
-  className?: string;                // Additional container CSS classes
-  disabled?: boolean;                // Is field disabled
+  label: string; // Field label text
+  sublabel?: string; // Optional secondary label
+  icon?: string; // Leading icon (lucide icon name)
+  error?: string; // Error message to display
+  className?: string; // Additional container CSS classes
+  disabled?: boolean; // Is field disabled
 }
 
 // Variant: default (editable inputs)
 interface DefaultVariantProps extends BaseFormFieldProps {
-  variant?: 'default';
-  type: 'text' | 'email' | 'password' | 'tel' | 'date' | 'number' | 'textarea';
+  variant?: "default";
+  type: "text" | "email" | "password" | "tel" | "date" | "number" | "textarea";
   name?: string;
   value?: string;
   onChange?: (value: string) => void;
@@ -85,33 +85,38 @@ interface SelectVariantProps extends BaseFormFieldProps {
 */
 
 // Each variant extends Base + the actual component props
-interface SelectVariantProps extends BaseFormFieldProps, 
-  Omit<CustomSelectProps, 'className'> {  // Omit className - FormField controls it
-  variant: 'select';
+interface SelectVariantProps
+  extends BaseFormFieldProps,
+    Omit<CustomSelectProps, "className"> {
+  // Omit className - FormField controls it
+  variant: "select";
 }
 
-interface ToggleVariantProps extends BaseFormFieldProps,
-  Omit<CustomToggleProps, 'className'> {
-  variant: 'toggle';
-  text?: string; 
+interface ToggleVariantProps
+  extends BaseFormFieldProps,
+    Omit<CustomToggleProps, "className"> {
+  variant: "toggle";
+  text?: string;
 }
 
-interface RadioVariantProps extends BaseFormFieldProps,
-  Omit<RadioButtonProps, 'className'> {
-  variant: 'radio';
+interface RadioVariantProps
+  extends BaseFormFieldProps,
+    Omit<RadioButtonProps, "className"> {
+  variant: "radio";
 }
 
-interface CheckboxVariantProps extends BaseFormFieldProps,
-  Omit<CheckboxProps, 'className'> {
-  variant: 'checkbox';
+interface CheckboxVariantProps
+  extends BaseFormFieldProps,
+    Omit<CheckboxProps, "className"> {
+  variant: "checkbox";
   placeholder?: string;
 }
 
 // Variant: display (read-only with edit button for mobile cards)
 interface DisplayVariantProps extends BaseFormFieldProps {
-  variant: 'display';
-  text: string;                      // Display text
-  onEdit?: () => void;               // Edit button handler
+  variant: "display";
+  text: string; // Display text
+  onEdit?: () => void; // Edit button handler
 }
 
 export type FormFieldProps =
@@ -123,35 +128,27 @@ export type FormFieldProps =
   | DisplayVariantProps;
 
 export const FormField = memo(function FormField(props: FormFieldProps) {
-  
   useAutofillFix;
 
   const { label, sublabel, icon, error, className = "", disabled } = props;
-  
+
   // Generate unique ID for connecting labels to inputs
   const generatedId = useId();
-  
+
   // Ref for date input to trigger calendar picker programmatically
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   const renderField = () => {
     // VARIANT: checkbox
-    if (props.variant === 'checkbox') {
+    if (props.variant === "checkbox") {
       return (
         <div className="input-field">
           {/* Leading icon (optional) */}
-          {icon && (
-            <Icon 
-              name={icon}
-              size="lg" 
-            />
-          )}
-          
+          {icon && <Icon name={icon} size="lg" />}
+
           {/* Main content - use placeholder if provided, otherwise use label */}
-          <div className={`input-base ${icon ? 'has-icon' : ''}`}>
-            <label htmlFor={generatedId} >
-              {props.placeholder || label}
-            </label>
+          <div className={`input-base ${icon ? "has-icon" : ""}`}>
+            <label htmlFor={generatedId}>{props.placeholder || label}</label>
 
             {/* Trailing checkbox */}
             <Checkbox
@@ -167,23 +164,18 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
     }
 
     // VARIANT: radio
-    if (props.variant === 'radio') {
+    if (props.variant === "radio") {
       return (
         <div className="input-field">
           {/* Leading icon (optional) */}
-          {icon && (
-            <Icon 
-              name={icon} 
-              size="lg" 
-            />
-          )}
-          
+          {icon && <Icon name={icon} size="lg" />}
+
           {/* Main content - label */}
-          <div className={`input-base ${icon ? 'has-icon' : ''}`}>
-            <label htmlFor={generatedId} className="form-field__content text-on-surface cursor-pointer">
+          <div className={`input-base ${icon ? "has-icon" : ""}`}>
+            <label htmlFor={generatedId} className="cursor-pointer">
               {label}
             </label>
-          
+
             {/* Trailing radio button */}
             <RadioButton
               id={generatedId}
@@ -199,21 +191,19 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
     }
 
     // VARIANT: toggle
-    if (props.variant === 'toggle') {
+    if (props.variant === "toggle") {
       return (
         <div className="input-field">
           {/* Leading icon (optional) */}
-          {icon && (
-            <Icon 
-              name={icon} 
-              size="lg" 
-            />
-          )}
-          
+          {icon && <Icon name={icon} size="lg" />}
+
           {/* Main content - label and optional text */}
-          <div className={`input-base ${icon ? 'has-icon' : ''}`}>
+          <div className={`input-base ${icon ? "has-icon" : ""}`}>
             <div className="flex flex-col gap-xs">
-              <label htmlFor={generatedId} className="body-md text-on-surface cursor-pointer">
+              <label
+                htmlFor={generatedId}
+                className="body-md text-on-surface cursor-pointer"
+              >
                 {label}
               </label>
               {props.text && (
@@ -222,54 +212,46 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
                 </span>
               )}
             </div>
-          
-          {/* Trailing toggle */}
-          <CustomToggle
-            id={generatedId}
-            checked={props.checked}
-            onChange={props.onChange}
-            disabled={disabled}
-          />
+
+            {/* Trailing toggle */}
+            <CustomToggle
+              id={generatedId}
+              checked={props.checked}
+              onChange={props.onChange}
+              disabled={disabled}
+            />
           </div>
         </div>
       );
     }
 
     // VARIANT: select
-    if (props.variant === 'select') {
+    if (props.variant === "select") {
       return (
         <CustomSelect
-          value={props.value || ''}
+          value={props.value || ""}
           options={props.options || []}
           onChange={props.onChange}
           name={props.name}
           placeholder={props.placeholder || "Select an option"}
           icon={icon}
           disabled={disabled}
-          hideChevronOnMobile={props.hideChevronOnMobile} 
-
+          hideChevronOnMobile={props.hideChevronOnMobile}
         />
       );
     }
 
     // VARIANT: display (read-only with edit button)
-    if (props.variant === 'display') {
+    if (props.variant === "display") {
       return (
         <div className="input-field">
           {/* Leading icon (optional) */}
-          {icon && (
-            <Icon 
-              name={icon} 
-              size="lg" 
-            />
-          )}
-          
+          {icon && <Icon name={icon} size="lg" />}
+
           {/* Main content - display text */}
-          <div className={`input-base ${icon ? 'has-icon' : ''}`}>
-            <span className="form-field__content text-on-surface">
-              {props.text}
-            </span>
-          
+          <div className={`input-base ${icon ? "has-icon" : ""}`}>
+            <span className="">{props.text}</span>
+
             {/* Trailing edit button */}
             {props.onEdit && (
               <Button
@@ -280,7 +262,6 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
                 icon="edit"
                 className="form-field-display-button"
               />
-              
             )}
           </div>
         </div>
@@ -289,90 +270,86 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
 
     // VARIANT: default (editable inputs - text, email, password, tel, date, number, textarea)
     const defaultProps = props as DefaultVariantProps;
-    
+
     // TEXTAREA
-    if (defaultProps.type === 'textarea') {
+    if (defaultProps.type === "textarea") {
       return (
         <div className="input-field">
           {/* Leading icon (optional) */}
-          {icon && (
-            <Icon 
-              name={icon} 
-              size="lg"
-            />
-          )}
-          
+          {icon && <Icon name={icon} size="lg" />}
+
           {/* Textarea */}
           <textarea
-            value={defaultProps.value || ''}
+            value={defaultProps.value || ""}
             name={defaultProps.name}
             placeholder={defaultProps.placeholder}
             onChange={(e) => defaultProps.onChange?.(e.target.value)}
             disabled={disabled}
-            className={`input-base ${icon ? 'has-icon' : ''} form-field__content  resize-none ${defaultProps.textareaClassName || ''}`}
+            className={`input-base ${icon ? "has-icon" : ""} resize-none ${
+              defaultProps.textareaClassName || ""
+            }`}
             rows={5}
           />
-          
         </div>
       );
     }
 
     // ALL OTHER INPUT TYPES (text, email, password, tel, date, number)
-    const isDateInput = defaultProps.type === 'date';
+    const isDateInput = defaultProps.type === "date";
 
     return (
       <div className="input-field">
         {/* Leading icon (optional) */}
         {icon && (
-          <Icon 
-            name={icon} 
+          <Icon
+            name={icon}
             size="lg"
-            className="cursor-pointer" 
+            className="cursor-pointer"
             onClick={() => {
-              
               if (isDateInput && dateInputRef.current) {
-               
                 dateInputRef.current.click();
               }
             }}
           />
         )}
-        
-          {/* Input */}
-          <input
-            ref={isDateInput ? dateInputRef : undefined}
-            type={defaultProps.type}
-            value={defaultProps.value || ''}
-            name={defaultProps.name}
-            placeholder={defaultProps.placeholder}
-            min={defaultProps.min}
-            max={defaultProps.max}
-            step={defaultProps.step}
-            onChange={(e) => defaultProps.onChange?.(e.target.value)}
-            disabled={disabled}
-            className={`input-base ${icon ? 'has-icon' : ''} form-field__content ${defaultProps.type === 'date' ? 'date-input-custom' : ''}`}
-          />
-        
+
+        {/* Input */}
+        <input
+          ref={isDateInput ? dateInputRef : undefined}
+          type={defaultProps.type}
+          value={defaultProps.value || ""}
+          name={defaultProps.name}
+          placeholder={defaultProps.placeholder}
+          min={defaultProps.min}
+          max={defaultProps.max}
+          step={defaultProps.step}
+          onChange={(e) => defaultProps.onChange?.(e.target.value)}
+          disabled={disabled}
+          className={`input-base ${icon ? "has-icon" : ""} ${
+            defaultProps.type === "date" ? "date-input-custom" : ""
+          }`}
+        />
       </div>
     );
   };
 
   // Show top label for default, select, display, AND checkbox variants
   // (checkbox will show placeholder inside the box, but needs top label for grid alignment)
-  const showTopLabel = !props.variant || props.variant === 'default' || props.variant === 'select' || props.variant === 'display' || props.variant === 'checkbox';
+  const showTopLabel =
+    !props.variant ||
+    props.variant === "default" ||
+    props.variant === "select" ||
+    props.variant === "display" ||
+    props.variant === "checkbox";
 
   return (
     <div className={`flex flex-col gap-sm ${className}`}>
       {/* Label (for default, select, display, checkbox variants) */}
       {showTopLabel && (
         <div className="flex items-baseline gap-xs">
-          <label className="form-field__top-label">
-            {label}
-          </label>
+          <label className="form-field__top-label">{label}</label>
           {sublabel && (
-            <span className="form-field__sub-label">
-              {sublabel}
-            </span>
+            <span className="form-field__sub-label">{sublabel}</span>
           )}
         </div>
       )}
@@ -380,17 +357,14 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
       {/* Field */}
       <div className="flex flex-col mb-4">
         {renderField()}
-        
+
         {/* Error Message Container */}
-        
-          {error && (
-            <div className="h-4">
-              <span className="label-sm text-error">
-                {error}
-              </span>
-            </div>
-          )}
-        
+
+        {error && (
+          <div className="h-4">
+            <span className="label-sm text-error">{error}</span>
+          </div>
+        )}
       </div>
     </div>
   );

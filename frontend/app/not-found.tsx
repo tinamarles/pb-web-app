@@ -10,7 +10,7 @@ export default function NotFound() {
         {/* Pickleball Icon */}
         <div className="flex items-center justify-center rounded-full bg-primary-container p-hero">
           <Icon 
-            name="placeholder" 
+            name="default" 
             size="5xl"
             className="text-primary" 
           />
