@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { FormField, Button, Icon } from "@/app/ui";
 import { useAuth } from "@/app/providers/AuthUserProvider";
 import { toast } from "sonner";
-import { useAutofillFix } from "@/app/lib/hooks";
+
 
 // === MODIFICATION LOG ===
 // Date: 2025-11-18 UTC
@@ -53,6 +53,7 @@ export interface ProfileFormData {
   skillLevel: string; // ← STRING in form (converted to number on save)
   isCertifiedInstructor: boolean;
   bio: string;
+  hasPrivacy: boolean;
 }
 
 export function ProfileForm({
@@ -65,7 +66,7 @@ export function ProfileForm({
   const router = useRouter();
 
   const [isSaving, setIsSaving] = useState(false);
-  useAutofillFix;
+  
 
   // Form state - initialize with user data
   const [formData, setFormData] = useState<ProfileFormData>({
@@ -80,6 +81,7 @@ export function ProfileForm({
     skillLevel: user?.skillLevel ? String(user.skillLevel) : "", // ← Convert number to string
     isCertifiedInstructor: user?.isCoach || false,
     bio: user?.bio || "",
+    hasPrivacy: false,
   });
 
   // Sync formData with user data when user loads
@@ -96,6 +98,7 @@ export function ProfileForm({
         skillLevel: user.skillLevel ? String(user.skillLevel) : '',  // ← Convert number to string
         isCertifiedInstructor: user.isCoach || false,
         bio: user.bio || '',
+        hasPrivacy: false,
       });
     }
   }, [user]);
@@ -107,6 +110,10 @@ export function ProfileForm({
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  const handleEdit = () => {
+    alert('Clicked Edit');
+  }
 
   // Convert form data to API format (string → number conversions)
   const prepareDataForAPI = (data: ProfileFormData) => {
@@ -258,6 +265,7 @@ export function ProfileForm({
             onChange={(value) => handleChange("gender", value)}
             placeholder="Placeholder"
             options={["Male", "Female", "Other"]}
+            hideChevronOnMobile
           />
           <button className="profile-page__formField__button">
             <Icon name="edit" className="icon-md" />
@@ -300,7 +308,7 @@ export function ProfileForm({
             value={formData.bio}
             onChange={(value) => handleChange("bio", value)}
             placeholder="Tell us about yourself"
-            textareaClassName="min-h-[120px]"
+            textareaClassName=""
             className=""
           />
           <button className="profile-page__formField__button">

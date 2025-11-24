@@ -317,7 +317,7 @@ export function Icon({
     // If onClick provided, wrap in clickable container
     if (onClick) {
       return (
-        <span onClick={onClick} className="inline-flex cursor-pointer" role="button" tabIndex={0}>
+        <span onClick={onClick} className="inline-flex items-center cursor-pointer" role="button" tabIndex={0}>
           <FallbackIcon strokeWidth={1.5} className={iconClasses} />
         </span>
       );
@@ -344,7 +344,7 @@ export function Icon({
   // If onClick provided, wrap in clickable container for better click handling
   if (onClick) {
     return (
-      <span onClick={onClick} className="inline-flex cursor-pointer" role="button" tabIndex={0}>
+      <span onClick={onClick} className="inline-flex items-center cursor-pointer" role="button" tabIndex={0}>
         <IconComponent {...iconProps} />
       </span>
     );

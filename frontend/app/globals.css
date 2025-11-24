@@ -627,8 +627,9 @@
   &:not(textarea) {
     max-width: var(--width-input-max);
   }
-
+  
   &:focus {
+    outline: none !important;
     --tw-ring-color: color-mix(in srgb, var(--color-primary), transparent 80%);
     @apply focus-ring-base border-primary;
     box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--tw-ring-color);
@@ -1076,14 +1077,15 @@
     .profile-page__mobile__list-item .input-base.has-icon {
       padding-left: var(--px-32) !important;
     }
-    .profile-page__mobile__list-item .input-field > svg {
+    .profile-page__mobile__list-item .input-field > svg,
+    .profile-page__mobile__list-item .input-field > span > svg {
       @apply left-0;
     }
 
   }
   /* Mobile List Item */
   .profile-page__mobile__list-item {
-    @apply flex items-center gap-md; /* Remove justify-between, add gap */
+    @apply flex items-start gap-xs; /* Remove justify-between, add gap */
     @apply px-md pt-md pb-0;
     @apply bg-surface border border-outline-variant rounded-lg;
     @apply hover:bg-surface-container;
@@ -1127,7 +1129,7 @@
   }
 
   .profile-page__formField__button {
-    @apply p-sm rounded-full hover:bg-surface-container;
+    @apply rounded-full hover:bg-surface-container;
   }
   @media (min-width: 640px) {
     .profile-page__formField__button {
@@ -1360,10 +1362,23 @@
   /* +++ INPUT Fields +++ */
   .input-field {
     @apply relative flex items-center;
+    height: var(--px-24);
+    @media (min-width: 640px) {
+      height: var(--px-48);
+    }
   }
-  .input-field > svg {
+
+  /* Auto-detect textarea and remove fixed height */
+  .input-field:has(textarea) {
+    height: auto !important;
+    @apply items-start;
+  }
+ 
+  .input-field > svg,
+  .input-field > span > svg {
     @apply absolute left-[var(--px-12)] z-10 pointer-events-none;
   }
+
   /* +++ FORM FIELD INPUT - Container focus styling +++ */
   .form-field-input {
     transition: border-color 200ms, box-shadow 200ms;
@@ -1389,7 +1404,16 @@
   .form-field__content {
     @apply body-md;
   }
-
+  /* This is the edit button that is shown for FormField variant='display */
+  .form-field-display-button {
+    display: none !important; /* necessary as @utility btn-base has higher specificity */
+    @media (min-width: 640px) {
+      display:inline-flex;
+    }
+  }
+}
+/* === Custom Checkbox === */
+@layer components {
   /* +++ CUSTOM CHECKBOX - Unified design using primary color +++ */
   .custom-checkbox {
     appearance: none;
@@ -1441,6 +1465,9 @@
     }
   }
 
+}
+/* === Custom RadioButton === */
+@layer components {
   /* +++ CUSTOM RADIO BUTTON +++ */
   .custom-radio {
     appearance: none;
@@ -1453,10 +1480,9 @@
     
     &:focus {
       outline: none;
+    }
   }
-}
   
-
   /* Radio wrapper and label */
   .radio-wrapper {
     position: relative;
@@ -1481,7 +1507,6 @@
     }
   }
 
-
   .radio-label {
     display: flex;
     align-items: center;
@@ -1495,7 +1520,9 @@
     transition: all 200ms ease;
 
   }
-
+}
+/* === Custom Toggle === */
+@layer components {
   /* +++ CUSTOM TOGGLE +++ */
   .custom-toggle {
     position: relative;
@@ -1555,7 +1582,9 @@
     transition: left 200ms ease, background-color 200ms ease;
     box-shadow: 0 3px 8px 0 rgba(0, 0, 0, 0.15), 0 3px 1px 0 rgba(0, 0, 0, 0.06);
   }
-
+}
+/* === Custom ComboBox (Select) === */
+@layer components {
   /* +++ CUSTOM SELECT COMPONENT - CSS-driven dropdown styling +++ */
 
   /* --- Dropdown Container ---
@@ -1618,6 +1647,9 @@
     font-weight: 500; /* Medium weight for subtle emphasis */
   }
 
+}
+/* === Custom Date Input for Calendar-picker === */
+@layer components {
   /* +++ DATE INPUT Custom styling - Hide native calendar icon but keep functionality +++ */
   .date-input-custom {
     /* Force same height as other inputs to prevent layout shift */
@@ -1664,6 +1696,7 @@
     }
   }
 }
+
 /* === ICON component === */
 @layer components {
   /* +++ ICON BORDERED - Circular frame for icons +++ */
@@ -1682,6 +1715,7 @@
       @apply border-primary;
     }
   }
+ 
 }
 /* === Dropdown Menu === */
 @layer components {
@@ -2301,4 +2335,21 @@
   h6 {
     @apply font-header;
   }
+}
+/* --- Overwritting Browser hijacking  --- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  /* This large inset box-shadow covers the default autofill background. */
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface-container-lowest) inset !important;
+  
+  /* Forces the text to match your light theme's text color. */
+  -webkit-text-fill-color: var(--color-on-surface) !important;
+  
+  /* Forces the font size to inherit from the parent element. */
+  font-size: inherit !important;
+
+  /* This long transition time prevents the autofill from flickering. */
+  transition: background-color 5000s ease-in-out 0s;
 }
