@@ -868,9 +868,7 @@
       @apply pb-0; /* no bottom padding */
     }
   }
-  
-  /* Refactor: Step 3 - classes */
-  /* NEW: Page Content classes */
+ 
   .page__content {
     @apply flex flex-col;
     @apply gap-md;
@@ -903,6 +901,25 @@
     }
   }
 
+  .page__form {
+    @apply p-lg;
+    @apply flex-1;
+  }
+  @media (min-width: 1024px) {
+    .page__form {
+      @apply bg-surface border border-outline-variant rounded-lg;
+    }
+  }
+
+  .page__form__button {
+    @apply hidden;
+  }
+  @media (min-width: 640px) {
+    .page__form__button {
+      @apply block;
+      @apply mt-lg;
+    }
+  }
 }
 
 /* +++ SIDEBAR Layout +++ */
@@ -1010,7 +1027,27 @@
     }
   }
 }
+/* +++ dynamic GRID Layout +++ */
+@layer components {
+  .grid-3 {
+    @apply grid grid-cols-1 gap-sm;
+  }
+  @media (min-width: 640px) {
+    .grid-3 {
+      @apply grid-cols-2 gap-lg;
+    }
+  }
+  @media (min-width: 1024px) {
+    .grid-3 {
+      @apply grid-cols-3;
+    }
+  }
 
+  .grid--textarea {
+    @apply col-span-full; /* Bio spans full width on all breakpoints */
+  }
+  
+}
 /* +++ AUTH Pages +++ */
 @layer components {
   .authForm-wrapper {
@@ -1033,47 +1070,14 @@
 }
 /* +++ PROFILE PAGE Component +++ */
 @layer components {
-  /* Refactor: Step 4 - classes */
-  /* NEW: Profile Page Header classes */
 
-
-  /* Refactor: Step 5 - classes */
-  /* NEW: Form Container classes */
-  .profile-page__form {
-    @apply p-lg;
-    @apply flex-1;
-  }
-  @media (min-width: 1024px) {
-    .profile-page__form {
-      @apply bg-surface border border-outline-variant rounded-lg;
-    }
-  }
-
-  .profile-page__form__grid {
-    @apply grid grid-cols-1 gap-sm;
-  }
-  @media (min-width: 640px) {
-    .profile-page__form__grid {
-      @apply grid-cols-2 gap-lg;
-    }
-  }
-  @media (min-width: 1024px) {
-    .profile-page__form__grid {
-      @apply grid-cols-3;
-    }
-  }
-
-  /* Refactor: Step 6 - classes */
-  /* NEW: Modify form-field for mobile so it is display only */
-  /* NEW: add .form-field--bio so it always spans the entire width
-  
   /* Mobile: Make fields display-only */
   @media (max-width: 639px) {
-    .profile-page__mobile__list-item input,
-    .profile-page__mobile__list-item select,  
-    .profile-page__mobile__list-item textarea,
-    .profile-page__mobile__list-item button:not(.profile-page__formField__button),  /* Disable buttons but NOT edit button */
-    .profile-page__mobile__list-item .input-base {
+    .profile-page__mobile-item input,
+    .profile-page__mobile-item select,  
+    .profile-page__mobile-item textarea,
+    .profile-page__mobile-item button:not(.profile-page__mobile-item__button),  /* Disable buttons but NOT edit button */
+    .profile-page__mobile-item .input-base {
       /* Disable CustomSelect trigger div */
       pointer-events: none; /* Can't click/focus */
       outline: none;
@@ -1084,76 +1088,59 @@
     }
 
     /* Remove FormField container border and background on mobile */
-    .profile-page__mobile__list-item .form-field-input,
-    .profile-page__mobile__list-item .input-base {
+    .profile-page__mobile-item .input-base {
       /* Also remove from CustomSelect trigger */
       background: transparent !important;
       border: none !important;
       padding: 0 !important; /* Remove padding so text aligns left */
     }
 
-    .profile-page__mobile__list-item .input-base.has-icon {
+    .profile-page__mobile-item .input-base.has-icon {
       padding-left: var(--px-32) !important;
     }
-    .profile-page__mobile__list-item .input-field > svg,
-    .profile-page__mobile__list-item .input-field > span > svg {
+    .profile-page__mobile-item .input-field > svg,
+    .profile-page__mobile-item .input-field > span > svg {
       @apply left-0;
     }
 
   }
   /* Mobile List Item */
-  .profile-page__mobile__list-item {
-    @apply flex items-start gap-xs; /* Remove justify-between, add gap */
-    @apply px-md pt-md pb-0;
-    @apply bg-surface border border-outline-variant rounded-lg;
-    @apply hover:bg-surface-container;
-    @apply transition-colors duration-200;
-  }
   @media (max-width: 639px) {
-    .profile-page__mobile__list-item > div:first-child {
-      @apply flex-1; /* FormField takes full width on mobile */
+    .profile-page__mobile-item {
+      @apply flex items-start gap-xs; /* Remove justify-between, add gap */
+      @apply px-md pt-md pb-0;
+      @apply bg-surface border border-outline-variant rounded-lg;
+      @apply hover:bg-surface-container;
+      @apply transition-colors duration-200;
     }
   }
-  @media (min-width: 640px) {
-    .profile-page__mobile__list-item {
-      all: revert;
-      @apply hover:bg-transparent;
+  @media (max-width: 639px) {
+    .profile-page__mobile-item > div:first-child {
+      @apply flex-1; /* FormField takes full width on mobile */
     }
   }
 
   /* Mobile: Increase field content text size 
   @media (max-width: 639px) {
-    .profile-page__mobile__list-item .form-field__content {
+    .profile-page__mobile-item .form-field__content {
      
       @apply title-md emphasized;
     }
-    .profile-page__mobile__list-item .form-field__top-label {
+    .profile-page__mobile-item .form-field__top-label {
       @apply body-sm;
     }
   }
   */
-  .form-field--bio {
-    grid-column: 1 / -1; /* Bio spans full width on all breakpoints */
-  }
-
-  .profile-page__form__button {
-    @apply hidden;
-  }
-  @media (min-width: 640px) {
-    .profile-page__form__button {
-      @apply block;
-      @apply mt-lg;
-    }
-  }
-
-  .profile-page__formField__button {
+  
+  .profile-page__mobile-item__button {
     @apply rounded-full hover:bg-surface-container;
   }
   @media (min-width: 640px) {
-    .profile-page__formField__button {
+    .profile-page__mobile-item__button {
       @apply hidden;
     }
   }
+ 
 }
 /* === BOTTOM NAVIGATION BAR Component (Mobile) === */
 @layer components {
@@ -1394,34 +1381,20 @@
     @apply absolute left-[var(--px-12)] z-10 pointer-events-none;
   }
 
-  /* +++ FORM FIELD INPUT - Container focus styling +++ */
-  .form-field-input {
-    transition: border-color 200ms, box-shadow 200ms;
-
-    &:focus-within {
-      --tw-ring-color: color-mix(in srgb, var(--color-primary), transparent 80%); 
-      @apply focus-ring-base;
-    }
-  }
-
-  .form-field__top-label {
+  .input-field__top-label {
     @apply body-lg emphasized text-on-surface-variant;
   }
-  .form-field__sub-label {
+  .input-field__sub-label {
     @apply label-sm text-on-surface-variant;
   }
-  /*
-  .form-field__content {
-    @apply body-md;
-  }
-  */
-  /* This is the edit button that is shown for FormField variant='display */
-  .form-field-display-button {
+  .input-field__display-button {
     display: none !important; /* necessary as @utility btn-base has higher specificity */
     @media (min-width: 640px) {
       display:inline-flex;
     }
   }
+  /* This is the edit button that is shown for FormField variant='display */
+  
 }
 /* === Custom Checkbox === */
 @layer components {

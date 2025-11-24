@@ -260,7 +260,7 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
                 onClick={props.onEdit}
                 aria-label="Edit field"
                 icon="edit"
-                className="form-field-display-button"
+                className="input-field__display-button"
               />
             )}
           </div>
@@ -347,9 +347,9 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
       {/* Label (for default, select, display, checkbox variants) */}
       {showTopLabel && (
         <div className="flex items-baseline gap-xs">
-          <label className="form-field__top-label">{label}</label>
+          <label className="input-field__top-label">{label}</label>
           {sublabel && (
-            <span className="form-field__sub-label">{sublabel}</span>
+            <span className="input-field__sub-label">{sublabel}</span>
           )}
         </div>
       )}

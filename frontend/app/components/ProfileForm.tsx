@@ -186,11 +186,11 @@ export function ProfileForm({
   };
 
   return (
-    <div className="profile-page__form">
+    <div className="page__form">
       <h2 className="title-lg emphasized mb-lg">Personal Details</h2>
 
-      <div className="profile-page__form__grid">
-        <div className="profile-page__mobile__list-item">
+      <div className="grid-3">
+        <div className="profile-page__mobile-item">
           <FormField
             label="First Name"
             type="text"
@@ -198,11 +198,11 @@ export function ProfileForm({
             onChange={(value) => handleChange("firstName", value)}
             placeholder="Your first Name"
           />
-          <button className="profile-page__formField__button">
+          <button className="profile-page__mobile-item__button">
             <Icon name="edit" className="icon-md" />
           </button>
         </div>
-        <div className="profile-page__mobile__list-item">
+        <div className="profile-page__mobile-item">
           <FormField
             label="Last Name"
             type="text"
@@ -210,11 +210,11 @@ export function ProfileForm({
             onChange={(value) => handleChange("lastName", value)}
             placeholder="Your last Name"
           />
-          <button className="profile-page__formField__button">
+          <button className="profile-page__mobile-item__button">
             <Icon name="edit" className="icon-md" />
           </button>
         </div>
-        <div className="profile-page__mobile__list-item">
+        <div className="profile-page__mobile-item">
           <FormField
             label="Phone Number"
             sublabel="(Optional)"
@@ -224,11 +224,11 @@ export function ProfileForm({
             onChange={(value) => handleChange("phoneNumber", value)}
             placeholder="Placeholder"
           />
-          <button className="profile-page__formField__button">
+          <button className="profile-page__mobile-item__button">
             <Icon name="edit" className="icon-md" />
           </button>
         </div>
-        <div className="profile-page__mobile__list-item">
+        <div className="profile-page__mobile-item">
           <FormField
             label="Location"
             sublabel="(Optional)"
@@ -238,11 +238,11 @@ export function ProfileForm({
             onChange={(value) => handleChange("location", value)}
             placeholder="Your city"
           />
-          <button className="profile-page__formField__button">
+          <button className="profile-page__mobile-item__button">
             <Icon name="edit" className="icon-md" />
           </button>
         </div>
-        <div className="profile-page__mobile__list-item">
+        <div className="profile-page__mobile-item">
           <FormField
             label="Date of Birth"
             sublabel="(Optional)"
@@ -252,11 +252,11 @@ export function ProfileForm({
             onChange={(value) => handleChange("dateOfBirth", value)}
             placeholder="yyyy/mm/dd"
           />
-          <button className="profile-page__formField__button">
+          <button className="profile-page__mobile-item__button">
             <Icon name="edit" className="icon-md" />
           </button>
         </div>
-        <div className="profile-page__mobile__list-item">
+        <div className="profile-page__mobile-item">
           <FormField
             label="Gender"
             sublabel="(Optional)"
@@ -267,11 +267,11 @@ export function ProfileForm({
             options={["Male", "Female", "Other"]}
             hideChevronOnMobile
           />
-          <button className="profile-page__formField__button">
+          <button className="profile-page__mobile-item__button">
             <Icon name="edit" className="icon-md" />
           </button>
         </div>
-        <div className="profile-page__mobile__list-item">
+        <div className="profile-page__mobile-item">
           <FormField
             label="Skill Level"
             sublabel="(Level 1.0 to 7.0)"
@@ -280,11 +280,11 @@ export function ProfileForm({
             onChange={(value) => handleChange("skillLevel", value)}
             placeholder="Your skill level"
           />
-          <button className="profile-page__formField__button">
+          <button className="profile-page__mobile-item__button">
             <Icon name="edit" className="icon-md" />
           </button>
         </div>
-        <div className="profile-page__mobile__list-item">
+        <div className="profile-page__mobile-item">
           {/* Certified Instructor Checkbox */}
           <FormField
             variant="checkbox"
@@ -296,11 +296,11 @@ export function ProfileForm({
               handleChange("isCertifiedInstructor", checked)
             }
           />
-          <button className="profile-page__formField__button">
+          <button className="profile-page__mobile-item__button">
             <Icon name="edit" className="icon-md" />
           </button>
         </div>
-        <div className="profile-page__mobile__list-item form-field--bio">
+        <div className="profile-page__mobile-item grid--textarea">
           {/* Bio - Full Width */}
           <FormField
             label="Bio"
@@ -311,14 +311,14 @@ export function ProfileForm({
             textareaClassName=""
             className=""
           />
-          <button className="profile-page__formField__button">
+          <button className="profile-page__mobile-item__button">
             <Icon name="edit" className="icon-md" />
           </button>
         </div>
       </div>
 
       {/* Save Button */}
-      <div className="profile-page__form__button">
+      <div className="page__form__button">
         <Button
           variant="filled"
           size="lg"
