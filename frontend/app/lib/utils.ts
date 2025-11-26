@@ -1,7 +1,7 @@
 // +++ Utility functions +++
 
 // Function to convert the snake_case coming from the Django API
-// into camelCase 
+// into camelCase BACKEND -> FRONTEND
 
 export function snakeToCamel(obj: unknown): unknown {
   if (typeof obj !== 'object' || obj === null) {
@@ -20,6 +20,30 @@ export function snakeToCamel(obj: unknown): unknown {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
       newObj[camelKey] = snakeToCamel((obj as Record<string, unknown>)[key]);
+    }
+  }
+  return newObj;
+}
+// Function to convert the camelCase coming from the frontend
+// into snake_case for the django Backend: FRONTEND -> BACKEND
+export function camelToSnake(obj: unknown): unknown {
+  if (typeof obj !== 'object' || obj === null) {
+    // Handle non-object types or null safely
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    // If it's an array, recursively convert its elements
+    return obj.map(item => camelToSnake(item));
+  }
+
+  // If it's an object, iterate over its keys and convert them
+  const newObj: Record<string, unknown> = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      // Convert camelCase to snake_case
+      const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+      newObj[snakeKey] = camelToSnake((obj as Record<string, unknown>)[key]);
     }
   }
   return newObj;

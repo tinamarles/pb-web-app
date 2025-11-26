@@ -1,6 +1,7 @@
 // app/api/profile/update/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { camelToSnake } from "@/app/lib/utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL;
 
@@ -26,6 +27,8 @@ export async function PATCH(req: Request) {
                 { status: 400 }  
             );  
         }
+        // Convert camelCase to snake_case for Django
+        const djangoData = camelToSnake(updateData);
 
         // ✅ Forward the ENTIRE object to Django - it handles partial updates
         const djangoResponse = await fetch (
@@ -36,7 +39,7 @@ export async function PATCH(req: Request) {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify(updateData),
+                body: JSON.stringify(djangoData),
             }
         );
 

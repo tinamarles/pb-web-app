@@ -11,10 +11,15 @@
     "chevronleft",
     "chevronright",
     "chevronup",
+    "darkgrey",
     "emailfilled",
     "hrefs",
+    "Jerôme",
+    "nowrap",
     "pickleball",
+    "rgba",
     "sonner",
+    "srgb",
     "sublabel"
   ],
   "workbench.colorCustomizations": {
@@ -24,5 +29,9 @@
     "editorBracketHighlight.foreground4": "#FF6347",
     "editorBracketHighlight.foreground5": "#90EE90",
     "editorBracketHighlight.foreground6": "#FFA500"
-  }
+  },
+
+  "css.validate": false,
+  "less.validate": false,
+  "scss.validate": false
 }

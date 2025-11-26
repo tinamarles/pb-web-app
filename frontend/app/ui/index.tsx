@@ -15,6 +15,7 @@ export { Sidebar, type SidebarProps, type SidebarItem } from "./sidebar";
 export { CustomSelect, type CustomSelectProps } from "./customSelect";
 export { FormField, type FormFieldProps } from "./formField";
 export { Avatar, type AvatarProps, type AvatarSize } from "./avatar";
+export { Sheet, type SheetProps } from "./sheet";
 //export { UploadImageButton, type UploadImageButtonProps } from './uploadImageButton';
 //export { AvatarWithUpload, type AvatarWithUploadProps } from './avatarWithUpload';
 export { Search, type SearchProps } from "./search";

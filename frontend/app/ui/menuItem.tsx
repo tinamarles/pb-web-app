@@ -250,7 +250,9 @@ export function MenuItem({
 
   // Render as Link or button based on href
   const itemContent = href ? (
-    <Link href={href} className={itemClasses} aria-disabled={disabled}>
+    <Link href={href} 
+        className={itemClasses} 
+        aria-disabled={disabled}>
       {content}
     </Link>
   ) : (

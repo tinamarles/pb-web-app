@@ -28,7 +28,9 @@ export function HeroSection() {
                               rounded-full border border-primary/20"
               >
                 <Icon name="default" className="icon-sm fill-current" />
-                <span className="label-lg text-on-primary">#1 Pickleball App</span>
+                <span className="label-lg text-on-primary">
+                  #1 Pickleball App
+                </span>
               </div>
             </div>
 
@@ -46,7 +48,6 @@ export function HeroSection() {
                 <span className="slogan-sm text-secondary lg:slogan-md">
                   Connect & Compete
                 </span>
-                
               </h1>
 
               <p className="body-lg text-on-surface-variant max-w-2xl mx-auto lg:mx-0">
@@ -133,7 +134,7 @@ export function HeroSection() {
           </div>
 
           {/* Right Column - Image Placeholder */}
-          <div className="relative w-full aspect-[2/3] max-w-md mx-auto lg:max-w-none lg:w-1/3">
+          <div className="relative w-full aspect-2/3 max-w-md mx-auto lg:max-w-none lg:w-1/3">
             <div className="rounded-2xl overflow-hidden shadow-2xl">
               <Image
                 src="https://res.cloudinary.com/dvjri35p2/image/upload/v1762894233/jon-matthews-aUBZRcUdAYk-unsplash_qurslo.jpg"

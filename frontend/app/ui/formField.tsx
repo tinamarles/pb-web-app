@@ -15,122 +15,58 @@
 // ========================
 
 import { memo, useId, useRef } from "react";
-import { CustomSelect, CustomSelectProps } from "./customSelect";
+import { CustomSelect } from "./customSelect";
 import { Icon } from "./icon";
-import { Checkbox, CheckboxProps } from "./checkbox";
-import { RadioButton, RadioButtonProps } from "./radioButton";
-import { CustomToggle, CustomToggleProps } from "./customToggle";
+import { Checkbox } from "./checkbox";
+import { RadioButton } from "./radioButton";
+import { CustomToggle } from "./customToggle";
 import { Button } from "./button";
 import { useAutofillFix } from "@/app/lib/hooks";
 
 // Base props shared by all variants
 interface BaseFormFieldProps {
-  label: string; // Field label text
+  label?: string; // Field label text
   sublabel?: string; // Optional secondary label
+  topLabelExtra?: React.ReactNode;   // Optional extra content on label line (e.g., "Forgot password?")
   icon?: string; // Leading icon (lucide icon name)
   error?: string; // Error message to display
   className?: string; // Additional container CSS classes
   disabled?: boolean; // Is field disabled
 }
 
-// Variant: default (editable inputs)
-interface DefaultVariantProps extends BaseFormFieldProps {
-  variant?: "default";
-  type: "text" | "email" | "password" | "tel" | "date" | "number" | "textarea";
+// ✅ UNIFIED PROPS INTERFACE - All variant-specific props are optional
+export interface FormFieldProps extends BaseFormFieldProps {
+  variant?: 'default' | 'checkbox' | 'radio' | 'toggle' | 'select' | 'display';
+  
+  // Default variant props
+  type?: 'text' | 'email' | 'password' | 'tel' | 'date' | 'number' | 'textarea';
   name?: string;
   value?: string;
-  onChange?: (value: string) => void;
   placeholder?: string;
   min?: string;
   max?: string;
   step?: string;
   textareaClassName?: string;
-}
-/*
-// Variant: checkbox
-interface CheckboxVariantProps extends BaseFormFieldProps {
-  variant: 'checkbox';
+  
+  // Checkbox/Radio/Toggle props
   checked?: boolean;
-  onChange?: (checked: boolean) => void;
-  name?: string;
-  placeholder?: string;  // Text to show inside the box (instead of label)
-}
-
-// Variant: radio
-interface RadioVariantProps extends BaseFormFieldProps {
-  variant: 'radio';
-  name?: string;
-  value?: string;
-  checked?: boolean;
-  onChange?: (checked: boolean) => void;
-}
-
-// Variant: toggle
-interface ToggleVariantProps extends BaseFormFieldProps {
-  variant: 'toggle';
-  checked?: boolean;
-  onChange?: (checked: boolean) => void;
-  text?: string;                     // Display text (e.g., phone number, email)
-}
-
-// Variant: select
-interface SelectVariantProps extends BaseFormFieldProps {
-  variant: 'select';
-  name?: string;
-  value?: string;
-  onChange?: (value: string) => void;
+  onChange?: ((value: string) => void) | ((checked: boolean) => void);
+  
+  // Select props
   options?: string[];
-  placeholder?: string;
-}
-*/
-
-// Each variant extends Base + the actual component props
-interface SelectVariantProps
-  extends BaseFormFieldProps,
-    Omit<CustomSelectProps, "className"> {
-  // Omit className - FormField controls it
-  variant: "select";
-}
-
-interface ToggleVariantProps
-  extends BaseFormFieldProps,
-    Omit<CustomToggleProps, "className"> {
-  variant: "toggle";
+  hideChevronOnMobile?: boolean;
+  
+  // Toggle props
   text?: string;
+  
+  // Display variant props
+  onEdit?: () => void;
 }
-
-interface RadioVariantProps
-  extends BaseFormFieldProps,
-    Omit<RadioButtonProps, "className"> {
-  variant: "radio";
-}
-
-interface CheckboxVariantProps
-  extends BaseFormFieldProps,
-    Omit<CheckboxProps, "className"> {
-  variant: "checkbox";
-  placeholder?: string;
-}
-
-// Variant: display (read-only with edit button for mobile cards)
-interface DisplayVariantProps extends BaseFormFieldProps {
-  variant: "display";
-  text: string; // Display text
-  onEdit?: () => void; // Edit button handler
-}
-
-export type FormFieldProps =
-  | DefaultVariantProps
-  | CheckboxVariantProps
-  | RadioVariantProps
-  | ToggleVariantProps
-  | SelectVariantProps
-  | DisplayVariantProps;
 
 export const FormField = memo(function FormField(props: FormFieldProps) {
   useAutofillFix;
 
-  const { label, sublabel, icon, error, className = "", disabled } = props;
+  const { label, sublabel, topLabelExtra, icon, error, className = "", disabled } = props;
 
   // Generate unique ID for connecting labels to inputs
   const generatedId = useId();
@@ -154,7 +90,7 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
             <Checkbox
               id={generatedId}
               checked={props.checked}
-              onChange={props.onChange}
+              onChange={props.onChange as ((checked: boolean) => void) | undefined}
               disabled={disabled}
               className="cursor-pointer"
             />
@@ -182,7 +118,7 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
               name={props.name}
               value={props.value}
               checked={props.checked}
-              onChange={props.onChange}
+              onChange={props.onChange as ((checked: boolean) => void) | undefined} 
               disabled={disabled}
             />
           </div>
@@ -217,7 +153,7 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
             <CustomToggle
               id={generatedId}
               checked={props.checked}
-              onChange={props.onChange}
+              onChange={props.onChange as ((checked: boolean) => void) | undefined}
               disabled={disabled}
             />
           </div>
@@ -231,7 +167,7 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
         <CustomSelect
           value={props.value || ""}
           options={props.options || []}
-          onChange={props.onChange}
+          onChange={props.onChange as ((value: string) => void) | undefined}
           name={props.name}
           placeholder={props.placeholder || "Select an option"}
           icon={icon}
@@ -269,10 +205,9 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
     }
 
     // VARIANT: default (editable inputs - text, email, password, tel, date, number, textarea)
-    const defaultProps = props as DefaultVariantProps;
-
+    
     // TEXTAREA
-    if (defaultProps.type === "textarea") {
+    if (props.type === "textarea") {
       return (
         <div className="input-field">
           {/* Leading icon (optional) */}
@@ -280,13 +215,13 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
 
           {/* Textarea */}
           <textarea
-            value={defaultProps.value || ""}
-            name={defaultProps.name}
-            placeholder={defaultProps.placeholder}
-            onChange={(e) => defaultProps.onChange?.(e.target.value)}
+            value={props.value || ""}
+            name={props.name}
+            placeholder={props.placeholder}
+            onChange={(e) => (props.onChange as ((value: string) => void) | undefined)?.(e.target.value)}
             disabled={disabled}
             className={`input-base ${icon ? "has-icon" : ""} resize-none ${
-              defaultProps.textareaClassName || ""
+              props.textareaClassName || ""
             }`}
             rows={5}
           />
@@ -295,7 +230,7 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
     }
 
     // ALL OTHER INPUT TYPES (text, email, password, tel, date, number)
-    const isDateInput = defaultProps.type === "date";
+    const isDateInput = props.type === "date";
 
     return (
       <div className="input-field">
@@ -316,17 +251,17 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
         {/* Input */}
         <input
           ref={isDateInput ? dateInputRef : undefined}
-          type={defaultProps.type}
-          value={defaultProps.value || ""}
-          name={defaultProps.name}
-          placeholder={defaultProps.placeholder}
-          min={defaultProps.min}
-          max={defaultProps.max}
-          step={defaultProps.step}
-          onChange={(e) => defaultProps.onChange?.(e.target.value)}
+          type={props.type}
+          value={props.value || ""}
+          name={props.name}
+          placeholder={props.placeholder}
+          min={props.min}
+          max={props.max}
+          step={props.step}
+          onChange={(e) => (props.onChange as ((value: string) => void) | undefined)?.(e.target.value)}
           disabled={disabled}
           className={`input-base ${icon ? "has-icon" : ""} ${
-            defaultProps.type === "date" ? "date-input-custom" : ""
+            props.type === "date" ? "date-input-custom" : ""
           }`}
         />
       </div>
@@ -350,6 +285,11 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
           <label className="input-field__top-label">{label}</label>
           {sublabel && (
             <span className="input-field__sub-label">{sublabel}</span>
+          )}
+          {topLabelExtra && (
+            <span className="input-field__top-label-extra">
+              {topLabelExtra}
+            </span>
           )}
         </div>
       )}

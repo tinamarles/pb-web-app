@@ -1,40 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FormField, Button, Icon } from "@/app/ui";
+import { FormField, Button, Sheet} from "@/app/ui";
 import { useAuth } from "@/app/providers/AuthUserProvider";
 import { toast } from "sonner";
+import { FORM_FIELDS, FormFieldConfig } from "../data/formFieldConfig";
 
-
-// === MODIFICATION LOG ===
-// Date: 2025-11-18 UTC
-// Modified by: Assistant
-// Changes: Extracted ProfileForm from /pages/profile.tsx (lines 94-231)
-// Purpose: Create reusable form component for both /profile and /setup pages
-// Follows DRY principle, allows form to be used in multiple contexts
-// ========================
-//
-// === MODIFICATION LOG ===
-// Date: 2025-11-18
-// Modified by: Assistant
-// Changes: Fixed skillLevel type - changed from number to string in ProfileFormData
-// Previous: skillLevel: number caused TypeScript errors (form inputs are strings)
-// New: skillLevel stored as string in formData, converted to number on save
-// Purpose: Follow standard React form pattern - keep form data as strings, convert on submit
-// ========================
-//
-// === MODIFICATION LOG ===
-// Date: 2025-11-18
-// Modified by: Assistant
-// Changes: Cleaned up callback pattern - Smart Component approach
-// Previous: onSave called before save, duplicate data conversion, confusing flow
-// New:
-//   - ProfileForm handles ALL save logic (conversion + API call) in ONE place
-//   - onSaveSuccess called AFTER successful save (no false promises!)
-//   - onSaveError for error handling (optional)
-//   - Parent just gets notified, does custom stuff (redirect, analytics, etc.)
-// Benefits: No duplicate work, clear responsibilities, works standalone
-// ========================
 
 export interface ProfileFormProps {
   mode?: "view" | "setup";
@@ -56,6 +27,22 @@ export interface ProfileFormData {
   hasPrivacy: boolean;
 }
 
+// ✅ FIELD CONFIGURATIONS - Imported from centralized data file
+// Ensures consistency across all forms - firstName always looks the same everywhere
+const fieldConfigs: Record<keyof ProfileFormData, FormFieldConfig> = {
+  firstName: FORM_FIELDS.firstName,
+  lastName: FORM_FIELDS.lastName,
+  phoneNumber: FORM_FIELDS.phoneNumber,
+  location: FORM_FIELDS.location,
+  dateOfBirth: FORM_FIELDS.dateOfBirth,
+  gender: FORM_FIELDS.gender,
+  skillLevel: FORM_FIELDS.skillLevel,
+  isCertifiedInstructor: FORM_FIELDS.isCertifiedInstructor,
+  bio: FORM_FIELDS.bio,
+  hasPrivacy: FORM_FIELDS.hasPrivacy,
+  email: FORM_FIELDS.email
+};
+
 export function ProfileForm({
   mode,
   onSaveSuccess,
@@ -66,8 +53,9 @@ export function ProfileForm({
   const router = useRouter();
 
   const [isSaving, setIsSaving] = useState(false);
+  // Mobile edit sheet state - tracks which field is being edited
+  const [editingField, setEditingField] = useState<keyof ProfileFormData | null>(null);
   
-
   // Form state - initialize with user data
   const [formData, setFormData] = useState<ProfileFormData>({
     firstName: user?.firstName || "",
@@ -181,135 +169,115 @@ export function ProfileForm({
     }
   };
 
+  // Handle save from sheet - saves and closes sheet
+  const handleSaveAndClose = async () => {
+    await handleSave();
+    setEditingField(null);  // Close sheet after save
+  };
+
+  // ✅ DYNAMIC FIELD RENDERER - Spreads static config + adds dynamic state
+  const renderField = (fieldKey: keyof ProfileFormData) => {
+    const config = fieldConfigs[fieldKey];
+    
+    return (
+      <>
+        <FormField
+          {...config}  // ← Spread static config (label, variant, type, icon, etc.)
+          value={formData[fieldKey] as string}  // ← Dynamic: current value from state
+          checked={formData[fieldKey] as boolean}  // ← Dynamic: current checked state (ignored by non-checkbox/toggle)
+          onChange={(val:string | boolean) => handleChange(fieldKey, val)}  // ← Dynamic: updates state
+        />
+        <Button 
+          variant='subtle'
+          icon='edit'
+          iconOnly
+          className="profile-page__mobile-item__button"
+          onClick={() => setEditingField(fieldKey)}
+        />
+      </>
+    );
+  };
+
+  // ✅ DYNAMIC SHEET RENDERER - Generic sheet for any field
+  const renderSheet = (fieldKey: keyof ProfileFormData) => {
+    const config = fieldConfigs[fieldKey];
+    
+    return (
+      <Sheet
+        open={editingField === fieldKey}
+        onOpenChange={(open) => !open && setEditingField(null)}
+        title={config.sheetTitle}
+      >
+        {renderField(fieldKey)}
+        <div className="flex gap-3 mt-6">
+          <Button
+            variant="filled"
+            size="lg"
+            label="Save"
+            onClick={handleSaveAndClose}
+            disabled={isSaving}
+            className="flex-1"
+          />
+          <Button
+            variant="outlined"
+            size="lg"
+            label="Cancel"
+            onClick={() => setEditingField(null)}
+            className="flex-1"
+          />
+        </div>
+      </Sheet>
+    );
+  };
+
   return (
     <div className="page__form" data-mode={mode}>
       <h2 className="title-lg emphasized mb-lg">Personal Details</h2>
 
       <div className="grid-3">
+        {/* First Name */}
         <div className="profile-page__mobile-item">
-          <FormField
-            label="First Name"
-            type="text"
-            value={formData.firstName}
-            onChange={(value) => handleChange("firstName", value)}
-            placeholder="Your first Name"
-          />
-          <button className="profile-page__mobile-item__button">
-            <Icon name="edit" className="icon-md" />
-          </button>
+          {renderField('firstName')}
         </div>
+
+        {/* Last Name */}
         <div className="profile-page__mobile-item">
-          <FormField
-            label="Last Name"
-            type="text"
-            value={formData.lastName}
-            onChange={(value) => handleChange("lastName", value)}
-            placeholder="Your last Name"
-          />
-          <button className="profile-page__mobile-item__button">
-            <Icon name="edit" className="icon-md" />
-          </button>
+          {renderField('lastName')}
         </div>
+
+        {/* Phone Number */}
         <div className="profile-page__mobile-item">
-          <FormField
-            label="Phone Number"
-            sublabel="(Optional)"
-            type="tel"
-            icon="phone"
-            value={formData.phoneNumber}
-            onChange={(value) => handleChange("phoneNumber", value)}
-            placeholder="Placeholder"
-          />
-          <button className="profile-page__mobile-item__button">
-            <Icon name="edit" className="icon-md" />
-          </button>
+          {renderField('phoneNumber')}
         </div>
+
+        {/* Location */}
         <div className="profile-page__mobile-item">
-          <FormField
-            label="Location"
-            sublabel="(Optional)"
-            type="text"
-            icon="location"
-            value={formData.location}
-            onChange={(value) => handleChange("location", value)}
-            placeholder="Your city"
-          />
-          <button className="profile-page__mobile-item__button">
-            <Icon name="edit" className="icon-md" />
-          </button>
+          {renderField('location')}
         </div>
+
+        {/* Date of Birth */}
         <div className="profile-page__mobile-item">
-          <FormField
-            label="Date of Birth"
-            sublabel="(Optional)"
-            type="date"
-            icon="calendar"
-            value={formData.dateOfBirth}
-            onChange={(value) => handleChange("dateOfBirth", value)}
-            placeholder="yyyy/mm/dd"
-          />
-          <button className="profile-page__mobile-item__button">
-            <Icon name="edit" className="icon-md" />
-          </button>
+          {renderField('dateOfBirth')}
         </div>
+
+        {/* Gender */}
         <div className="profile-page__mobile-item">
-          <FormField
-            label="Gender"
-            sublabel="(Optional)"
-            variant="select"
-            value={formData.gender}
-            onChange={(value) => handleChange("gender", value)}
-            placeholder="Placeholder"
-            options={["Male", "Female", "Other"]}
-            hideChevronOnMobile
-          />
-          <button className="profile-page__mobile-item__button">
-            <Icon name="edit" className="icon-md" />
-          </button>
+          {renderField('gender')}
         </div>
+
+        {/* Skill Level */}
         <div className="profile-page__mobile-item">
-          <FormField
-            label="Skill Level"
-            sublabel="(Level 1.0 to 7.0)"
-            type="text"
-            value={formData.skillLevel}
-            onChange={(value) => handleChange("skillLevel", value)}
-            placeholder="Your skill level"
-          />
-          <button className="profile-page__mobile-item__button">
-            <Icon name="edit" className="icon-md" />
-          </button>
+          {renderField('skillLevel')}
         </div>
+
+        {/* Certified Instructor */}
         <div className="profile-page__mobile-item">
-          {/* Certified Instructor Checkbox */}
-          <FormField
-            variant="checkbox"
-            icon='coaches'
-            label="Certification" // Shows at TOP (aligns with grid)
-            placeholder="Certified Instructor" // Shows INSIDE the box
-            checked={formData.isCertifiedInstructor}
-            onChange={(checked) =>
-              handleChange("isCertifiedInstructor", checked)
-            }
-          />
-          <button className="profile-page__mobile-item__button">
-            <Icon name="edit" className="icon-md" />
-          </button>
+          {renderField('isCertifiedInstructor')}
         </div>
+
+        {/* Bio - Full Width */}
         <div className="profile-page__mobile-item grid--textarea">
-          {/* Bio - Full Width */}
-          <FormField
-            label="Bio"
-            type="textarea"
-            value={formData.bio}
-            onChange={(value) => handleChange("bio", value)}
-            placeholder="Tell us about yourself"
-            textareaClassName=""
-            className=""
-          />
-          <button className="profile-page__mobile-item__button">
-            <Icon name="edit" className="icon-md" />
-          </button>
+          {renderField('bio')}
         </div>
       </div>
 
@@ -323,6 +291,21 @@ export function ProfileForm({
           disabled={isSaving}
         />
       </div>
+
+      {/* ===== MOBILE EDIT SHEETS ===== */}
+      {/* NEXT.JS: No changes needed - works identically */}
+      
+      {renderSheet('firstName')}
+      {renderSheet('lastName')}
+      {renderSheet('phoneNumber')}
+      {renderSheet('location')}
+      {renderSheet('dateOfBirth')}
+      {renderSheet('gender')}
+      {renderSheet('skillLevel')}
+      {renderSheet('isCertifiedInstructor')}
+      {renderSheet('bio')}
+      {renderSheet('hasPrivacy')}
+
     </div>
   );
 }
