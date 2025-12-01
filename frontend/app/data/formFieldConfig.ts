@@ -171,8 +171,6 @@ export const FORM_FIELDS = {
   // Activity
   ...ACTIVITY_FIELDS,
   
-  // Privacy
-  ...PRIVACY_FIELDS
 } as const;
 
 // ============================================

@@ -187,7 +187,7 @@ export const CustomSelect = memo(function CustomSelect({
           name="chevrondown"
           size="lg"
           className={`${
-            hideChevronOnMobile ? "hidden md:block" : ""
+            hideChevronOnMobile ? "hidden sm:block" : ""
           } transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
         />
       </div>

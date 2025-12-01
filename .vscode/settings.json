@@ -11,16 +11,20 @@
     "chevronleft",
     "chevronright",
     "chevronup",
+    "collectstatic",
     "darkgrey",
     "emailfilled",
     "hrefs",
     "Jerôme",
     "nowrap",
     "pickleball",
+    "pycache",
     "rgba",
     "sonner",
     "srgb",
-    "sublabel"
+    "staticfiles",
+    "sublabel",
+    "venv"
   ],
   "workbench.colorCustomizations": {
     "editorBracketHighlight.foreground1": "#FFD700",

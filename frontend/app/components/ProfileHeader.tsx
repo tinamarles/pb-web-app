@@ -17,6 +17,9 @@ export function ProfileHeader() {
   // ✅ Step 1: Handle upload (save to backend)
   // Wrap saveAvatar to show user Feedback
   const handleAvatarUpload = async (url: string) => {
+    console.log("Saving avatar...");
+    console.log("current User: ", user);
+    console.log("avatar url passed:", url);
     try {
       const response = await fetch("/api/profile/update", {
         method: "PATCH",

@@ -36,12 +36,14 @@ class NestedClubSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
+            'short_name',
             'description',
             'phone_number',
             'email',
             'website_url',
             'logo_url',
             'address',
+            'requests',
         ]
 
 class ClubSerializer(serializers.ModelSerializer):
@@ -67,6 +69,8 @@ class ClubSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 # Serializer for member users, including related information
+# This is the serializer used for Member Users 
+# - via api endpoint api/auth/user that points to the UserDetailsView in users/views.py
 @ts_interface()
 class MemberUserSerializer(CustomUserSerializer):
     # Use the defined related_name here
@@ -100,6 +104,7 @@ class ClubMembershipSerializer(serializers.ModelSerializer):
                   'levels', 
                   'membership_number', 
                   'is_preferred_club',
+                  'status',
                   'registration_start_date',
                   'registration_end_date'
                   ]

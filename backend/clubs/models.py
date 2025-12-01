@@ -40,13 +40,15 @@ class ClubMembershipSkillLevel(models.Model):
 # Club model
 class Club(models.Model):
     name = models.CharField(max_length=255)
+    short_name = models.CharField(max_length=20,blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     members = models.ManyToManyField(User, through='ClubMembership', related_name='clubs_as_member')
-    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, related_name='club_location')
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='club_location')
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True) 
     website_url = models.URLField(max_length=200, blank=True, null=True)
     logo_url = models.URLField(max_length=200, blank=True, null=True)
+    requests = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -55,6 +57,21 @@ class Club(models.Model):
 
 # Through-table for User and Club (ClubMembership)
 class ClubMembership(models.Model):
+    # ClubMembership.status (MembershipStatus)
+
+    # pending
+    # accepted
+    # rejected
+    # cancelled
+    # blocked
+    #
+    class MembershipStatus (models.IntegerChoices):
+        PENDING = 1, "Pending"
+        ACCEPTED = 2, "Accepted"
+        REJECTED = 3, "Rejected"
+        CANCELLED = 4, "Cancelled"
+        BLOCKED = 5, "Blocked"
+
     member = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='club_memberships') # Changed on_delete to SET_NULL for safety
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='club_memberships')
     roles = models.ManyToManyField(Role, related_name='club_memberships_with_role')
@@ -65,7 +82,8 @@ class ClubMembership(models.Model):
     # Link to ClubMemberShip Type and if a Type is deleted, then set all associated
     # ClubMemberships with that Type to type = null
     type = models.ForeignKey(ClubMembershipType, on_delete=models.SET_NULL, null=True)
-    level = models.ManyToManyField(ClubMembershipSkillLevel, related_name='club_memberships_with_level')
+    level = models.ForeignKey(ClubMembershipSkillLevel, on_delete=models.SET_NULL, null=True)
+    status= models.IntegerField(choices=MembershipStatus, default=MembershipStatus.ACCEPTED, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -73,5 +91,5 @@ class ClubMembership(models.Model):
         unique_together = ('member', 'club')
 
     def __str__(self):
-        return f"{self.user.username} - {self.club.name}"
+        return f"{self.member.username} - {self.club.name}"
     

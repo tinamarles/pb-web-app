@@ -8,7 +8,7 @@ User = get_user_model()
 
 # Member profile linked one-to-one with a User.
 # The user field can be NULL to support members without a user account.
-# THIS MODEL WILL BE OBSOLETE WHEN USING CustomUser!
+# THIS MODEL IS OBSOLETE -> WE ARE USING CustomUser!
 
 class Member(models.Model):
 

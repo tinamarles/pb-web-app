@@ -62,7 +62,9 @@ INSTALLED_APPS = [
     'clubs',
     'leagues',
     'public',
-    'users'
+    'users',
+    'matches',
+    'courts'
 ]
 
 MIDDLEWARE = [

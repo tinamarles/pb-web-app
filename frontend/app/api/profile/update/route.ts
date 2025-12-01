@@ -30,6 +30,8 @@ export async function PATCH(req: Request) {
         // Convert camelCase to snake_case for Django
         const djangoData = camelToSnake(updateData);
 
+        console.log('djangoData:', djangoData);
+
         // ✅ Forward the ENTIRE object to Django - it handles partial updates
         const djangoResponse = await fetch (
             `${API_BASE_URL}/api/profile/update/`,
@@ -42,7 +44,7 @@ export async function PATCH(req: Request) {
                 body: JSON.stringify(djangoData),
             }
         );
-
+        /*
         if (!djangoResponse.ok) {
             const errorData = await djangoResponse.json();
             return NextResponse.json(
@@ -50,7 +52,21 @@ export async function PATCH(req: Request) {
                 { status: djangoResponse.status }
             );
         }
+        */
 
+        if (!djangoResponse.ok) {
+            const errorData = await djangoResponse.json();
+            
+            // 🎯 LOG EVERYTHING DJANGO SENDS!
+            console.error("❌ Django response status:", djangoResponse.status);
+            console.error("❌ Django error data:", errorData);
+            console.error("❌ Full error object:", JSON.stringify(errorData, null, 2));
+            
+            return NextResponse.json(
+                { error: errorData.detail || errorData.error || JSON.stringify(errorData) || 'Failed to update profile' },
+                { status: djangoResponse.status }
+            );
+        }
         const userData = await djangoResponse.json();
         console.log('Profile updated successfully:', userData);
 

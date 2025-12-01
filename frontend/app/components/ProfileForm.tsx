@@ -6,7 +6,6 @@ import { useAuth } from "@/app/providers/AuthUserProvider";
 import { toast } from "sonner";
 import { FORM_FIELDS, FormFieldConfig } from "../data/formFieldConfig";
 
-
 export interface ProfileFormProps {
   mode?: "view" | "setup";
   onSaveSuccess?: () => void; // Called AFTER successful save
@@ -24,24 +23,24 @@ export interface ProfileFormData {
   skillLevel: string; // ← STRING in form (converted to number on save)
   isCertifiedInstructor: boolean;
   bio: string;
-  hasPrivacy: boolean;
 }
 
-// ✅ FIELD CONFIGURATIONS - Imported from centralized data file
+// ✅ FIELD CONFIGURATIONS - Function that receives mode for conditional props
 // Ensures consistency across all forms - firstName always looks the same everywhere
-const fieldConfigs: Record<keyof ProfileFormData, FormFieldConfig> = {
+// Mode-specific overrides: hideChevronOnMobile only in 'view' mode, show chevron in 'setup'
+const getFieldConfigs = (mode: 'view' | 'setup'): Record<keyof ProfileFormData, FormFieldConfig> => ({
   firstName: FORM_FIELDS.firstName,
   lastName: FORM_FIELDS.lastName,
   phoneNumber: FORM_FIELDS.phoneNumber,
   location: FORM_FIELDS.location,
   dateOfBirth: FORM_FIELDS.dateOfBirth,
-  gender: FORM_FIELDS.gender,
+  // Override hideChevronOnMobile based on mode - only hide in 'view' mode
+  gender: { ...FORM_FIELDS.gender, hideChevronOnMobile: mode === 'view' },
   skillLevel: FORM_FIELDS.skillLevel,
   isCertifiedInstructor: FORM_FIELDS.isCertifiedInstructor,
   bio: FORM_FIELDS.bio,
-  hasPrivacy: FORM_FIELDS.hasPrivacy,
   email: FORM_FIELDS.email
-};
+});
 
 export function ProfileForm({
   mode,
@@ -53,6 +52,10 @@ export function ProfileForm({
   const router = useRouter();
 
   const [isSaving, setIsSaving] = useState(false);
+
+  // Get field configs based on current mode (for conditional props like hideChevronOnMobile)
+  const fieldConfigs = getFieldConfigs(mode || 'view');
+
   // Mobile edit sheet state - tracks which field is being edited
   const [editingField, setEditingField] = useState<keyof ProfileFormData | null>(null);
   
@@ -69,7 +72,6 @@ export function ProfileForm({
     skillLevel: user?.skillLevel ? String(user.skillLevel) : "", // ← Convert number to string
     isCertifiedInstructor: user?.isCoach || false,
     bio: user?.bio || "",
-    hasPrivacy: false,
   });
 
   // Sync formData with user data when user loads
@@ -86,7 +88,6 @@ export function ProfileForm({
         skillLevel: user.skillLevel ? String(user.skillLevel) : '',  // ← Convert number to string
         isCertifiedInstructor: user.isCoach || false,
         bio: user.bio || '',
-        hasPrivacy: false,
       });
     }
   }, [user]);
@@ -105,7 +106,7 @@ export function ProfileForm({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
-      dob: data.dateOfBirth,
+      dob: data.dateOfBirth || null,
       gender: data.gender === "Male" ? 1 : data.gender === "Female" ? 2 : 3,
       mobilePhone: data.phoneNumber,
       skillLevel: parseFloat(data.skillLevel) || 0, // ← STRING to NUMBER
@@ -125,6 +126,7 @@ export function ProfileForm({
     console.log("Saving profile...");
     console.log("Form data (strings):", formData);
     console.log("API data (converted):", apiData);
+    console.log("current User: ", user);
 
     try {
       // 2. Call API to save profile changes (ONCE, here only)
@@ -138,7 +140,23 @@ export function ProfileForm({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update profile");
+        console.error("❌ Response status:", response.status);
+        console.error("❌ Response statusText:", response.statusText);
+        
+        // Try to get error as JSON
+        let errorMessage = "ProfileForm: Failed to update profile";
+        try {
+          const errorData = await response.json();
+          console.error("❌ Error data (JSON):", errorData);
+          errorMessage = errorData.error || errorData.detail || errorData.message || JSON.stringify(errorData);
+        } catch (jsonError) {
+          // Not JSON, try as text
+          const errorText = await response.text();
+          console.error("❌ Error data (TEXT):", errorText);
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -304,7 +322,6 @@ export function ProfileForm({
       {renderSheet('skillLevel')}
       {renderSheet('isCertifiedInstructor')}
       {renderSheet('bio')}
-      {renderSheet('hasPrivacy')}
 
     </div>
   );
