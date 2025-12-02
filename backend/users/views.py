@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(name)
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -13,6 +15,8 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, Ou
 from django.db import transaction
 from django.contrib.auth import get_user_model
 
+
+
 # Get the active user model
 User = get_user_model()
 
@@ -20,6 +24,30 @@ User = get_user_model()
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+    def post(self, request, *args, **kwargs):
+        # 🔍 LOG WHAT DJANGO RECEIVES
+        logger.info("=" * 50)
+        logger.info("🔵 TOKEN REQUEST RECEIVED")
+        logger.info(f"🔵 Request method: {request.method}")
+        logger.info(f"🔵 Request path: {request.path}")
+        logger.info(f"🔵 Origin header: {request.headers.get('Origin', 'NOT SET')}")
+        logger.info(f"🔵 Content-Type: {request.headers.get('Content-Type', 'NOT SET')}")
+        logger.info(f"🔵 Request body data: {request.data}")
+        logger.info("=" * 50)
+        
+        # Call the parent class method (does the actual work)
+        response = super().post(request, *args, **kwargs)
+        
+        # 🔍 LOG THE RESPONSE
+        logger.info(f"🔵 Response status: {response.status_code}")
+        if response.status_code != 200:
+            logger.error(f"❌ Error response data: {response.data}")
+        else:
+            logger.info("✅ Success! Tokens generated")
+        logger.info("=" * 50)
+        
+        return response
+    
 class LogoutAndBlacklistRefreshToken(APIView):
     permission_classes = () # We don't need authentication to log out
 
