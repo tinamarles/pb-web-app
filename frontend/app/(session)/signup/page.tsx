@@ -6,6 +6,12 @@ import Link from "next/link";
 import { formatBackendErrors } from "@/lib/utils";
 import { useAutofillFix } from "@/lib/hooks";
 import { Icon, Button } from "@/ui";
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {  
+  title: 'Sign Up | PickleHub',  
+  description: 'Create your account to join pickleball clubs, participate in leagues, and book courts.',  
+}
 
 export default function SignUpPage() {
   // Call the useAutoFillFix Hook to prevent the default browser behaviour for input fields

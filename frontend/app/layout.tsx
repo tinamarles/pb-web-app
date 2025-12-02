@@ -4,12 +4,24 @@ import "@/app/globals.css";
 import { Providers } from "@/providers/Providers";
 import { Toaster } from "sonner";
   
-export const metadata: Metadata = {
-
-  title: "Club Management",
-  description: "A comprehensive club and league management solution.",
-
-};
+export const metadata: Metadata = {  
+  title: {  
+    default: 'PickleHub',  
+    template: '%s | PickleHub' // This makes child pages work nicely  
+  },  
+  description: 'A comprehensive club and league management solution for pickleball communities and players.',  
+  keywords: ['pickleball', 'club management', 'league management', 'sports management'],  
+  authors: [{ name: 'Tina Marles' }],  
+  creator: 'Tina Marles',  
+  openGraph: {  
+  type: 'website',  
+  locale: 'en_US',  
+  url: 'https://pb-web-app.vercel.app',  
+  siteName: 'PickleHub',  
+  title: 'PickleHub - Pickleball League & Club Management',  
+  description: 'A comprehensive club and league management solution for pickleball communities and players.',  
+  },  
+}  
 
 export default function RootLayout({
   children,
