@@ -669,6 +669,7 @@
     background-color: var(--color-background);
     color: var(--color-on-background);
     min-height: 100vh;
+    margin: auto;
   }
   /* +++ HEADER Component +++ */
   .header {

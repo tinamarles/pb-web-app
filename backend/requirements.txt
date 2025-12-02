@@ -38,7 +38,7 @@ Flask==3.0.0
 flydenity==0.1.6
 folium==0.15.1
 fonttools==4.44.0
-geopandas @ file:///Users/tinamarles/geopandas
+geopandas==0.14.4
 h11==0.14.0
 h3==3.7.6
 html5lib==1.1

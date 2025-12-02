@@ -1,4 +1,4 @@
-import { DashboardSidebar } from "@/app/components/DashboardSidebar";
+import { DashboardSidebar } from "@/components/DashboardSidebar";
 
 export default function ProfileSidebarSlot() {
   return <DashboardSidebar />;

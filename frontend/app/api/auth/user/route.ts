@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { User } from "@/app/lib/definitions";
+import { User } from "@/lib/definitions";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL;
 

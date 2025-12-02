@@ -1,8 +1,5 @@
-import { ProfileForm } from "@/app/components/ProfileForm";
+import { ProfileForm } from "@/components/ProfileForm";
 
 export default function ProfilePage() {
- 
-  return (
-   <ProfileForm mode='view'/>
-  );
+  return <ProfileForm mode="view" />;
 }

@@ -1,7 +1,7 @@
 // 404 Not Found Page
 
-import Link from 'next/link';
-import { Button, Icon } from '@/app/ui';
+import Link from "next/link";
+import { Button, Icon } from "@/ui";
 
 export default function NotFound() {
   return (
@@ -9,11 +9,7 @@ export default function NotFound() {
       <div className="flex max-w-2xl flex-col items-center gap-2xl text-center">
         {/* Pickleball Icon */}
         <div className="flex items-center justify-center rounded-full bg-primary-container p-hero">
-          <Icon 
-            name="default" 
-            size="5xl"
-            className="text-primary" 
-          />
+          <Icon name="default" size="5xl" className="text-primary" />
         </div>
 
         {/* Error Code */}
@@ -26,7 +22,8 @@ export default function NotFound() {
 
         {/* Description */}
         <p className="body-lg text-on-surface-variant">
-          The page you&apos;re looking for doesn&apos;t exist. It might have been moved, deleted, or you might have hit the ball a little too hard.
+          The page you&apos;re looking for doesn&apos;t exist. It might have
+          been moved, deleted, or you might have hit the ball a little too hard.
         </p>
 
         {/* Actions */}

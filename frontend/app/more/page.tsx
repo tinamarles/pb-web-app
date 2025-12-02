@@ -1,8 +1,5 @@
-import { MoreMenuPage } from "@/app/pages/moreMenuPage";
+import { MoreMenuPage } from "@/page-components/moreMenuPage";
 
 export default function MorePage() {
- 
-  return (
-   <MoreMenuPage />
-  );
+  return <MoreMenuPage />;
 }

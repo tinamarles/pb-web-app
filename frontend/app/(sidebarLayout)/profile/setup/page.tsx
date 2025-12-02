@@ -1,8 +1,5 @@
-import { ProfileForm } from "@/app/components/ProfileForm";
+import { ProfileForm } from "@/components/ProfileForm";
 
 export default function ProfileSetupPage() {
- 
-  return (
-    <ProfileForm mode="setup" />
-  );
+  return <ProfileForm mode="setup" />;
 }

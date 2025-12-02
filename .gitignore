@@ -5,12 +5,12 @@
 /backend/venv/
 
 # Python bytecode - CORRECTED to catch ALL levels
-/backend/**/pycache/
-/backend/*/.pyc
-/backend/*/.pyo
-/backend/*/.pyd
 *.py[cod]
+*.pyc
+*.pyo
+*.pyd
 *$py.class
+.Python
 
 # Database files created by Django
 /backend/*.sqlite3

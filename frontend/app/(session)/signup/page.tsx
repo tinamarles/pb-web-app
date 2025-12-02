@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatBackendErrors } from "@/app/lib/utils";
-import { useAutofillFix } from "@/app/lib/hooks";
-import { Icon, Button } from "@/app/ui";
+import { formatBackendErrors } from "@/lib/utils";
+import { useAutofillFix } from "@/lib/hooks";
+import { Icon, Button } from "@/ui";
 
 export default function SignUpPage() {
   // Call the useAutoFillFix Hook to prevent the default browser behaviour for input fields
@@ -60,7 +60,6 @@ export default function SignUpPage() {
 
   return (
     <>
-     
       <div
         className="w-full p-4
                   shrink-0 z-30
@@ -71,18 +70,18 @@ export default function SignUpPage() {
                   shadow-2xl
                   "
       >
-        <h1
-          className="headline-lg text-center text-primary py-4"
-        >
+        <h1 className="headline-lg text-center text-primary py-4">
           Create your Pickle Hub account
         </h1>
         <form onSubmit={handleSubmit} noValidate className="space-y-2 text-md">
           {/* We now use the 'error' state from the AuthContext to display the message */}
           {error && (
-            <div className="mt-4 p-4 
+            <div
+              className="mt-4 p-4 
                             text-center 
                             rounded-md
-                            bg-error text-on-error">
+                            bg-error text-on-error"
+            >
               {error}
             </div>
           )}
@@ -97,7 +96,10 @@ export default function SignUpPage() {
               Username
             </label>
             <div className="input-field">
-              <Icon name="user" className="icon-lg text-on-surface-variant/60" />
+              <Icon
+                name="user"
+                className="icon-lg text-on-surface-variant/60"
+              />
               <input
                 type="text"
                 id="username"
@@ -123,7 +125,10 @@ export default function SignUpPage() {
               Email
             </label>
             <div className="input-field">
-              <Icon name="emailfilled" className="icon-lg text-on-surface-variant/60" />
+              <Icon
+                name="emailfilled"
+                className="icon-lg text-on-surface-variant/60"
+              />
               <input
                 type="email"
                 id="email"
@@ -137,7 +142,7 @@ export default function SignUpPage() {
                         invalid:[&:not(:placeholder-shown):not(:focus)]:border-error
                         "
               />
-              
+
               <span className="mt-2 hidden text-sm text-error peer-[&:not(:placeholder-shown):not(:focus):invalid]:block">
                 <Icon name="warning" className="icon-md text-error" /> Please
                 enter a valid email address
@@ -155,7 +160,10 @@ export default function SignUpPage() {
               Set Password
             </label>
             <div className="input-field">
-              <Icon name="lock" className="icon-lg text-on-surface-variant/60" />
+              <Icon
+                name="lock"
+                className="icon-lg text-on-surface-variant/60"
+              />
               <input
                 type="password"
                 id="password"
@@ -171,10 +179,15 @@ export default function SignUpPage() {
             </div>
           </div>
           <div className="">
-            <label htmlFor="verifyPassword" 
-                  className="block py-2 body-md"></label>
+            <label
+              htmlFor="verifyPassword"
+              className="block py-2 body-md"
+            ></label>
             <div className="input-field">
-              <Icon name="lock" className="icon-lg text-on-surface-variant/60" />
+              <Icon
+                name="lock"
+                className="icon-lg text-on-surface-variant/60"
+              />
               <input
                 type="password"
                 id="verifyPassword"
@@ -193,13 +206,13 @@ export default function SignUpPage() {
               {passwordError}
             </div>
           )}
-          <Button 
-              type='submit'
-              variant='filled'
-              size='lg'
-              label='Create Account' 
-              className='w-full mt-6 body-lg' />
-          
+          <Button
+            type="submit"
+            variant="filled"
+            size="lg"
+            label="Create Account"
+            className="w-full mt-6 body-lg"
+          />
         </form>
         <div className="mt-4 text-center">
           <p className="body-md">
@@ -213,7 +226,6 @@ export default function SignUpPage() {
           </p>
         </div>
       </div>
-     
     </>
   );
 }

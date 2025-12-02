@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatBackendErrors } from "@/app/lib/utils";
-import { useAutofillFix } from "@/app/lib/hooks";
-import { Icon, Button } from "@/app/ui";
+import { formatBackendErrors } from "@/lib/utils";
+import { useAutofillFix } from "@/lib/hooks";
+import { Icon, Button } from "@/ui";
 
 export default function LoginPage() {
   // Call the useAutoFillFix Hook to prevent the default browser behaviour for input fields

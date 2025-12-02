@@ -1,7 +1,7 @@
-import { LandingPage } from "./pages/Landing/landing";
+import { LandingPage } from "@/page-components/Landing/landing";
 
-const App = () => {
+export default function App() {
+
   return <LandingPage />;
-};
 
-export default App;
+}

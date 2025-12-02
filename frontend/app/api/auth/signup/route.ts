@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { SignUpFormValues, JWTResponse } from "@/app/lib/definitions";
+import { SignUpFormValues, JWTResponse } from "@/lib/definitions";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL;
 
@@ -8,17 +8,20 @@ export async function POST(req: Request) {
   try {
     const { username, email, password }: SignUpFormValues = await req.json();
     // 1. Call your Django API to get the JWT token
-    const djangoResponse = await fetch(`${API_BASE_URL}/api/profile/registration/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
-    });
+    const djangoResponse = await fetch(
+      `${API_BASE_URL}/api/profile/registration/`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      }
+    );
 
     if (!djangoResponse.ok) {
       // Handle failed login attempts
       const errorData = await djangoResponse.json();
       // return NextResponse.json({ error: errorData.detail }, { status: 401 });
-      return NextResponse.json(errorData, {status: djangoResponse.status});
+      return NextResponse.json(errorData, { status: djangoResponse.status });
     }
 
     const { access, refresh }: JWTResponse = await djangoResponse.json();
@@ -46,7 +49,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Sign Up error:', error);
+    console.error("Sign Up error:", error);
     return NextResponse.json({ error: "Sign Up failed" }, { status: 500 });
   }
 }

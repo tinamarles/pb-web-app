@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { LoginFormValues, JWTResponse } from "@/app/lib/definitions";
+import { LoginFormValues, JWTResponse } from "@/lib/definitions";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL;
 
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       // Handle failed login attempts
       const errorData = await djangoResponse.json();
       // return NextResponse.json({ error: errorData.detail }, { status: 401 });
-      return NextResponse.json(errorData, {status: djangoResponse.status});
+      return NextResponse.json(errorData, { status: djangoResponse.status });
     }
 
     const { access, refresh }: JWTResponse = await djangoResponse.json();
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     return NextResponse.json({ error: "Login failed" }, { status: 500 });
   }
 }

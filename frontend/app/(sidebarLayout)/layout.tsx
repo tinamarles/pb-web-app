@@ -1,7 +1,7 @@
 // app/(sidebarLayout)/layout.tsx
 
-import { Module } from "@/app/shared";
-import { ProfileHeader } from "@/app/components/ProfileHeader";
+import { Module } from "@/shared";
+import { ProfileHeader } from "@/components/ProfileHeader";
 
 export default function SidebarLayout({
   children,

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
 // Global Error Page - Backend Error
 
-import { Icon, Button } from '@/app/ui';
+import { Icon, Button } from "@/ui";
 
 export default function GlobalError({
   error,
@@ -18,11 +18,7 @@ export default function GlobalError({
           <div className="flex max-w-2xl flex-col items-center gap-2xl text-center">
             {/* Warning Icon */}
             <div className="flex items-center justify-center rounded-full bg-error-container p-hero">
-              <Icon 
-                name="error" 
-                className="text-error" 
-                size='5xl'
-              />
+              <Icon name="error" className="text-error" size="5xl" />
             </div>
 
             {/* Error Code */}
@@ -35,33 +31,27 @@ export default function GlobalError({
 
             {/* Description */}
             <div className="body-lg text-on-surface-variant space-y-md">
-              <p>
-                Something went wrong on our end. This usually means:
-              </p>
+              <p>Something went wrong on our end. This usually means:</p>
               <ul className="list-inside list-disc text-left">
                 <li>Your Django backend isn&apos;t running</li>
                 <li>The API server is unreachable</li>
                 <li>There&apos;s a server-side configuration issue</li>
               </ul>
               <p className="body-sm text-on-surface-variant/70">
-                Error digest: {error.digest || 'N/A'}
+                Error digest: {error.digest || "N/A"}
               </p>
             </div>
 
             {/* Actions */}
             <div className="mt-lg flex flex-wrap items-center justify-center gap-md">
-              <Button 
-                variant="filled" 
-                size="lg"
-                onClick={reset}
-              >
+              <Button variant="filled" size="lg" onClick={reset}>
                 <Icon name="reset" />
                 Try Again
               </Button>
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 size="lg"
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = "/")}
               >
                 <Icon name="Home" />
                 Go Home
