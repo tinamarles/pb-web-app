@@ -7,6 +7,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL;
 export async function POST(req: Request) {
   try {
     const { identifier, password }: LoginFormValues = await req.json();
+    console.log("🔵 Login request received");
+    console.log("🔵 Identifier:", identifier);
+    console.log("🔵 Password length:", password?.length);
+    
+    const djangoUrl = `${API_BASE_URL}/api/token/`;
+    console.log("🔵 Calling Django at:", djangoUrl);
+
     // 1. Call your Django API to get the JWT token
     const djangoResponse = await fetch(`${API_BASE_URL}/api/token/`, {
       method: "POST",
@@ -14,14 +21,35 @@ export async function POST(req: Request) {
       body: JSON.stringify({ identifier, password }),
     });
 
+    // LOGGING OF DJANGO RESPONSE 
+    console.log("🔵 Django response status:", djangoResponse.status);
+    console.log("🔵 Django response headers:", Object.fromEntries(djangoResponse.headers.entries()));
+
     if (!djangoResponse.ok) {
       // Handle failed login attempts
       const errorData = await djangoResponse.json();
+
+      // 🎯 LOG EVERYTHING DJANGO SENDS!
+      console.error("❌ Django response status:", djangoResponse.status);
+      console.error("❌ Django error data:", errorData);
+      console.error("❌ Full error object:", JSON.stringify(errorData, null, 2));
+
       // return NextResponse.json({ error: errorData.detail }, { status: 401 });
-      return NextResponse.json(errorData, { status: djangoResponse.status });
+      return NextResponse.json(
+        { error:errorData.detail || 
+          errorData.error || 
+          JSON.stringify(errorData) ||
+          'Failed to login'}, 
+          { status: djangoResponse.status }
+      );
     }
 
     const { access, refresh }: JWTResponse = await djangoResponse.json();
+
+    // LOG THE TOKENS
+    console.log("✅ Got tokens from Django");
+    console.log("🔵 Access token length:", access?.length);
+    console.log("🔵 Refresh token length:", refresh?.length);
 
     // 2. Get the cookie store asynchronously
     const cookieStore = await cookies();
@@ -44,9 +72,11 @@ export async function POST(req: Request) {
       sameSite: "strict",
     });
 
+    console.log("✅ Cookies set successfully");
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("🔴 Caught exception - Login error:", error);
     return NextResponse.json({ error: "Login failed" }, { status: 500 });
   }
 }
