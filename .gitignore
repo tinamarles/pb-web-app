@@ -5,6 +5,7 @@
 /backend/venv/
 
 # Python bytecode - CORRECTED to catch ALL levels
+__pycache__/
 *.py[cod]
 *.pyc
 *.pyo
@@ -29,6 +30,9 @@
 
 # Django media files (user uploads)
 /backend/media/
+
+# Superuser 
+/backend/superuser.json
 
 # Other system files
 .DS_Store
@@ -55,10 +59,10 @@ Node package manager cache and dependencies
 /frontend/.env.development.local
 /frontend/.env.test.local
 /frontend/.env.production.local
-
 /frontend/package-lock.json
 
-/backend/superuser.json
+# To not confuse with pages router!!!
+/frontend/pages/
 
 # This line ignores any file that starts with an underscore inside the `frontend` directory.
 /frontend/*/_
