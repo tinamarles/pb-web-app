@@ -95,7 +95,7 @@ export function ProfileHeader() {
         </div>
         <div className="flex items-center gap-xs text-on-surface-variant">
           <Icon name="location" className="icon-lg" />
-          <span className="body-lg">St. Jerome</span>
+          <span className="body-lg">{user.location}</span>
         </div>
       </div>
 

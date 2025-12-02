@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FormField, Button, Sheet } from "@/ui";
+import { FormField, Button, Sheet, LocationAutocomplete } from "@/ui";
 import { useAuth } from "@/providers/AuthUserProvider";
 import { toast } from "sonner";
 import { FORM_FIELDS, FormFieldConfig } from "@/data/formFieldConfig";
@@ -69,8 +69,8 @@ export function ProfileForm({
     email: user?.email || "",
     dateOfBirth: user?.dob || "",
     gender:
-      user?.gender === 1 ? "Male" : user?.gender === 2 ? "Female" : "Other",
-    location: "St. Jerôme, QC", // TODO: Get from user address
+      user?.gender === 1 ? "Female" : user?.gender === 2 ? "Male" : "Other",
+    location: user?.location || "", 
     phoneNumber: user?.mobilePhone || "",
     skillLevel: user?.skillLevel ? String(user.skillLevel) : "", // ← Convert number to string
     isCertifiedInstructor: user?.isCoach || false,
@@ -86,8 +86,8 @@ export function ProfileForm({
         email: user.email || "",
         dateOfBirth: user.dob || "",
         gender:
-          user.gender === 1 ? "Male" : user.gender === 2 ? "Female" : "Other",
-        location: "St. Jerôme, QC", // TODO: Get from user address
+          user.gender === 1 ? "Female" : user.gender === 2 ? "Male" : "Other",
+        location: user.location || "", // TODO: Get from user address
         phoneNumber: user.mobilePhone || "",
         skillLevel: user.skillLevel ? String(user.skillLevel) : "", // ← Convert number to string
         isCertifiedInstructor: user.isCoach || false,
@@ -111,7 +111,8 @@ export function ProfileForm({
       lastName: data.lastName,
       email: data.email,
       dob: data.dateOfBirth || null,
-      gender: data.gender === "Male" ? 1 : data.gender === "Female" ? 2 : 3,
+      gender: data.gender === "Female" ? 1 : data.gender === "Male" ? 2 : 3,
+      location: data.location,
       mobilePhone: data.phoneNumber,
       skillLevel: parseFloat(data.skillLevel) || 0, // ← STRING to NUMBER
       isCoach: data.isCertifiedInstructor,
@@ -205,6 +206,27 @@ export function ProfileForm({
   const renderField = (fieldKey: keyof ProfileFormData) => {
     const config = fieldConfigs[fieldKey];
 
+    // 🆕 Special case: Location field uses LocationAutocomplete component
+    if (fieldKey === 'location') {
+      return (
+        <>
+          <LocationAutocomplete
+            label={config.label}
+            sublabel={config.sublabel}
+            value={formData.location}
+            onChange={(val: string) => handleChange('location', val)}
+            placeholder="Start typing your city..."
+          />
+          <Button 
+            variant='subtle'
+            icon='edit'
+            iconOnly
+            className="profile-page__mobile-item__button"
+            onClick={() => setEditingField(fieldKey)}
+          />
+        </>
+      );
+    }
     return (
       <>
         <FormField

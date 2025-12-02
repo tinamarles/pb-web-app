@@ -72,7 +72,7 @@ export const PERSONAL_FIELDS = {
     sublabel: "(Optional)",
     variant: "select" as const,
     placeholder: "Placeholder",
-    options: ["Male", "Female", "Other"],
+    options: ["Female", "Male", "Other"],
     sheetTitle: "Edit Gender",
     hideChevronOnMobile: true,
   },

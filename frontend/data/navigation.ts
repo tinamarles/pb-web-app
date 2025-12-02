@@ -103,27 +103,27 @@ export const DASHBOARD_NAV_ITEMS: NavItem[] = [
   },
   {
     label: "Club Notifications",
-    href: "/dashboard/notifications",
+    href: "/club/notifications",
     icon: "notifications",
   },
   {
     label: "Club Leagues",
-    href: "/dashboard/leagues",
+    href: "/club/leagues",
     icon: "leagues",
   },
   {
     label: "Leaderboard",
-    href: "/dashboard/leaderboard",
+    href: "/club/leaderboard",
     icon: "achievements",
   },
   {
     label: "Club Members",
-    href: "/dashboard/members",
+    href: "/club/members",
     icon: "members",
   },
   {
     label: "Club Details",
-    href: "/dashboard/clubdetails",
+    href: "/club/clubdetails",
     icon: "show",
   },
 ];

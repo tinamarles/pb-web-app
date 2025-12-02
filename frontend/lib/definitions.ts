@@ -164,6 +164,7 @@ export interface PublicUser {
   homePhone?: string | null;
   mobilePhone?: string | null;
   workPhone?: string | null;
+  location?: string | null;
   dob?: string | null;
   gender?: 1 | 2 | 3;
   bio?: string | null;

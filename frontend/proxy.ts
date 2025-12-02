@@ -55,8 +55,7 @@ export async function proxy(request: NextRequest) {
     }
 
     const userDashboardPath = DASHBOARD_ROUTES[userRole];
-    console.log('in proxy before redirect:', userDashboardPath);
-    console.log('pathname: ', pathname);
+   
     // Redirect authenticated users trying to access public pages
     if (PUBLIC_ROUTES.includes(pathname)) {
       // New User Redirection Logic

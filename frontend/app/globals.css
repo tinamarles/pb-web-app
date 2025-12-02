@@ -83,6 +83,7 @@
   --px-64: 4rem;
   --px-80: 5rem;
   --px-96: 6rem;
+  --px-104: 6.5rem;
   --px-120: 7.5rem;
   --px-130: 8.125rem;
   --px-160: 10rem;
@@ -247,6 +248,7 @@
   --icon-bordered-lg: var(--px-32);
   --icon-bordered-xl: var(--px-40);
   --icon-bordered-2xl: var(--px-48);
+  --icon-bordered-5xl: var(--px-104);
 
   --icon-av-xl: var(--px-60); /* icon for generic avatar-xl */
   --icon-av-lg: var(--px-40); /* icon for generic avatar-lg */
@@ -670,6 +672,22 @@
     color: var(--color-on-background);
     min-height: 100vh;
     margin: auto;
+  }
+  /* +++ General container to use for various purposes, such as cards, etc. */
+  .container {
+    @apply flex flex-col;
+    @apply gap-sm;  /* Mobile: 8px */
+    @apply p-md;
+    @apply border border-transparent;
+    @apply rounded-lg;
+    @apply bg-surface;
+  }
+  
+  /* Tablet and Desktop: Larger gap */
+  @media (min-width: 640px) {
+    .container {
+      @apply gap-md;  /* 12px */
+    }
   }
   /* +++ HEADER Component +++ */
   .header {

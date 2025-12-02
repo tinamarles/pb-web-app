@@ -32,7 +32,7 @@ interface AuthUserProviderProps {
 export function AuthUserProvider({ children }: AuthUserProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
-  const pathname = usePathname() || '/'; // Get the current path
+  const pathname = usePathname() || "/"; // Get the current path
 
   // EXTRACTED fetchUser function using useCallback
   const fetchUser = useCallback(async () => {
@@ -111,28 +111,22 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
   }, [fetchUser]);
 
   const logout = async () => {
-    console.log('🟢 A. logout() function started');
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
       });
-      console.log('🟢 B. API call completed:', response.status);
 
       if (response.ok) {
-        console.log('🟢 C. response=OK');
         setUser(null);
-        console.log('🚪 LOGOUT: User set to null');
+        console.log("🚪 LOGOUT: User set to null");
         // console.log('🚪 LOGOUT: Calling router.push("/")');
         // router.refresh(); // added 2025-12-01 cause it somehow got stuck on dashboard/member/page.tsx
         // router.push("/");
         // ✅ USE HARD NAVIGATION - bypasses Next.js router
-        console.log('🟢 LOGOUT: Calling window.location.href');
-        window.location.href = '/';
-        console.log('❌ LOGOUT: After window.location.href (should NEVER see this)');
+        window.location.href = "/";
       }
-    
     } catch (error) {
-      console.log('🟢 ERROR in logout:', error);
+      console.log("🟢 ERROR in logout:", error);
     }
   };
 

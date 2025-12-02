@@ -61,6 +61,8 @@ import {
   CalendarCog,
   Wrench,
   RotateCw,
+  PencilRuler,
+  LoaderCircle,
 
 } from "lucide-react";
 
@@ -152,6 +154,7 @@ const iconMap = {
   quote: Quote,
   smartphone: Smartphone,
   zap: Zap,
+  construction: PencilRuler,
 
   // Resources & Content
   library: Library,
@@ -171,6 +174,7 @@ const iconMap = {
   error: AlertTriangle,
   info: Info,
   reset: RotateCw,
+  loading: LoaderCircle,
 
   // Navigation Arrows
   chevrondown: ChevronDown,
@@ -261,7 +265,7 @@ export function Icon({
   // Check if this is a Material Design icon (from react-icons/md)
   const isMaterialDesignIcon = normalizedName.startsWith('radio-');
   
-  const iconStrokeWidth = size === '5xl' ? 3 : 1.5;
+  const iconStrokeWidth = size === '5xl' ? 1 : 1.5;
 
   // Extract icon size from className for Material Design icons
   // MD icons need numeric size prop, Lucide icons use CSS classes

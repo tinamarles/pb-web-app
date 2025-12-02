@@ -1,6 +1,6 @@
 import { Icon } from "@/ui";
 
-export default function NotFound() {
+export function PlaceholderPage() {
   return (
     <div className="container border-primary items-center max-w-md mx-auto">
       
