@@ -1,12 +1,4 @@
 'use client';
-// === MODIFICATION LOG ===
-// Date: 2025-11-29 UTC
-// Modified by: Assistant
-// Changes: Created LocationAutocomplete component for city/state selection
-// Purpose: Smart location search with API autocomplete (Nominatim for testing)
-// Architecture: Standalone component that mimics FormField styling, manages own state
-// Features: Debounced API calls, keyboard navigation, mobile-friendly
-// ========================
 
 import { useState, useEffect, useRef } from 'react';
 import { Icon } from './icon';
@@ -23,17 +15,19 @@ export interface LocationAutocompleteProps {
   countries?: string[]; // Optional: filter by ISO 3166-1 alpha-2 codes (e.g., ['us', 'ca', 'au'])
 }
 
-interface LocationResult {
-  display_name: string;
-  address: {
-    city?: string;
-    town?: string;
-    village?: string;
-    state?: string;
-    country?: string;
-    country_code?: string; // ISO country code (e.g., "at", "au")
-    'ISO3166-2-lvl4'?: string; // State code (e.g., "US-MO")
-  };
+interface MapboxFeature {
+  place_name: string;
+  text: string;
+  place_type: string[];
+  context?: Array<{
+    id: string;
+    text: string;
+    short_code?: string;
+  }>;
+}
+
+interface MapboxResponse {
+  features: MapboxFeature[];
 }
 
 export function LocationAutocomplete({
@@ -74,9 +68,18 @@ export function LocationAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch suggestions from Nominatim API
+  // Fetch suggestions from Mapbox Geocoding API
   const fetchSuggestions = async (query: string) => {
     if (query.length < 2) {
+      setSuggestions([]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Check for Mapbox token
+    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+    if (!mapboxToken) {
+      console.error('NEXT_PUBLIC_MAPBOX_TOKEN is not set in environment variables');
       setSuggestions([]);
       setIsLoading(false);
       return;
@@ -85,55 +88,57 @@ export function LocationAutocomplete({
     try {
       setIsLoading(true);
       
-      // Nominatim API - Free, no API key needed (respects usage policy: max 1 req/sec)
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?` +
-        `q=${encodeURIComponent(query)}` +
-        `&format=json` +
-        `&addressdetails=1` +
-        `&limit=5` +
-        (countries ? `&countrycodes=${countries.join(',')}` : ''), // Filter by country codes if provided
-        {
-          headers: {
-            'Accept': 'application/json',
-            // User-Agent required by Nominatim usage policy
-            'User-Agent': 'PickleballApp/1.0' 
-          }
-        }
-      );
+      // Mapbox Geocoding API - Free tier: 100k requests/month
+      // Docs: https://docs.mapbox.com/api/search/geocoding/
+      const url = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`);
+      url.searchParams.set('access_token', mapboxToken);
+      url.searchParams.set('types', 'place'); // Only cities/towns
+      url.searchParams.set('limit', '10'); // More results than Nominatim!
+      url.searchParams.set('autocomplete', 'true'); // Optimize for autocomplete
+      
+      // Optional country filter
+      if (countries && countries.length > 0) {
+        url.searchParams.set('country', countries.join(','));
+      }
+      
+      const response = await fetch(url.toString());
 
       if (!response.ok) throw new Error('Failed to fetch locations');
 
-      const data: LocationResult[] = await response.json();
+      const data: MapboxResponse = await response.json();
       
-      // Format results as "City, State"
-      const formatted = data
-        .map(result => {
-          const city = result.address.city || result.address.town || result.address.village;
-          const state = result.address.state;
-          const country = result.address.country;
-          const countryCode = result.address.country_code?.toUpperCase();
-          // Extract state code from ISO format (e.g., "US-MO" -> "MO")
-          const stateCode = result.address['ISO3166-2-lvl4']?.split('-')[1];
+      // Format results from Mapbox
+      const formatted = data.features
+        .map(feature => {
+          // Mapbox already provides nicely formatted place names!
+          // Example: "Vienna, Austria" or "St. Louis, Missouri, United States"
+          const placeName = feature.place_name;
           
-          if (!city) return null;
+          // Extract city name and region/country from context
+          const city = feature.text;
+          const context = feature.context || [];
           
-          // US/Canada format: "City, State"
-          if (countryCode === 'US' || countryCode === 'CA') {
-            if (stateCode || state) {
-              return `${city}, ${stateCode || state}`;
-            }
+          // Find region and country from context
+          const region = context.find(c => c.id.startsWith('region.'))?.text;
+          const country = context.find(c => c.id.startsWith('country.'));
+          const countryCode = country?.short_code?.toUpperCase();
+          const countryName = country?.text;
+          
+          // For US/Canada: show "City, State" format
+          if (region && (countryCode === 'US' || countryCode === 'CA')) {
+            // Extract state code from region (e.g., "Missouri" -> keep as is, or use short code if available)
+            return `${city}, ${region}`;
           }
           
-          // International format: "City, Country"
-          if (country) {
-            return `${city}, ${country}`;
+          // For other countries: show "City, Country" format
+          if (countryName && countryCode !== 'US' && countryCode !== 'CA') {
+            return `${city}, ${countryName}`;
           }
           
-          // Fallback: just the city name
-          return city;
+          // Fallback: use Mapbox's formatted place_name
+          return placeName;
         })
-        .filter((item): item is string => item !== null);
+        .filter((item): item is string => item !== null && item !== undefined);
 
       // Remove duplicates
       const unique = [...new Set(formatted)];
@@ -255,7 +260,7 @@ export function LocationAutocomplete({
           {/* Loading Spinner */}
           {isLoading && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Icon name="loading" size="md" className="text-on-surface-variant animate-spin" />
+              <Icon name="loader-circle" size="md" className="text-on-surface-variant animate-spin" />
             </div>
           )}
         </div>
