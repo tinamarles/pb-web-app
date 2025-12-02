@@ -244,6 +244,7 @@ export function LocationAutocomplete({
           <input
             ref={inputRef}
             type="text"
+            name="location-search" // Prevent browser from recognizing this as an address field
             className="input-base pl-10"
             value={inputValue}
             onChange={(e) => handleInputChange(e.target.value)}
@@ -254,7 +255,11 @@ export function LocationAutocomplete({
             }}
             placeholder={placeholder}
             disabled={disabled}
-            autoComplete="off"
+            autoComplete="new-password" // Trick browser into NOT autofilling (browsers respect this more than "off")
+            role="combobox" // Accessibility: indicates this is a custom autocomplete
+            aria-autocomplete="list" // Accessibility: indicates we provide our own suggestions
+            aria-expanded={isOpen} // Accessibility: indicates dropdown state
+            aria-controls="location-suggestions" // Accessibility: links to suggestion list
           />
           
           {/* Loading Spinner */}
@@ -267,11 +272,19 @@ export function LocationAutocomplete({
 
         {/* Suggestions Dropdown */}
         {isOpen && suggestions.length > 0 && (
-          <div className="absolute z-50 w-full mt-1 bg-surface-container rounded-lg shadow-lg border border-outline-variant overflow-hidden">
-            <ul className="max-h-60 overflow-y-auto py-1">
+          <div 
+            id="location-suggestions"
+            className="absolute z-50 w-full mt-1 bg-surface-container rounded-lg shadow-lg border border-outline-variant overflow-hidden"
+          >
+            <ul 
+              className="max-h-60 overflow-y-auto py-1"
+              role="listbox" // Accessibility: indicates this is a list of options
+            >
               {suggestions.map((suggestion, index) => (
                 <li
                   key={`${suggestion}-${index}`}
+                  role="option" // Accessibility: indicates this is a selectable option
+                  aria-selected={index === highlightedIndex} // Accessibility: indicates current selection
                   className={`
                     px-4 py-3 cursor-pointer transition-colors
                     hover:bg-surface-container-high
