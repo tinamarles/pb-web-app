@@ -235,9 +235,9 @@ export function LocationAutocomplete({
       )}
 
       {/* Input Container */}
-      <div className="relative">
-        <div className="input-field h-12">
-          {/* Location Icon */}
+      <div className="relative flex flex-col mb-4">
+        <div className="input-field">
+          {/* Location Icon */}  
           <Icon name="location" size="lg" className="text-on-surface-variant" />
           
           {/* Input */}
@@ -245,7 +245,7 @@ export function LocationAutocomplete({
             ref={inputRef}
             type="text"
             name="location-search" // Prevent browser from recognizing this as an address field
-            className="input-base pl-10"
+            className="input-base has-icon"
             value={inputValue}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
