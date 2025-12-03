@@ -1729,7 +1729,7 @@
 
   /* WEBKIT FIX - ONLY for VIEW mode on mobile */
   @media (max-width: 639px) {
-    .page__form[data-mode="view"] .date-input-custom::-webkit-date-and-time-value {
+     .input-field .input-base.has-icon.date-input-custom::-webkit-date-and-time-value {
       text-align: left;
       padding-left: var(--px-24) !important;
     }
