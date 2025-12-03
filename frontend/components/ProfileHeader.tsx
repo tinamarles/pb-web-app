@@ -3,6 +3,7 @@
 import { useAuth } from "@/providers/AuthUserProvider";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Avatar, Icon, Dropdown, Button, MenuItem } from "@/ui";
 import { AvatarUploader } from "@/ui/avatar-uploader";
 
@@ -11,8 +12,24 @@ export function ProfileHeader() {
   const router = useRouter();
   const pathname = usePathname();
 
+  const [isMobile, setIsMobile] = useState(false);
+
   const showEditAvatar =
     pathname === "/profile/details" || pathname === "/profile/setup";
+
+  // Effect to detect mobile view
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640); // Mobile breakpoint: < 640px
+    };
+
+    handleResize(); // Initial check
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // ✅ Step 1: Handle upload (save to backend)
   // Wrap saveAvatar to show user Feedback
@@ -86,28 +103,32 @@ export function ProfileHeader() {
         name={`${user.firstName} ${user.lastName}`}
       />
       <div className="flex-1 flex flex-col justify-between h-[64px] sm:h-[96px]">
-        <h1 className="title-lg emphasized">
+        <h1 className="title-md sm:title-lg emphasized">
           {user.firstName} {user.lastName}
         </h1>
         <div className="flex items-center gap-xs text-on-surface-variant">
-          <Icon name="profile" className="icon-lg" />
-          <span className="body-lg">@{user.username}</span>
+          <Icon name="profile" className="icon-md sm:icon-lg" />
+          <span className="body-sm sm:body-lg">@{user.username}</span>
         </div>
         <div className="flex items-center gap-xs text-on-surface-variant">
-          <Icon name="location" className="icon-lg" />
-          <span className="body-lg">{user.location}</span>
+          <Icon name="location" className="icon-md sm:icon-lg" />
+          <span className="body-sm sm:body-lg">{user.location}</span>
         </div>
       </div>
 
       {showEditAvatar && (
         <Dropdown
           trigger={
-            <Button
-              variant="outlined"
-              size="md"
-              label="Change Image"
-              icon="edit"
-            />
+            isMobile ? (
+              <Icon name="picture" size="lg" bordered className='text-primary' />
+            ) : (
+              <Button
+                variant="outlined"
+                size="md"
+                label="Change Image"
+                icon="edit"
+              />
+            )
           }
           align="right"
           hoverEnabled={false}

@@ -63,6 +63,7 @@ import {
   RotateCw,
   PencilRuler,
   LoaderCircle,
+  Image,
 
 } from "lucide-react";
 
@@ -145,6 +146,7 @@ const iconMap = {
   password: Lock,
   lock: IoIosLock,
   camera: Camera,
+  picture: Image,
 
   // Navigation & Communication
   sparkles: Sparkles,

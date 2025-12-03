@@ -577,6 +577,7 @@
 @utility icon-* {
   height: --value(--icon- *);
   width: --value(--icon- *);
+  flex-shrink: 0;
 }
 @utility icon-bordered-* {
   height: --value(--icon-bordered- *);
