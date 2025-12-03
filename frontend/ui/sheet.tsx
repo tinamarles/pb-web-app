@@ -15,9 +15,15 @@ export interface SheetProps {
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
   title?: string;
+  className?: string; // Allow custom className to be passed
 }
 
-export const Sheet = ({ open, onOpenChange, children, title }: SheetProps) => {
+export const Sheet = ({ 
+  open, 
+  onOpenChange, 
+  children, 
+  title,
+  className = 'sheet' }: SheetProps) => {
   const sheetRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape key
@@ -66,7 +72,7 @@ export const Sheet = ({ open, onOpenChange, children, title }: SheetProps) => {
       <div className="sheet-backdrop" />
       
       {/* Sheet Content - slides up from bottom on mobile, centered modal on desktop */}
-      <div className="sheet-content" ref={sheetRef}>
+      <div className={`sheet-content ${className}`} ref={sheetRef}>
         {/* Header - sticky at top with title and close button */}
         <div className="sheet__header">
           <h2 className="title-lg emphasized">{title}</h2>
