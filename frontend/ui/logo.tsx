@@ -112,7 +112,7 @@ export const Logo = memo(function Logo({
 
   if (variant === "app-icon") {
     const containerSizeClasses = {
-      xs: "w-[var(--px-32)] h-[var(--px-32)]",
+      xs: "w-[var(--px-24)] h-[var(--px-24)]",
       sm: "w-[var(--px-36)] h-[var(--px-36)]",
       md: "w-[var(--px-48)] h-[var(--px-48)]",
       lg: "w-[var(--px-64)] h-[var(--px-64)]",
