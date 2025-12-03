@@ -1265,6 +1265,11 @@
       display: flex !important;  /* !important to override base display: none !important */
       @apply rounded-full hover:bg-surface-container;
     }
+
+     /* Hide edit button inside Sheet (already in edit mode) */
+    .page__form[data-mode="view"] .sheet-body .profile-page__mobile-item__button {
+      display: none !important;
+    }
   }
 
   /* View mode: Hide save button */
