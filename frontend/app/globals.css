@@ -1708,8 +1708,7 @@
     /* 2025-12-03: FORCE padding inheritance - THIS IS THE FIX */
     &::-webkit-date-and-time-value {
       text-align: left;
-      padding-left: 0 !important;
-      padding-right:0 !important;
+      padding-left: var(--px-12) !important;
     }
 
     &::-webkit-inner-spin-button,
