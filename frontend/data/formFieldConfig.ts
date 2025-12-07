@@ -1,4 +1,5 @@
 import { FormFieldProps } from "@/ui";
+import { getGenderOptions } from "@/lib/constants";
 
 // === MODIFICATION LOG ===
 // Date: 2025-11-26 UTC
@@ -72,7 +73,7 @@ export const PERSONAL_FIELDS = {
     sublabel: "(Optional)",
     variant: "select" as const,
     placeholder: "Placeholder",
-    options: ["Female", "Male", "Other"],
+    options: getGenderOptions(),
     sheetTitle: "Edit Gender",
     hideChevronOnMobile: true,
   },

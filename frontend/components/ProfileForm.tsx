@@ -5,6 +5,7 @@ import { FormField, Button, Sheet, LocationAutocomplete } from "@/ui";
 import { useAuth } from "@/providers/AuthUserProvider";
 import { toast } from "sonner";
 import { FORM_FIELDS, FormFieldConfig } from "@/data/formFieldConfig";
+import { Gender, GenderLabels, GenderValues } from "@/lib/constants";
 
 export interface ProfileFormProps {
   mode?: "view" | "setup";
@@ -64,34 +65,32 @@ export function ProfileForm({
 
   // Form state - initialize with user data
   const [formData, setFormData] = useState<ProfileFormData>({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    email: user?.email || "",
-    dateOfBirth: user?.dob || "",
-    gender:
-      user?.gender === 1 ? "Female" : user?.gender === 2 ? "Male" : "Other",
-    location: user?.location || "", 
-    phoneNumber: user?.mobilePhone || "",
-    skillLevel: user?.skillLevel ? String(user.skillLevel) : "", // ← Convert number to string
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    dateOfBirth: user?.dob || '',
+    gender: user?.gender ? GenderLabels[user.gender] : 'Unspecified',  // ✅ Use GenderLabels mapping
+    location: user?.location || '', 
+    phoneNumber: user?.mobilePhone || '',
+    skillLevel: user?.skillLevel ? String(user.skillLevel) : '', // ← Convert number to string
     isCertifiedInstructor: user?.isCoach || false,
-    bio: user?.bio || "",
+    bio: user?.bio || '',
   });
 
   // Sync formData with user data when user loads
   useEffect(() => {
     if (user) {
       setFormData({
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        email: user.email || "",
-        dateOfBirth: user.dob || "",
-        gender:
-          user.gender === 1 ? "Female" : user.gender === 2 ? "Male" : "Other",
-        location: user.location || "", // TODO: Get from user address
-        phoneNumber: user.mobilePhone || "",
-        skillLevel: user.skillLevel ? String(user.skillLevel) : "", // ← Convert number to string
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        dateOfBirth: user.dob || '',
+        gender: user.gender ? GenderLabels[user.gender] : 'Unspecified',
+        location: user.location || '', 
+        phoneNumber: user.mobilePhone || '',
+        skillLevel: user.skillLevel ? String(user.skillLevel) : '', // ← Convert number to string
         isCertifiedInstructor: user.isCoach || false,
-        bio: user.bio || "",
+        bio: user.bio || '',
       });
     }
   }, [user]);
@@ -105,18 +104,25 @@ export function ProfileForm({
   };
 
   // Convert form data to API format (string → number conversions)
+
   const prepareDataForAPI = (data: ProfileFormData) => {
     return {
-      firstName: data.firstName,
-      lastName: data.lastName,
+      // CharField/TextField with blank=True → send '' not null
+      firstName: data.firstName || '',  // ✅ blank=True → ''
+      lastName: data.lastName || '',    // ✅ blank=True → ''
+      // Required fields → send as is
       email: data.email,
-      dob: data.dateOfBirth || null,
-      gender: data.gender === "Female" ? 1 : data.gender === "Male" ? 2 : 3,
-      location: data.location,
-      mobilePhone: data.phoneNumber,
-      skillLevel: parseFloat(data.skillLevel) || 0, // ← STRING to NUMBER
+      // DateField with null=True → send null if empty
+      dob: data.dateOfBirth || null,  // ✅ null=True → null
+      // IntegerField with default → use constant mapping (never null)
+      gender: GenderValues[data.gender] ?? Gender.UNSPECIFIED,  // ✅ Clean mapping!
+      location: data.location || '',
+      mobilePhone: data.phoneNumber || '',  // ✅ blank=True → ''
+      // DecimalField with null=True → send null if empty/invalid
+      skillLevel: data.skillLevel ? parseFloat(data.skillLevel) : null,  // ✅ null=True → null
+      // BooleanField with default → send as is (never null)
       isCoach: data.isCertifiedInstructor,
-      bio: data.bio,
+      bio: data.bio || '',  // ✅ blank=True → ''
       // Add other fields as needed (address, etc.)
     };
   };
@@ -127,11 +133,6 @@ export function ProfileForm({
 
     // 1. Convert form data to API format (ONCE, here only)
     const apiData = prepareDataForAPI(formData);
-
-    console.log("Saving profile...");
-    console.log("Form data (strings):", formData);
-    console.log("API data (converted):", apiData);
-    console.log("current User: ", user);
 
     try {
       // 2. Call API to save profile changes (ONCE, here only)

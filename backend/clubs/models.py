@@ -1,6 +1,7 @@
 # clubs/models.py
 
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import date
 from public.models import Address
@@ -369,8 +370,20 @@ class ClubMembership(models.Model):
     def __str__(self):
         return f"{self.member.username} - {self.club.name} ({self.get_status_display()})"
     
+    def clean(self):
+        """Validate that membership type belongs to the same club"""
+        super().clean()
+        if self.type and self.club and self.type.club != self.club:
+            raise ValidationError({
+                'type': f'Membership type "{self.type.name}" does not belong to {self.club.name}.'
+            })
+    
     def save(self, *args, **kwargs):
-        """Ensure only one preferred club per user"""
+        """Ensure validation + only one preferred club per user"""
+        # 🎯 VALIDATE FIRST - This calls clean() above
+        self.full_clean()
+        
+        # Your existing logic
         if self.is_preferred_club:
             # Unset any other preferred clubs for this user
             ClubMembership.objects.filter(
@@ -385,5 +398,4 @@ class ClubMembership(models.Model):
         # Auto-assign RoleType.MEMBER if no roles exist (new Membership)
         if is_new and not self.roles.exists():
             self.roles.add(Role.objects.get(name=RoleType.MEMBER))
-
 

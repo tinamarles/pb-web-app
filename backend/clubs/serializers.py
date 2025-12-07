@@ -17,12 +17,24 @@ class RoleSerializer(serializers.ModelSerializer):
 class ClubMembershipTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubMembershipType
-        fields = ['id', 'type', 'description']
+        fields = [
+            'id', 
+            'name', 
+            'description',
+            'registration_open_date',
+            'registration_close_date',
+            'requires_approval',
+            'annual_fee',
+            'current_member_count',
+            'is_at_capacity']
 
 class ClubMembershipSkillLevelSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubMembershipSkillLevel
-        fields = ['id', 'level', 'description']
+        fields = [
+            'id', 
+            'level', 
+            'description']
 
 class NestedClubSerializer(serializers.ModelSerializer):
     '''
@@ -43,7 +55,7 @@ class NestedClubSerializer(serializers.ModelSerializer):
             'website_url',
             'logo_url',
             'address',
-            'requests',
+            'autoapproval',
         ]
 
 class ClubSerializer(serializers.ModelSerializer):

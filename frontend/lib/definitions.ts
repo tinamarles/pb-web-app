@@ -1,6 +1,6 @@
 // frontend/lib/definitions.ts
 
-import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import * as C from '@/lib/constants';
 
 // Token Response delivered by JWT
 export interface JWTResponse {
@@ -32,25 +32,23 @@ export interface Address {
 }
 
 export interface Role {
-  /* club.serializer sends fields = '__all__'
-    id = primaryKey
-    name = models.CharField(max_length=50, unique=True)
-    description = models.TextField(blank=True, null=True)
-  */
   id?: number;
-  name: string;
+  name: C.RoleTypeValue; // needs to change to name: RoleTypeValue (from constants.ts)
   description?: string | null;
 }
 
 export interface ClubMembershipType {
-  /* club.serializer sends fields = ['id', 'type', 'description']
-    id = primaryKey
-    type = models.CharField(max_length=50, unique=True)
-    description = models.TextField(blank=True, null=True)
-  */
   id?: number;
-  type: string;
-  description?: string | null;
+  name: string;  // e.g., "Resident", "Non-Resident", "Junior"
+  description?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  requiresApproval?: boolean;
+  registrationOpenDate?: string | null;
+  registrationCloseDate?: string | null;
+  currentMemberCount?: number;  // ✅ From @property
+  isAtCapacity?: boolean;       // ✅ From @property
+  annualFee?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ClubMembershipSkillLevel {
@@ -60,35 +58,25 @@ export interface ClubMembershipSkillLevel {
     description = models.TextField(blank=True, null=True)
   */
   id?: number;
-  level: string;
-  description?: string | null;
+  level: C.SkillLevelValue; 
+  description?: string; 
 }
 
 export interface MemberClub {
   /* light-weight club that is used for a Club member. It
      does NOT include the array that contains all the members of 
      the club.
-     
-     It corresponds to the NestedClubSerializer in club.serializer
-     that sends the fields = [
-            'id',
-            'name',
-            'description',
-            'phone_number',
-            'email',
-            'website_url',
-            'logo_url',
-            'address',
-        ]
   */
   id?: number;
   name: string;
-  description?: string | null;
-  phoneNumber?: string | null;
-  email?: string | null;
-  websiteUrl?: string | null;
-  logoUrl?: string | null;
-  address?: Address;
+  shortName?: string;
+  description?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  phoneNumber?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  email?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  websiteUrl?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  logoUrl?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  address?: Address | null;  // ✅ FIXED: Django ForeignKey with null=True, blank=True
+  autoapproval: boolean; // default=False in Django
 }
 
 export interface Club extends MemberClub {
@@ -104,25 +92,7 @@ export interface Club extends MemberClub {
 }
 
 export interface ClubMembership {
-  /* club.serializer ClubMembership which sends:
-    club = NestedClubSerializer(read_only=True) ==> MemberClub
-    roles = RoleSerializer(many=True, read_only=True) ==> Role
-    type = ClubMembershipTypeSerializer(read_only=True) ==> ClubMembershipType
-    levels = ClubMembershipSkillLevelSerializer(many=True, read_only=True) ==> ClubMembershipLevel
 
-    class Meta:
-        model = ClubMembership
-        fields = ['id', 
-                  'club', 
-                  'roles', 
-                  'type', 
-                  'levels', 
-                  'membership_number', 
-                  'is_preferred_club',
-                  'registration_start_date',
-                  'registration_end_date'
-                  ]
-  */
   id?: number;
   club?: MemberClub;
   roles?: Role[];
@@ -130,6 +100,7 @@ export interface ClubMembership {
   levels?: ClubMembershipSkillLevel[];
   membershipNumber?: string | null;
   isPreferredClub?: boolean;
+  status: C.MembershipStatusValue;
   registrationStartDate?: string | null;
   registrationEndDate?: string | null;
 }
@@ -137,37 +108,28 @@ export interface ClubMembership {
 
 // PublicUser has no club membership and matches CustomUser
 // serializer
-/*
-    'id', 
-    'username', 
-    'first_name', 
-    'last_name', 
-    'email', 
-    'skill_level',
-    'is_coach',
-    'home_phone',
-    'mobile_phone',
-    'work_phone',
-    'dob',
-    'gender',
-    'bio',
-*/
+
+/* UPDATED VERSION due to changes of character fields */
 export interface PublicUser {
   id?: number;
   username: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  email?: string;
-  skillLevel?: number | null;
-  profilePictureUrl?: string | null;
+  firstName?: string;  // Django AbstractUser has blank=True
+  lastName?: string;  // Django AbstractUser has blank=True
+  email?: string;  // Required but optional in response
+  profilePictureUrl?: string;  // ✅ blank=True only - NO null!
+  skillLevel?: number | null;  // ✅ null=True - NULL OK
   isCoach?: boolean;
-  homePhone?: string | null;
-  mobilePhone?: string | null;
-  workPhone?: string | null;
-  location?: string | null;
-  dob?: string | null;
-  gender?: 1 | 2 | 3;
-  bio?: string | null;
+  homePhone?: string;  // ✅ blank=True only - NO null!
+  mobilePhone?: string;  // ✅ blank=True only - NO null!
+  workPhone?: string;  // ✅ blank=True only - NO null!
+  location?: string;  // ✅ blank=True only - NO null!
+  dob?: string | null;  // ✅ null=True - NULL OK
+  gender: C.GenderValue;  // Has default, not null
+  bio?: string;  // ✅ blank=True only - NO null!
+  createdAt?: string;
+  updatedAt?: string;
+  // themePreference?: Theme;
+  // unreadNotifications?: number;
 }
 
 export interface MemberUser extends PublicUser {
