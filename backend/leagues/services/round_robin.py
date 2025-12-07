@@ -6,6 +6,7 @@ Maps player positions to actual User objects.
 """
 
 from leagues.models import RoundRobinPattern
+from public.constants import MatchFormat, MatchType, ScoreFormat, MatchStatus
 
 class RoundRobinGenerator:
     """
@@ -95,10 +96,10 @@ class RoundRobinGenerator:
         # Create Match
         match = Match.objects.create(
             match_date=self.session_date,
-            match_format='best_of_1',  # Use your actual choice constant
-            match_type='doubles',
-            score_format='sideout',
-            match_status='pending',
+            match_format=MatchFormat.BEST_OF_1,  # Use your actual choice constant
+            match_type=MatchType.DOUBLES,
+            score_format=ScoreFormat.SIDEOUT,
+            match_status=MatchStatus.PENDING,
             league=self.league_session.league,
             court_location=self.league_session.court_location,
             court_number=str(court_number)

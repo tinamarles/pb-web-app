@@ -232,23 +232,18 @@ class LeagueAttendanceAdmin(admin.ModelAdmin):
 class RoundRobinPatternAdmin(admin.ModelAdmin):
     list_display = (
         'name',
-        'num_courts',
         'num_players',
         'created_at'
     )
-    list_filter = (
-        'num_courts',
-        'num_players'
-    )
+   
     search_fields = (
         'name',
     )
-    ordering = ('num_courts', 'num_players')
     readonly_fields = ('created_at',)
     
     fieldsets = (
         ('Pattern Info', {
-            'fields': ('name', 'num_courts', 'num_players')
+            'fields': ('name', 'num_players')
         }),
         ('Pattern Data', {
             'fields': ('pattern_data',),

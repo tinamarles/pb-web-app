@@ -1,5 +1,6 @@
 from django.db import models
 from public.models import Address
+from public.constants import AffiliationType, BookingType, BlockType, DayOfWeek
 from clubs.models import Club
 from django.contrib.auth import get_user_model
 
@@ -29,6 +30,7 @@ class CourtLocation(models.Model):
         Address,
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
         related_name='court_locations',
         help_text='Physical address of court location'
     )
@@ -42,7 +44,6 @@ class CourtLocation(models.Model):
     # External booking
     booking_website = models.URLField(
         blank=True,
-        null=True,
         help_text='Link to external booking site (e.g., www.pickleballenligne.com/PSJ)'
     )
     
@@ -58,13 +59,11 @@ class CourtLocation(models.Model):
     # Display info
     description = models.TextField(
         blank=True,
-        null=True,
         help_text='Additional info about the court (e.g., "Outdoor courts, covered")'
     )
     photo = models.URLField(
         max_length=200,
         blank=True,
-        null=True,
         help_text='Photo of court location'
     )
     
@@ -88,9 +87,6 @@ class CourtLocation(models.Model):
             self.affiliated_clubs.values_list('name', flat=True)
         )
 
-# The CourtLocationSchedule handles the court availability schedule. Using a ForeignKey
-# to CourtLocation allows to specify blocked times for each court location
-
 class CourtClubAffiliation(models.Model):
     """
     Links courts to clubs that have priority access.
@@ -100,13 +96,6 @@ class CourtClubAffiliation(models.Model):
     - Club St. Jérôme has exclusive block bookings Mondays 8-12pm at Parc La Source
     - Multiple clubs may share access at same location
     """
-    
-    AFFILIATION_TYPE_CHOICES = [
-        ('priority', 'Priority Access'),
-        ('exclusive', 'Exclusive Access (certain times)'),
-        ('partner', 'Partner Club'),
-        ('shared', 'Shared Access'),
-    ]
     
     court_location = models.ForeignKey(
         CourtLocation,
@@ -120,15 +109,13 @@ class CourtClubAffiliation(models.Model):
     )
     
     # Affiliation details
-    affiliation_type = models.CharField(
-        max_length=50,
-        choices=AFFILIATION_TYPE_CHOICES,
-        default='priority'
+    affiliation_type = models.IntegerField(
+        choices=AffiliationType,
+        default=AffiliationType.PRIORITY
     )
     
     notes = models.TextField(
         blank=True,
-        null=True,
         help_text='e.g., "Club has priority Mondays 8-12pm" or "Exclusive access for leagues"'
     )
     
@@ -178,14 +165,6 @@ class UserCourtBooking(models.Model):
     - "I have Parc La Source reserved, Friday 10-12pm"
     """
     
-    BOOKING_TYPE_CHOICES = [
-        ('practice', 'Practice Session'),
-        ('casual', 'Casual Play'),
-        ('lesson', 'Lesson'),
-        ('drill', 'Drill Session'),
-        ('other', 'Other'),
-    ]
-    
     # Who booked
     user = models.ForeignKey(
         User,
@@ -204,7 +183,6 @@ class UserCourtBooking(models.Model):
     court_number = models.CharField(
         max_length=20,
         blank=True,
-        null=True,
         help_text='Specific court number (if known, e.g., "14", "Court 2", "T5")'
     )
     
@@ -214,10 +192,9 @@ class UserCourtBooking(models.Model):
     end_time = models.TimeField(help_text='End time')
     
     # Booking details
-    booking_type = models.CharField(
-        max_length=50,
-        choices=BOOKING_TYPE_CHOICES,
-        default='practice'
+    booking_type = models.IntegerField(
+        choices=BookingType,
+        default=BookingType.PRACTICE
     )
     
     # Who's playing (optional)
@@ -232,14 +209,12 @@ class UserCourtBooking(models.Model):
     external_booking_reference = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
         help_text='Booking confirmation number from external site (if any)'
     )
     
     # Notes
     notes = models.TextField(
         blank=True,
-        null=True,
         help_text='e.g., "Doubles with Joe and Laura", "Working on serves"'
     )
     
@@ -296,19 +271,25 @@ class CourtScheduleBlock(models.Model):
     - League organizers create these blocks
     - Helps users see "When can I book for public play?"
     - Shows "When does my club have priority access?"
+
+    **Purpose**: Display court schedule to users (like weekly grid)
+
+    **⚠️ CRITICAL IMPORT NOTE:**
+    This model has a ForeignKey to `League`, which creates a **circular import** issue:
+    - `leagues/models.py` imports `CourtLocation` from `courts/models.py` (for LeagueSession)
+    - `courts/models.py` would normally import `League` from `leagues/models.py` (for CourtScheduleBlock)
+    - This creates: `leagues.models` → `courts.models` → `leagues.models` ❌ CIRCULAR!
+
+    **SOLUTION: Use String Reference**
+    Instead of importing `League` at the top of the file, we use Django's string reference feature:
+    ```python
+    # ❌ WRONG - Creates circular import:
+        from leagues.models import League
+        league = models.ForeignKey(League, ...)
+
+    # ✅ CORRECT - String reference, no import needed:
+        league = models.ForeignKey('leagues.League', ...)
     """
-    
-    BLOCK_TYPE_CHOICES = [
-        ('league', 'League'),
-        ('competitive', 'Competitive Play'),
-        ('recreative', 'Recreative Play'),
-        ('skill_restricted', 'Skill Restricted (3.5+, 4.0+, etc.)'),
-        ('public', 'Public Open Play'),
-        ('drill', 'Drill/Training'),
-        ('tournament', 'Tournament'),
-        ('blocked', 'Blocked/Reserved'),
-        ('maintenance', 'Maintenance/Closed'),
-    ]
     
     court_location = models.ForeignKey(
         CourtLocation,
@@ -318,58 +299,62 @@ class CourtScheduleBlock(models.Model):
     
     # Time block
     day_of_week = models.IntegerField(
-        choices=[
-            (0, "Monday"), (1, "Tuesday"), (2, "Wednesday"), (3, "Thursday"),
-            (4, "Friday"), (5, "Saturday"), (6, "Sunday")
-        ],
+        choices=DayOfWeek,
         help_text='Day of week for this recurring block'
     )
     start_time = models.TimeField()
     end_time = models.TimeField()
     
     # What's happening
-    block_type = models.CharField(
-        max_length=20,
-        choices=BLOCK_TYPE_CHOICES
-    )
-    title = models.CharField(
-        max_length=100,
-        help_text='e.g., "Groupe Action Pickleball", "Competitive", "PUBLIC", "3.5+"'
-    )
-    description = models.CharField(
-        max_length=200,
+    block_type = models.IntegerField(
         blank=True,
         null=True,
-        help_text='e.g., "4 terrains", "Tous les membres", "T5-T6-T7-T8"'
+        choices=BlockType
     )
-    
-    # Court allocation
-    courts_affected = models.CharField(
-        max_length=50,
-        blank=True,
+    # Access control
+    skill_level_min = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
         null=True,
-        help_text='Which courts (e.g., "1-4", "5-8", "All", "T5,T6,T7,T8")'
-    )
-    
-    # Display hints
-    background_color = models.CharField(
-        max_length=20,
         blank=True,
-        null=True,
-        help_text='Hex color for schedule display (e.g., #FF00FF for magenta)'
+        help_text='Minimum skill level required (e.g., 3.5 for 3.5+ play)'
     )
-    text_color = models.CharField(
-        max_length=20,
-        default='#FFFFFF',
-        help_text='Text color for readability'
+    skill_level_max = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        help_text='Maximum skill level allowed (e.g., 4.0 for up to 4.0)'
     )
     
-    # Links
+    # Capacity
+    max_players = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Maximum number of players allowed in this time block'
+    )
+    
+    # Reservations
+    requires_reservation = models.BooleanField(
+        default=False,
+        help_text='Do users need to reserve a spot?'
+    )
+    
+    # Cost
+    cost_per_session = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.00,
+        help_text='Cost per person per session (0.00 for free play)'
+    )
+    
+    # Links to leagues/clubs
     league = models.ForeignKey(
-        'leagues.League',  # ← String reference! Format: 'app_name.ModelName'
-        on_delete=models.CASCADE,
-        blank=True,
+        'leagues.League',  # Use string reference to avoid circular import
+        on_delete=models.SET_NULL,
         null=True,
+        blank=True,
+        related_name='league_schedule_blocks',  # league.league_schedule_blocks.all()
         help_text='Link to league if this is a league block'
     )
     club = models.ForeignKey(
@@ -433,14 +418,14 @@ class CourtScheduleBlock(models.Model):
         
         return True
 
+# The CourtLocationSchedule handles the court availability schedule. Using a ForeignKey
+# to CourtLocation allows to specify blocked times for each court location
+
 class CourtLocationSchedule(models.Model):
 
     court_location = models.ForeignKey(CourtLocation, on_delete=models.CASCADE, related_name="schedule")
     day_of_week = models.IntegerField(
-        choices=[
-            (0, "Monday"), (1, "Tuesday"), (2, "Wednesday"), (3, "Thursday"),
-            (4, "Friday"), (5, "Saturday"), (6, "Sunday")
-        ]
+        choices=DayOfWeek
     )
     start_time = models.TimeField()
     end_time = models.TimeField()

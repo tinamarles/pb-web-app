@@ -4,8 +4,9 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from functools import cached_property
 from clubs.models import Club
-from leagues.models import League
+from leagues.models import League, LeagueSession
 from courts.models import UserCourtBooking, CourtLocation
+from public.constants import MatchFormat, MatchType, MatchStatus, ScoreFormat, GenerationFormat, MLPGameType
 
 User = get_user_model()
 
@@ -19,32 +20,6 @@ class Match(models.Model):
     - Private matches (organized_by set)
     - MLP team matches (match_type='mlp')
     """
-    
-    MATCH_FORMAT_CHOICES = [
-        ('best_of_1', 'Best of 1 (Single Game)'),
-        ('best_of_3', 'Best of 3'),
-        ('best_of_5', 'Best of 5'),
-    ]
-    
-    MATCH_TYPE_CHOICES = [
-        ('singles', 'Singles'),
-        ('doubles', 'Doubles'),
-        ('mlp', 'MLP Team Match'),
-    ]
-    
-    SCORE_FORMAT_CHOICES = [
-        ('sideout', 'Side-out Scoring'),
-        ('rally', 'Rally Scoring'),
-    ]
-    
-    MATCH_STATUS_CHOICES = [
-        ('pending', 'Pending - Players invited'),       # Private matches: awaiting player confirmation
-        ('accepted', 'Accepted - All players confirmed'),  # Private matches: all players confirmed
-        ('scheduled', 'Scheduled'),                     # League/Tournament: awaiting results
-        ('in_progress', 'In Progress'),                 # Optional: live match
-        ('completed', 'Completed - Results entered'),   # Results entered
-        ('cancelled', 'Cancelled'),                     # Not played (rain, abandoned, etc.)
-    ]
     
     # Match context
     club = models.ForeignKey(
@@ -72,20 +47,30 @@ class Match(models.Model):
         help_text='User who organized this match (for private matches)'
     )
     
+    # Link to session (if league match)
+    match_day = models.ForeignKey(
+        LeagueSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='session_matches'  # session.session_matches.all()
+    )
+
     # Match details
     match_date = models.DateField()
-    match_format = models.CharField(max_length=20, choices=MATCH_FORMAT_CHOICES)
-    match_type = models.CharField(max_length=20, choices=MATCH_TYPE_CHOICES)
-    score_format = models.CharField(max_length=20, choices=SCORE_FORMAT_CHOICES)
-    match_status = models.CharField(
-        max_length=20,
-        choices=MATCH_STATUS_CHOICES,
-        default='pending'
+    match_format = models.IntegerField(
+        choices=MatchFormat)
+    match_type = models.IntegerField(
+        choices=MatchType)
+    score_format = models.IntegerField(
+        choices=ScoreFormat)
+    match_status = models.IntegerField(
+        choices=MatchStatus,
+        default=MatchStatus.PENDING
     )
     
     cancellation_reason = models.TextField(
         blank=True,
-        null=True,
         help_text='Why was this match cancelled? (e.g., rain, insufficient players, abandoned mid-match)'
     )
     
@@ -95,7 +80,7 @@ class Match(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='matches'
+        related_name='matches_played'
     )
     court_number = models.CharField(
         max_length=20,
@@ -103,7 +88,25 @@ class Match(models.Model):
         null=True,
         help_text='Specific court number (e.g., "1", "Court 2", "14")'
     )
-    
+    # ⭐ NEW: Round number for round-robin matches (2025-12-04)
+    # Purpose: Track which round of a session this match belongs to
+    # Use Case: Captain needs to regenerate future rounds after player leaves early
+    #           System deletes rounds 4-8, regenerates with new player count
+    round_number = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Round number (1-16) for round-robin format only. NULL for other formats.'
+    )
+    # ⭐ NEW: Generation format for league matches (2025-12-05)
+    # Purpose: Store HOW these matches were generated (Round-Robin, King-of-Court, Manual)
+    # Use Case: Display format on match results screen, filter matches by generation type
+    #           All matches from same session occurrence share same generation_format
+    generation_format = models.IntegerField(
+        choices=GenerationFormat,
+        blank=True,
+        null=True,
+        help_text='How matches were generated: Round-Robin, King-of-Court, or Manual. Set by captain when generating matches.'
+    )
     # Link to user's manual booking (if private match)
     user_booking = models.OneToOneField(
         UserCourtBooking,
@@ -123,7 +126,7 @@ class Match(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='matches_won',
+        related_name='team_matches_won',
         help_text='Team that won (for singles/doubles matches)'
     )
     
@@ -132,12 +135,12 @@ class Match(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='matches_won',
+        related_name='mlp_team_matches_won',
         help_text='MLP team that won (for MLP matches only)'
     )
     
     # Optional details
-    notes = models.TextField(blank=True, null=True)
+    notes = models.TextField(blank=True)
     
     # Result editing tracking (for self-reporting feature)
     result_entered_by = models.ForeignKey(
@@ -167,7 +170,14 @@ class Match(models.Model):
             raise ValidationError(
                 "MLP matches must be associated with a league"
             )
+    def save(self, *args, **kwargs):
+        """Auto-set court_location from league_session for league matches."""
         
+        if self.league_session:
+            self.court_location = self.league_session.court_location
+        
+        super().save(*args, **kwargs) 
+
     def is_mlp(self):
         """Check if this is an MLP match."""
         return self.match_type == 'mlp'
@@ -194,13 +204,6 @@ class Team(models.Model):
     
     NOTE: For round-robin leagues, teams are temporary and change every match!
     """
-    MLP_GAME_TYPE_CHOICES = [
-        ('women_doubles', "Women's Doubles"),
-        ('men_doubles', "Men's Doubles"),
-        ('mixed_doubles_1', 'Mixed Doubles 1'),
-        ('mixed_doubles_2', 'Mixed Doubles 2'),
-        ('dreambreaker', 'DreamBreaker'),
-    ]
 
     match = models.ForeignKey(
         Match,
@@ -209,9 +212,8 @@ class Team(models.Model):
     )
     
     # MLP-specific: What game type is this team for?
-    mlp_game_type = models.CharField(
-        max_length=20,
-        choices=MLP_GAME_TYPE_CHOICES,
+    mlp_game_type = models.IntegerField(
+        choices=MLPGameType,
         blank=True,
         null=True,
         help_text='Type of MLP game. Match to Game.mlp_game_type to find teams.'
@@ -221,7 +223,6 @@ class Team(models.Model):
     team_name = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
         help_text='e.g., "Team A", "Joe & Tina", "Thunderstruck"'
     )
     
@@ -305,14 +306,6 @@ class Game(models.Model):
     - Game record = Was played, has winner AND loser (both REQUIRED!)
     """
     
-    MLP_GAME_TYPE_CHOICES = [
-        ('women_doubles', "Women's Doubles"),
-        ('men_doubles', "Men's Doubles"),
-        ('mixed_doubles_1', 'Mixed Doubles 1'),
-        ('mixed_doubles_2', 'Mixed Doubles 2'),
-        ('dreambreaker', 'DreamBreaker'),
-    ]
-    
     match = models.ForeignKey(
         'Match',
         on_delete=models.CASCADE,
@@ -342,9 +335,8 @@ class Game(models.Model):
     )
     
     # MLP-specific
-    mlp_game_type = models.CharField(
-        max_length=20,
-        choices=MLP_GAME_TYPE_CHOICES,
+    mlp_game_type = models.IntegerField(
+        choices=MLPGameType,
         blank=True,
         null=True
     )
@@ -403,7 +395,7 @@ class MLPTeam(models.Model):
     )
     
     # Team logo/colors
-    logo_url = models.URLField(max_length=200, blank=True, null=True)
+    logo_url = models.URLField(max_length=200, blank=True)
     
     # Status
     is_active = models.BooleanField(default=True)
@@ -442,3 +434,175 @@ class MLPTeam(models.Model):
             effective_from__lte=date,
             is_active=True
         ).order_by('-effective_from').first()
+    
+class MLPTeamRosterVersion(models.Model):
+    """
+    Versioned roster snapshot for an MLP team.
+    
+    PURPOSE: Track roster changes over time
+    - New version created when players added/removed
+    - Historical record of who played when
+    - Supports mid-season roster changes
+    
+    BUSINESS RULES:
+    - Only ONE active version per team at a time
+    - New version must have effective_from >= previous version
+    - Rosters are versioned, not edited in place
+    
+    EXAMPLE TIMELINE:
+    - Feb 1: Initial roster (Mike, Sarah, John, Lisa)
+    - Mar 15: Add Alex, remove Mike → New version!
+    - Apr 20: Add Emma → New version!
+    """
+    
+    mlp_team = models.ForeignKey(
+        MLPTeam,
+        on_delete=models.CASCADE,
+        related_name='roster_versions',
+        help_text='Which MLP team this roster belongs to'
+    )
+    
+    # Version metadata
+    version_number = models.IntegerField(
+        help_text='Auto-incremented version (1, 2, 3, ...)'
+    )
+    effective_from = models.DateField(
+        help_text='Date this roster version became active'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text='Is this the current active roster?'
+    )
+    
+    # Change tracking
+    changed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='mlp_roster_changes_made',
+        help_text='Admin/captain who made this roster change'
+    )
+    change_notes = models.TextField(
+        blank=True,
+        help_text='Optional notes about roster change (e.g., "Added John after Mike injured")'
+    )
+    
+    # M2M to User via MLPTeamRosterPlayer through-table
+    players = models.ManyToManyField(
+        User,
+        through='MLPTeamRosterPlayer',
+        related_name='mlp_roster_versions',
+        help_text='Players in this roster version'
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('mlp_team', 'version_number')
+        ordering = ['mlp_team', '-version_number']
+        verbose_name = 'MLP Team Roster Version'
+        constraints = [
+            # Only one active roster per team
+            models.UniqueConstraint(
+                fields=['mlp_team'],
+                condition=models.Q(is_active=True),
+                name='one_active_roster_per_team'
+            )
+        ]
+    
+    def __str__(self):
+        return f"{self.mlp_team.name} - Roster v{self.version_number} (from {self.effective_from})"
+    
+    def clean(self):
+        """Validation rules"""
+        # If creating new version, ensure effective_from is after previous version
+        if self.mlp_team_id:
+            previous = self.mlp_team.roster_versions.filter(
+                version_number__lt=self.version_number
+            ).order_by('-version_number').first()
+            
+            if previous and self.effective_from < previous.effective_from:
+                raise ValidationError(
+                    f"New roster version must have effective_from >= {previous.effective_from}"
+                )
+    
+    def save(self, *args, **kwargs):
+        """Auto-increment version_number if not set"""
+        if not self.version_number:
+            last_version = self.mlp_team.roster_versions.order_by('-version_number').first()
+            self.version_number = (last_version.version_number + 1) if last_version else 1
+        
+        # If setting this as active, deactivate all other versions for this team
+        if self.is_active:
+            MLPTeamRosterVersion.objects.filter(
+                mlp_team=self.mlp_team
+            ).exclude(id=self.id).update(is_active=False)
+        
+        super().save(*args, **kwargs)
+    
+    def get_player_count(self):
+        """Get number of players in this roster version"""
+        return self.roster_players.count()
+    
+    def get_players_by_gender(self):
+        """Get player counts by gender (for validation hints)"""
+        from django.db.models import Count
+        return self.roster_players.values('player__gender').annotate(
+            count=Count('id')
+        )
+    
+class MLPTeamRosterPlayer(models.Model):
+    """
+    Links a player to a specific roster version.
+    
+    PURPOSE: Track which players are in which roster version
+    - Through-table for MLPTeamRosterVersion.players M2M
+    - Allows additional metadata per player (jersey number, position, etc.)
+    
+    EXAMPLE:
+    Roster v1 (Feb 1): Mike, Sarah, John, Lisa
+    Roster v2 (Mar 15): Sarah, John, Lisa, Alex (Mike removed, Alex added)
+    
+    This table has separate records for each player in each version.
+    """
+    
+    roster_version = models.ForeignKey(
+        MLPTeamRosterVersion,
+        on_delete=models.CASCADE,
+        related_name='roster_players',
+        help_text='Which roster version this player belongs to'
+    )
+    player = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='mlp_roster_positions',
+        help_text='Player in this roster'
+    )
+    
+    # Optional metadata (future features)
+    jersey_number = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        help_text='Optional jersey number for this player'
+    )
+    position_notes = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text='Optional position notes (e.g., "Primary for women\'s doubles")'
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('roster_version', 'player')
+        ordering = ['roster_version', 'id']
+        verbose_name = 'MLP Team Roster Player'
+    
+    def __str__(self):
+        player_name = self.player.get_full_name() or self.player.username
+        return f"{player_name} in {self.roster_version}"

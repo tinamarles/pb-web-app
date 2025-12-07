@@ -2,8 +2,10 @@
 
 from django.db import models
 from django.core.exceptions import ValidationError
+from functools import cached_property
 from clubs.models import Club, ClubMembership, ClubMembershipSkillLevel
 from courts.models import CourtLocation
+from public.constants import LeagueType, GenerationFormat, LeagueParticipationStatus, DayOfWeek, RecurrenceType, LeagueAttendanceStatus, MatchStatus
 from datetime import date, timedelta
 from django.contrib.auth import get_user_model
 
@@ -36,38 +38,25 @@ class League(models.Model):
       (Fixed 2-player teams for entire season)
     """
     
-    LEAGUE_TYPE_CHOICES = [
-        ('standard', 'Standard (Rotating Partners)'),
-        ('team', 'Team-Based (Fixed 2-Player Teams)'),
-        ('mlp', 'MLP (Fixed 4+ Player Teams)'),
-    ]
-    
-    MATCH_FORMAT_CHOICES = [
-        ('round_robin', 'Round-Robin'),
-        ('king_of_court', 'King of the Court'),
-        ('manual', 'Manual Entry'),
-    ]
     # Basic info
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True)
     club = models.ForeignKey(
         Club, 
         on_delete=models.CASCADE, 
         related_name='leagues')
     # League type (defines team structure, NOT match generation format!)
-    league_type = models.CharField(
-        max_length=20,
-        choices=LEAGUE_TYPE_CHOICES,
-        default='standard',
+    league_type = models.IntegerField(
+        choices=LeagueType,
+        default=LeagueType.STANDARD,
         help_text='Standard=rotating partners, Team=fixed pairs, MLP=fixed 4+ teams'
     )
     # Default match format (for Standard leagues only - convenience feature!)
     # This is used to pre-select the format when captain generates matches
     # Captain can override this choice for any specific session occurrence
-    default_match_format = models.CharField(
-        max_length=20,
-        choices=MATCH_FORMAT_CHOICES,
-        default='round_robin',
+    default_generation_format = models.IntegerField(
+        choices=GenerationFormat,
+        default=GenerationFormat.ROUND_ROBIN,
         blank=True,
         null=True,
         help_text='Default format for match generation. Only applies to Standard leagues. Captain can override per session.'
@@ -146,7 +135,10 @@ class League(models.Model):
         existing = LeagueParticipation.objects.filter(
             league=self,
             member=user,
-            status__in=['active', 'reserve']
+            status__in=[
+                LeagueParticipationStatus.ACTIVE,
+                LeagueParticipationStatus.RESERVE
+            ]
         ).exists()
         if existing:
             return (False, None, "You are already in this league")
@@ -162,26 +154,12 @@ class League(models.Model):
             # '3.5+' - the player has been assessed and achieved a rating of 3.5+ but is not a 4.0+ yet
             # '4.0+' - the player has been assessed and achieved a level of 4.0 or higher
             
-            # ❗️ FIXED: Define skill hierarchy (open = 0, means anyone!)
-            skill_hierarchy = {
-                'open': 0,      # ❗️ FIXED: 'open' = no restriction, anyone can join
-                'beginner': 1,
-                '2.0': 2,
-                '2.5': 3,
-                '3.0': 4,
-                '3.5': 5,
-                '4.0': 6,
-                '4.5': 7,
-                '5.0': 8,
-            }
-            
-            min_value = skill_hierarchy.get(self.minimum_skill_level.level, 0)
-            
             # Check if any of user's skills meet requirement
+            # Since ClubMembershipSkillLevel uses integer IDs (higher ID = higher skill),
+            # we just compare IDs directly!
             skill_met = False
             for level in user_skill_levels:
-                user_value = skill_hierarchy.get(level.level, 0)
-                if user_value >= min_value:
+                if level.id >= self.minimum_skill_level.id:
                     skill_met = True
                     break
         
@@ -195,7 +173,7 @@ class League(models.Model):
         # ❗️ Check max participants (active only, not reserves)
         if self.max_participants:
             current_count = self.participants.filter(
-                leagueparticipation__status='active'
+                leagueparticipation__status=LeagueParticipationStatus.ACTIVE
             ).count()
             
             if current_count >= self.max_participants:
@@ -203,19 +181,19 @@ class League(models.Model):
                 if self.allow_reserves:
                     return (
                         True,
-                        'reserve',
+                        LeagueParticipationStatus.RESERVE,
                         f"League is full ({current_count}/{self.max_participants}). You will join as RESERVE."
                     )
                 else:
                     return (False, None, "League is full and not accepting reserves")
         
         # Can join as active player
-        return (True, 'active', "Welcome to the league!")
+        return (True, LeagueParticipationStatus.ACTIVE, "Welcome to the league!")
     
     def get_current_participants_count(self):
         """Get count of active participants."""
         return self.participants.filter(
-            leagueparticipation__status='active'
+            leagueparticipation__status=LeagueParticipationStatus.ACTIVE
         ).count()
     
     def is_full(self):
@@ -229,11 +207,9 @@ class League(models.Model):
         if not self.minimum_skill_level:
             return "Open to all skill levels"
         
-        level = self.minimum_skill_level.level
-        if level == 'open':
-            return "Open skill level"
-        else:
-            return f"Minimum skill: {level}+"
+        # Since we're using integer IDs (1='open', 2='3.5+', 3='4.0+'),
+        # we display the actual level text
+        return f"Minimum skill: {self.minimum_skill_level.level}"
         
 # Through-table for Member and League (LeagueParticipation)
 class LeagueParticipation(models.Model):
@@ -246,13 +222,11 @@ class LeagueParticipation(models.Model):
     - Statistics
     """
     
-    STATUS_CHOICES = [
-        ('active', 'Active'),                         # Currently playing in league
-        ('reserve', 'Reserve - Waiting for spot'),    # ❗️ Waiting for spot when league full
-        ('injured', 'Injured - Temporarily out'),     # ❗️ Temporarily unavailable (injury)
-        ('holiday', 'On Holiday - Temporarily out'),  # ❗️ Temporarily unavailable (vacation)
-        ('dropped', 'Dropped Out'),                   # Permanently left league
-    ]
+    league = models.ForeignKey(
+        League, 
+        on_delete=models.CASCADE, 
+        related_name='league_participants'
+    )
     # Foreign key to Member is required by the ManyToManyField
     member = models.ForeignKey(
         User, 
@@ -266,18 +240,11 @@ class LeagueParticipation(models.Model):
         on_delete=models.CASCADE, 
         related_name='league_participations_as_club_member' # Renamed for clarity and uniqueness
     )
-    
-    league = models.ForeignKey(
-        League, 
-        on_delete=models.CASCADE, 
-        related_name='league_participations'
-    )
 
     # Status
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='active'
+    status = models.IntegerField(
+        choices=LeagueParticipationStatus,
+        default=LeagueParticipationStatus.ACTIVE
     )
     
     # Dates
@@ -287,7 +254,6 @@ class LeagueParticipation(models.Model):
     # Captain notes (❗️ Added for captain's private notes about player)
     captain_notes = models.TextField(
         blank=True,
-        null=True,
         help_text='Private notes from captain (e.g., "Struggles with serve", "Strong backhand")'
     )
     
@@ -328,7 +294,7 @@ class LeagueParticipation(models.Model):
                 })
 
     def __str__(self):
-        return f"{self.member.first_name} {self.member.last_name} in {self.league.name}"
+        return f"{self.member.get_full_name()} in {self.league.name}"
     
 # The LeagueSession represents the recurring session for a league. It links
 # to the League and CourtLocation models and defines the recurrence pattern
@@ -343,11 +309,6 @@ class LeagueSession(models.Model):
     - Wednesday 12-2pm at Parc La Source, 3 courts
     - Friday 6-8pm at Tennis 13, 2 courts
     """
-    RECURRENCE_CHOICES = [
-        ('weekly', 'Weekly'),
-        ('bi_weekly', 'Every other week'),
-        ('monthly', 'Once a month'),
-    ]
 
     league = models.ForeignKey(
         League, 
@@ -360,18 +321,19 @@ class LeagueSession(models.Model):
         related_name="league_sessions")
     
     courts_used = models.IntegerField(
+        default=1,
         help_text="The number of courts used for this session."
     )
     day_of_week = models.IntegerField(
-        choices=[
-            (0, "Monday"), (1, "Tuesday"), (2, "Wednesday"), (3, "Thursday"),
-            (4, "Friday"), (5, "Saturday"), (6, "Sunday")
-        ]
+        choices=DayOfWeek
     )
     start_time = models.TimeField()
     end_time = models.TimeField()
     
-    recurrence_type = models.CharField(max_length=20, choices=RECURRENCE_CHOICES)
+    recurrence_type = models.IntegerField(
+        choices=RecurrenceType,
+        default=RecurrenceType.WEEKLY)
+    
     recurrence_interval = models.IntegerField(
         default=1,
         help_text="e.g., 2 for 'Every other week' or 1 for 'Once a month' on the first week."
@@ -445,6 +407,76 @@ class LeagueSession(models.Model):
             'recurrence': self.get_recurrence_type_display()
         }
     
+class SessionCancellation(models.Model):
+    """
+    Temporary cancellation of a recurring session.
+    
+    Use Cases:
+    - Captain unavailable for specific time period
+    - Holiday break (e.g., "No sessions Dec 20-31")
+    - Venue unavailable temporarily
+    
+    Note: For permanent cancellation, set LeagueSession.is_active = False
+    """
+    
+    session = models.ForeignKey(
+        LeagueSession,
+        on_delete=models.CASCADE,
+        related_name='cancellations',
+        help_text='Which recurring session to cancel'
+    )
+    
+    # Cancellation period
+    cancelled_from = models.DateField(
+        help_text='First date of cancellation (inclusive)'
+    )
+    cancelled_until = models.DateField(
+        help_text='Last date of cancellation (inclusive)'
+    )
+    
+    # Optional details
+    reason = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text='Why captain cancelled (personal, weather, venue closed, etc.)'
+    )
+    
+    # Audit trail
+    cancelled_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='session_cancellations_made',
+        help_text='Captain who created this cancellation'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-cancelled_from']
+        indexes = [
+            models.Index(fields=['session', 'cancelled_from', 'cancelled_until']),
+        ]
+    
+    def __str__(self):
+        return (
+            f"{self.session.league.name} - {self.session.get_day_of_week_display()} "
+            f"cancelled {self.cancelled_from} to {self.cancelled_until}"
+        )
+    
+    def clean(self):
+        """Validate cancellation period."""
+        if self.cancelled_until < self.cancelled_from:
+            raise ValidationError('cancelled_until must be >= cancelled_from')
+        
+        # Check if overlaps with session's active period
+        if self.session.active_from and self.cancelled_until < self.session.active_from:
+            raise ValidationError('Cancellation ends before session starts')
+        
+        if self.session.active_until and self.cancelled_from > self.session.active_until:
+            raise ValidationError('Cancellation starts after session ends')
+
 class LeagueAttendance(models.Model):
     """
     Attendance tracking for league sessions.
@@ -455,44 +487,100 @@ class LeagueAttendance(models.Model):
     - If cancelled → triggers match regeneration
     """
     
-    STATUS_CHOICES = [
-        ('attending', 'Attending'),
-        ('cancelled', 'Cancelled'),
-        ('absent', 'Absent (no-show)'),
-    ]
-    
     league_participation = models.ForeignKey(
         LeagueParticipation,
         on_delete=models.CASCADE,
         related_name='attendance_records'
     )
     
+    # ⭐ NEW: Which recurring session (2025-12-04)
+    # CRITICAL: Needed for leagues with multiple sessions on same day!
+    # Example: Monday 9am session AND Monday 6pm session on 2024-12-09
+    league_session = models.ForeignKey(
+        LeagueSession,
+        on_delete=models.CASCADE,
+        related_name='session_attendances',
+        help_text='Which recurring session schedule this attendance is for'
+    )
+
     # Which session date
     session_date = models.DateField(
         help_text='Specific date of this session'
     )
     
     # Status
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='attending'  # ← Default to attending!
+    status = models.IntegerField(
+        choices=LeagueAttendanceStatus,
+        default=LeagueAttendanceStatus.ATTENDING  # ← Default to attending!
     )
     
     # Cancellation details
     cancelled_at = models.DateTimeField(blank=True, null=True)
     cancellation_reason = models.TextField(
         blank=True,
-        null=True,
         help_text='Optional reason for cancellation'
     )
     
+    # ⭐ NEW: On-the-Fly Day-of Check-In (2025-12-04)
+    # Purpose: Captain confirms ACTUAL attendance on the day
+    # Use Case: People don't reliably confirm/cancel in advance
+    #           Captain does check-in, marks who ACTUALLY showed up
+    #           System can then re-generate matches with actual players
+    checked_in = models.BooleanField(
+        default=False,
+        help_text='Did the player check in / show up on the day? (captain confirms)'
+    )
+    
+    checked_in_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='checked_in_attendances',
+        help_text='Captain/co-captain who performed day-of check-in (useful for multi-captain leagues)'
+    )
+    
+    # ⭐ NEW: Mid-Session Player Changes (2025-12-04)
+    # Purpose: Handle players leaving early or arriving late during active session
+    # Use Case: Player says "Gotta go - appointment!" after Round 3
+    #           OR player shows up late before Round 4
+    #           System regenerates future rounds with updated player count
+    
+    # BUSINESS LOGIC EXAMPLES:
+    # 
+    # Player Mike:
+    #   status = 'attending' (confirmed on Sunday)
+    #   checked_in = False (captain marked absent Monday 8am - no-show!)
+    #   Result: Planned YES, Showed NO
+    # 
+    # Player Sarah:
+    #   status = 'cancelled' (cancelled on Saturday)
+    #   checked_in = True (captain marked present Monday 8am - surprise!)
+    #   Result: Planned NO, Showed YES
+    # 
+    # Player John:
+    #   status = 'attending' (confirmed on Sunday)
+    #   checked_in = True (captain confirmed Monday 8am)
+    #   Result: Planned YES, Showed YES ✅
+    
+    left_after_round = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Which round player left after (e.g., 3). NULL = did not leave early.'
+    )
+    
+    arrived_before_round = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Which round player arrived before (e.g., 4). NULL = was not late.'
+    )
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ('league_participation', 'session_date')
+        unique_together = ('league_participation', 'league_session', 'session_date')
         ordering = ['session_date', 'league_participation']
     
     def __str__(self):
@@ -507,49 +595,169 @@ class LeagueAttendance(models.Model):
         
         Triggers:
         - Status change to 'cancelled'
-        - Match regeneration if needed
+        - Match regeneration ONLY if matches were round-robin generated
         """
         from datetime import datetime
         
-        self.status = 'cancelled'
+        self.status = LeagueAttendanceStatus.CANCELLED
         self.cancelled_at = datetime.now()
         if reason:
             self.cancellation_reason = reason
         self.save()
         
-        # Trigger match regeneration
+        # Trigger match regeneration (only if round-robin format)
         self._trigger_match_regeneration()
     
     def _trigger_match_regeneration(self):
-        """Regenerate matches if player count changed."""
+        """
+        Regenerate matches ONLY if they were round-robin generated.
+        
+        Purpose: Auto-regenerate matches when players cancel/arrive/leave
+        This is a CRITICAL feature for captains - removes manual rotation management!
+        
+        Safety: Only touches round-robin matches, never King-of-Court/Manual/MLP
+        """
         from matches.models import Match
         from .services.round_robin import RoundRobinGenerator
-        # Get all attending players for this session date
-        attending = LeagueAttendance.objects.filter(
-            league_participation__league=self.league_participation.league,
-            session_date=self.session_date,
-            status='attending'
+        
+        # Get existing matches for THIS specific session
+        existing_matches = Match.objects.filter(
+            league=self.league_participation.league,
+            league_session=self.league_session,  # ← CRITICAL: specific session, not all sessions!
+            match_date=self.session_date,
+            match_status=MatchStatus.PENDING  # Only regenerate unplayed matches
         )
         
-        # Delete existing pending matches
-        Match.objects.filter(
-            league=self.league_participation.league,
-            match_date=self.session_date,
-            match_status='pending'
-        ).delete()
+        # Check if matches exist and were round-robin generated
+        if not existing_matches.exists():
+            return  # No matches to regenerate
         
-        # Generate new matches
-        # (See Round-Robin Generation section below)
-       
+        # Check generation format (all matches for a session have same format)
+        first_match = existing_matches.first()
+        if first_match.generation_format != GenerationFormat.ROUND_ROBIN:
+            # Don't touch King-of-Court, Manual, or MLP matches!
+            return
         
-        session = self.league_participation.league.sessions.first()  # Get session
-        if session:
-            generator = RoundRobinGenerator(
-                session,
-                self.session_date,
-                [att.league_participation.member for att in attending]
+        # ✅ Safe to regenerate - these are round-robin matches
+        # Get currently attending players
+        attending = LeagueAttendance.objects.filter(
+            league_participation__league=self.league_participation.league,
+            league_session=self.league_session,
+            session_date=self.session_date,
+            status=LeagueAttendanceStatus.ATTENDING  # ← Use constant, not string!
+        )
+        
+        # Delete old round-robin matches
+        existing_matches.delete()
+        
+        # Generate fresh matches with updated player list
+        generator = RoundRobinGenerator(
+            self.league_session,
+            self.session_date,
+            [att.league_participation.member for att in attending]
+        )
+        generator.generate_matches()
+
+    def set_left_early(self, after_round: int):
+        """
+        Record that player left early after completing a specific round.
+        
+        Args:
+            after_round: Last round the player completed before leaving
+        """
+        self.left_after_round = after_round
+        self.save(update_fields=['left_after_round'])
+    
+    def set_arrived_late(self, from_round: int):
+        """
+        Record that player arrived late and will play from a specific round onwards.
+        
+        Args:
+            from_round: First round the player will participate in
+        
+        Raises:
+            ValidationError: If from_round is invalid
+        """
+        # Defensive check (should never happen in normal operation)
+        if from_round <= self.left_after_round:
+            raise ValidationError(
+                f"Cannot arrive (round {from_round}) after already leaving (round {self.left_after_round})"
             )
-            generator.generate_matches()
+        
+        self.arrived_before_round = from_round
+        self.checked_in = True
+        self.save(update_fields=['arrived_before_round', 'checked_in'])
+    
+    def _regenerate_future_rounds(self, from_round: int):
+        """
+        Regenerate ONLY future rounds (not already-played rounds).
+        
+        Args:
+            from_round: First round to regenerate (inclusive)
+        
+        Business Logic:
+            - Get currently ACTIVE players (attending + checked_in + not left yet)
+            - Delete matches for rounds >= from_round that are still pending
+            - Regenerate those rounds with updated player list
+        
+        CRITICAL: Only works for round-robin matches!
+        """
+        from matches.models import Match
+        from .services.round_robin import RoundRobinGenerator
+        
+        # Get existing matches for this session
+        existing_matches = Match.objects.filter(
+            league=self.league_participation.league,
+            league_session=self.league_session,
+            match_date=self.session_date,
+            round_number__gte=from_round,  # ← Only future rounds!
+            match_status=MatchStatus.PENDING  # ← Only unplayed matches!
+        )
+        
+        # Safety check: only regenerate round-robin matches
+        if not existing_matches.exists():
+            return
+        
+        first_match = existing_matches.first()
+        if first_match.generation_format != GenerationFormat.ROUND_ROBIN:
+            return  # Don't touch King-of-Court, Manual, or MLP matches!
+        
+        # Get currently ACTIVE players for this round
+        # Logic: attending AND checked_in AND (not left OR left after this round)
+        active_players = []
+        all_attendance = LeagueAttendance.objects.filter(
+            league_participation__league=self.league_participation.league,
+            league_session=self.league_session,
+            session_date=self.session_date,
+            status=LeagueAttendanceStatus.ATTENDING,
+            checked_in=True  # ← Only checked-in players!
+        )
+        
+        for att in all_attendance:
+            # Check if player is still active for this round
+            if att.left_after_round and att.left_after_round < from_round:
+                continue  # Player left before this round
+            
+            if att.arrived_before_round and att.arrived_before_round > from_round:
+                continue  # SAFETY CHECK: Should never happen in normal operation!
+                         # This would mean: "We're regenerating Round X, but player arrives AFTER Round X"
+                         # Example: Regenerating R4, but player arrived_before_round=6
+                         # In practice, we ONLY regenerate from arrived_before_round onwards,
+                         # so this condition protects against bugs in calling code.
+            
+            active_players.append(att.league_participation.member)
+        
+        # Delete old future rounds
+        existing_matches.delete()
+        
+        # Generate fresh matches for future rounds with updated player list
+        generator = RoundRobinGenerator(
+            self.league_session,
+            self.session_date,
+            active_players,
+            starting_round=from_round  # ← Start from specific round number!
+        )
+        generator.generate_matches()
 
 # Signal to auto-create attendance records
 from django.db.models.signals import post_save
@@ -570,7 +778,7 @@ def create_attendance_records(sender, instance, created, **kwargs):
         # Get all active participants
         participants = LeagueParticipation.objects.filter(
             league=instance.league,
-            status='active'
+            status=LeagueParticipationStatus.ACTIVE
         )
         
         # Create attendance records
@@ -578,7 +786,7 @@ def create_attendance_records(sender, instance, created, **kwargs):
             LeagueAttendance.objects.get_or_create(
                 league_participation=participation,
                 session_date=next_date,
-                defaults={'status': 'attending'}
+                defaults={'status': LeagueAttendanceStatus.ATTENDING}
             )
 class RoundRobinPattern(models.Model):
     """
@@ -593,9 +801,7 @@ class RoundRobinPattern(models.Model):
     """
     
     # Pattern identification
-    num_courts = models.IntegerField(
-        help_text='Number of courts for this pattern'
-    )
+   
     num_players = models.IntegerField(
         help_text='Number of players for this pattern'
     )
@@ -615,8 +821,18 @@ class RoundRobinPattern(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        unique_together = ('num_courts', 'num_players')
-        ordering = ['num_courts', 'num_players']
+        ordering = ['num_players']
     
     def __str__(self):
-        return f"{self.num_courts} courts, {self.num_players} players"
+        courts_needed = self.num_players // 4
+        return f"{self.num_players} players ({courts_needed} courts)"
+    
+    @property
+    def courts_needed(self):
+        """Calculate number of courts needed for this player count."""
+        return self.num_players // 4
+    
+    @property
+    def bench_count(self):
+        """Calculate number of players on bench each round."""
+        return self.num_players % 4
