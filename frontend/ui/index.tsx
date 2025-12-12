@@ -11,12 +11,23 @@ export {
 export { Icon, type IconProps, type IconName, type IconSize } from "./icon";
 export { Logo, type LogoProps } from "./logo";
 export { Badge, type BadgeProps, type BadgeVariant } from "./badge";
-export { Sidebar, type SidebarProps, type SidebarItem } from "./sidebar";
+export {
+  Sidebar,
+  type SidebarProps,
+  type SidebarItem,
+  type SidebarSection,
+} from "./sidebar";
 export { CustomSelect, type CustomSelectProps } from "./customSelect";
+export { Select, type SelectProps, type SelectOption} from "./select";
 export { FormField, type FormFieldProps } from "./formField";
 export { Avatar, type AvatarProps, type AvatarSize } from "./avatar";
 export { Sheet, type SheetProps } from "./sheet";
-export { LocationAutocomplete, type LocationAutocompleteProps } from './locationAutocomplete';
+export {
+  LocationAutocomplete,
+  type LocationAutocompleteProps,
+} from "./locationAutocomplete";
+export { RadioButton } from "./radioButton";
+
 //export { UploadImageButton, type UploadImageButtonProps } from './uploadImageButton';
 //export { AvatarWithUpload, type AvatarWithUploadProps } from './avatarWithUpload';
 export { Search, type SearchProps } from "./search";
@@ -27,7 +38,11 @@ export { Search, type SearchProps } from "./search";
 
 //export { ThemeSelector, type ThemeSelectorProps } from './themeSelector';
 export { ThemeToggle } from "./ThemeToggle";
-export { Dropdown, type DropdownProps, type TriggerRenderFunction } from "./dropdown";
+export {
+  Dropdown,
+  type DropdownProps,
+  type TriggerRenderFunction,
+} from "./dropdown";
 export { MenuItem, type MenuItemProps } from "./menuItem";
 
 // TYPES

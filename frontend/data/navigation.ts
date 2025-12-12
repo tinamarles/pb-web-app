@@ -48,6 +48,7 @@ export interface NavigationConfig {
   profile: NavItem[];
   dashboard: NavItem[];
   admin?: NavItem[];
+  feed?: NavItem[];
 }
 
 // ============================================
@@ -98,61 +99,51 @@ export const PROFILE_NAV_ITEMS: NavItem[] = [
 export const DASHBOARD_NAV_ITEMS: NavItem[] = [
   {
     label: "Overview",
-    href: "/dashboard",
+    href: "/dashboard/overview",
     icon: "dashboard",
   },
   {
     label: "Club Notifications",
-    href: "/club/notifications",
+    href: "/dashboard/notifications",
     icon: "notifications",
   },
   {
     label: "Club Leagues",
-    href: "/club/leagues",
+    href: "/dashboard/leagues",
     icon: "leagues",
   },
   {
     label: "Leaderboard",
-    href: "/club/leaderboard",
+    href: "/dashboard/leaderboard",
     icon: "achievements",
   },
   {
     label: "Club Members",
-    href: "/club/members",
+    href: "/dashboard/members",
     icon: "members",
   },
   {
     label: "Club Details",
-    href: "/club/clubdetails",
+    href: "/dashboard/clubdetails",
     icon: "show",
   },
 ];
+// ✅ ADD: Admin navigation items (conditionally rendered in sidebar)
+export const DASHBOARD_ADMIN_ITEMS: NavItem[] = [
+  // Key feature for League Captains on League Day: allows check-in,
+  // round management ('complete', 'in-progress', mid-session player changes, etc)
+  { label: "League Session", href: "/dashboard/league-day-[sessionId]", icon: "leagues" },
+  // only for bulk admin feature - such as accepting join request, import/export data etc.
+  { label: "Manage Members", href: "/dashboard/admin-members", icon: "members" },
+  { label: "Court Schedule", href: "/dashboard/admin-courts", icon: "court-schedule" },
+  { label: "Training", href: "/dashboard/admin-training", icon: "coaches" },
+];
 
-/**
- * ADMIN SIDEBAR NAVIGATION (Future)
- * Used in: /app/(sidebarLayout)/admin/* pages
- */
-export const ADMIN_NAV_ITEMS: NavItem[] = [
-  {
-    label: "Manage Members",
-    href: "/admin/club/users",
-    icon: "Users",
-  },
-  {
-    label: "Add Notification",
-    href: "/admin/club/notification",
-    icon: "add-notification",
-  },
-  {
-    label: "Court Schedule",
-    href: "/admin/club/courts",
-    icon: "court-schedule",
-  },
-  {
-    label: "Manage Leagues",
-    href: "/admin/club/leagues",
-    icon: "leagues",
-  },
+// ✅ ADD: Feed navigation items (public users)
+export const FEED_NAV_ITEMS: NavItem[] = [
+  { label: "Discover", href: "/feed/discover", icon: "compass" },
+  { label: "My Matches", href: "/feed/my-matches", icon: "matches" },
+  { label: "Activity", href: "/feed/activity", icon: "activity" },
 ];
 
 // ============================================
@@ -252,7 +243,8 @@ export const MORE_MENU_FOOTER_LINKS: FooterLink[] = [
 export const navigation: NavigationConfig = {
   profile: PROFILE_NAV_ITEMS,
   dashboard: DASHBOARD_NAV_ITEMS,
-  admin: ADMIN_NAV_ITEMS,
+  admin: DASHBOARD_ADMIN_ITEMS,
+  feed: FEED_NAV_ITEMS,
 };
 
 // ============================================

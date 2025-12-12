@@ -19,7 +19,7 @@ import { snakeToCamel } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
 
 // Define protected routes.
-const PROTECTED_ROUTES = ["/dashboard"];
+const PROTECTED_ROUTES = ["/dashboard", "/feed"];
 
 // Create the context with a default value
 const AuthUserContext = createContext<AuthUserContextType | null>(null);

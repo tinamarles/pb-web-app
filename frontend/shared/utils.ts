@@ -114,7 +114,7 @@ export const actionHandlers: Record<string, ActionHandler> = {
     // Check if we have the isMemberUser value (injected from Providers)
     if (dependencies.isMemberUser !== undefined) {
       const isMember = dependencies.isMemberUser; // ← Changed: Now it's a value, not a function call
-      const route = isMember ? '/dashboard/member' : '/dashboard/public';
+      const route = isMember ? '/dashboard/overview' : '/feed/discover';
       
       console.log(`🎯 User type: ${isMember ? 'Member' : 'Public'} → Navigating to: ${route}`);
       

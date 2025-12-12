@@ -94,15 +94,23 @@ export interface Club extends MemberClub {
 export interface ClubMembership {
 
   id?: number;
-  club?: MemberClub;
-  roles?: Role[];
-  type?: ClubMembershipType;
-  levels?: ClubMembershipSkillLevel[];
+  club: MemberClub; // required in Django
+  roles: Role[];
+  type: ClubMembershipType;
+  levels: ClubMembershipSkillLevel[];
   membershipNumber?: string | null;
-  isPreferredClub?: boolean;
+  isPreferredClub: boolean;
   status: C.MembershipStatusValue;
   registrationStartDate?: string | null;
   registrationEndDate?: string | null;
+  // ✅ Aggregated permission flags from Django @property methods
+  canManageClub: boolean;
+  canManageMembers: boolean;
+  canCreateTraining: boolean;
+  canManageLeagues: boolean;
+  canManageLeagueSessions: boolean;
+  canCancelLeagueSessions: boolean;
+  canManageCourts: boolean;
 }
 // +++ User-specific types: types for different user roles
 

@@ -12,7 +12,10 @@ User = get_user_model()
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = '__all__'
+        fields = ['id', 
+                  'name', 
+                  'description'
+                  ] 
 
 class ClubMembershipTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -118,5 +121,12 @@ class ClubMembershipSerializer(serializers.ModelSerializer):
                   'is_preferred_club',
                   'status',
                   'registration_start_date',
-                  'registration_end_date'
+                  'registration_end_date',
+                  'can_manage_club', 
+                  'can_manage_members', 
+                  'can_create_training',
+                  'can_manage_leagues', 
+                  'can_manage_league_sessions',
+                  'can_cancel_league_sessions', 
+                  'can_manage_courts',
                   ]

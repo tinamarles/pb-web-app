@@ -12,7 +12,14 @@ import { Icon } from './icon';
 // ========================
 
 // Badge variants using CSS utilities system
-export type BadgeVariant = "primary" | "secondary" | "tertiary" | "outlined" | "destructive";
+export type BadgeVariant = 
+        "primary" | 
+        "secondary" | 
+        "tertiary" | 
+        "outlined" | 
+        "destructive" | 
+        "accent1" | 
+        "accent2";
 
 export interface BadgeProps extends React.ComponentProps<"span"> {
   variant?: BadgeVariant;
@@ -38,6 +45,8 @@ export function Badge({
     variant === "primary" && "badge-primary",
     variant === "secondary" && "badge-secondary", 
     variant === "tertiary" && "badge-tertiary",
+    variant === "accent1" && "badge-accent1",
+    variant === "accent2" && "badge-accent2",
     variant === "outlined" && "badge-outlined",
     variant === "destructive" && "badge-destructive",
     

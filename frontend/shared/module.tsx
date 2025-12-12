@@ -177,8 +177,8 @@ export const Module = memo(function Module({
   };
   // Resolve dashboard href based on membership
   const resolvedDashboardHref = isMemberUser
-    ? "/dashboard/member"
-    : "/dashboard/public";
+    ? "/dashboard/overview"
+    : "/feed/discover";
 
   // 4. Prep bottomNav props (only for mobile + logged in)
   // Active state is detected here using pathname before passing to BottomNav

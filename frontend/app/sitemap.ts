@@ -29,7 +29,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.5,  
         },  
         {  
-            url: `${baseUrl}/dashboard/public`,  
+            url: `${baseUrl}/dashboard/overview`,  
+            lastModified: new Date(),  
+            changeFrequency: 'daily',  
+            priority: 0.7,  
+        },  
+        {  
+            url: `${baseUrl}/feed/discover`,  
             lastModified: new Date(),  
             changeFrequency: 'daily',  
             priority: 0.7,  

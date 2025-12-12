@@ -118,11 +118,17 @@
 
   /* Secondary color - Teal */
   --color-secondary: var(--teal-50);
-  --color-on-secondary: var(--neutral-100);
+  --color-on-secondary: var(--neutral-30);
 
   /* Tertiary color - Yellow */
   --color-tertiary: var(--yellow-90);
   --color-on-tertiary: var(--neutral-30);
+
+  --color-accent1: var(--darkgrey-20);
+  --color-on-accent1: var(--neutral-90);
+
+  --color-accent2: var(--lightgrey-80);
+  --color-on-accent2: var(--neutral-12);
 
   /* Keep error, success, warning the same as light theme */
   --color-error: var(--ex-error-60);
@@ -173,6 +179,9 @@
 
   /* Secondary color - Teal */
   --color-secondary: var(--teal-70);
+
+  --color-accent1: var(--darkgrey-40);
+  --color-on-accent1: var(--neutral-94);
 
   /* Tertiary color - Yellow ==> same as for light*/
   /* Keep error, success, warning the same as light theme */
@@ -590,6 +599,7 @@
 @utility avatar-container {
   overflow: hidden;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   background-color: var(--color-primary);
@@ -660,6 +670,26 @@
   }
 }
 
+@utility dropdown-button {
+  @apply flex items-center justify-between;
+  @apply w-full gap-3;
+  @apply single-line-medium;
+  @apply transition-colors;
+
+  &:focus,
+  &:focus-within {
+    --tw-ring-color: color-mix(in srgb, var(--color-primary), transparent 80%);
+    @apply focus-ring-base border-primary;
+  }
+  &:hover {
+    @apply bg-surface-container;
+  }
+
+  &:disabled {
+    @apply disabled-item;
+  }
+}
+
 /* === LAYOUT CONTAINER CLASSES === */
 @layer components {
   /* +++ Module container responsible for creating the header props, render the header and the footer +++ */
@@ -677,17 +707,17 @@
   /* +++ General container to use for various purposes, such as cards, etc. */
   .container {
     @apply flex flex-col;
-    @apply gap-sm;  /* Mobile: 8px */
+    @apply gap-sm; /* Mobile: 8px */
     @apply p-md;
     @apply border border-transparent;
     @apply rounded-lg;
     @apply bg-surface;
   }
-  
+
   /* Tablet and Desktop: Larger gap */
   @media (min-width: 640px) {
     .container {
-      @apply gap-md;  /* 12px */
+      @apply gap-md; /* 12px */
     }
   }
   /* +++ HEADER Component +++ */
@@ -1219,7 +1249,7 @@
   }
 
   .profile-page__mobile-item__button {
-    display: none !important;  /* !important needed to override .btn-base display: inline-flex */
+    display: none !important; /* !important needed to override .btn-base display: inline-flex */
   }
 
   /* View mode: Display-only fields */
@@ -1263,12 +1293,14 @@
   /* View mode: Show edit buttons */
   @media (max-width: 639px) {
     .page__form[data-mode="view"] .profile-page__mobile-item__button {
-      display: flex !important;  /* !important to override base display: none !important */
+      display: flex !important; /* !important to override base display: none !important */
       @apply rounded-full hover:bg-surface-container;
     }
 
-     /* Hide edit button inside Sheet (already in edit mode) */
-    .page__form[data-mode="view"] .sheet-body .profile-page__mobile-item__button {
+    /* Hide edit button inside Sheet (already in edit mode) */
+    .page__form[data-mode="view"]
+      .sheet-body
+      .profile-page__mobile-item__button {
       display: none !important;
     }
   }
@@ -1656,7 +1688,7 @@
   .select-option {
     @apply p-md single-line-base;
     @apply cursor-pointer transition-colors duration-150;
-    @apply flex items-center justify-between;
+    @apply flex w-full items-center justify-between;
     padding-inline: var(--px-16); /* Override p-md for horizontal padding */
     padding-block: var(--px-12); /* Override p-md for vertical padding */
     color: var(--color-on-surface);
@@ -1685,6 +1717,7 @@
     font-weight: 500; /* Medium weight for subtle emphasis */
   }
 }
+
 /* === Custom Date Input for Calendar-picker === */
 @layer components {
   /* +++ DATE INPUT Custom styling - Hide native calendar icon but keep functionality +++ */
@@ -1735,13 +1768,101 @@
 
   /* WEBKIT FIX - ONLY for VIEW mode on mobile */
   @media (max-width: 639px) {
-    .input-field .input-base.has-icon.date-input-custom::-webkit-date-and-time-value {
+    .input-field
+      .input-base.has-icon.date-input-custom::-webkit-date-and-time-value {
       text-align: left;
       padding-left: var(--px-24) !important;
     }
-    .sheet-body .input-field .input-base.has-icon.date-input-custom::-webkit-date-and-time-value {
+    .sheet-body
+      .input-field
+      .input-base.has-icon.date-input-custom::-webkit-date-and-time-value {
       text-align: left;
       padding-left: var(--px-32) !important;
+    }
+  }
+}
+/* === TABS === */
+@layer components {
+  /* whole container */
+  .tabs-list {
+    @apply flex items-center justify-between mt-md gap-md w-full;
+    @apply rounded-full bg-surface-container-high;
+  }
+  /* individual item */
+  .tabs-item {
+    @apply flex flex-1 shrink-0 items-center justify-center gap-xs;
+    @apply p-sm whitespace-nowrap;
+    @apply rounded-full;
+    @apply transition-all duration-200;
+
+    &:disabled {
+      @apply opacity-50;
+    }
+    & svg {
+      @apply cursor-pointer shrink-0 icon-md self-center;
+    }
+    &.active {
+      @apply bg-primary text-on-primary; 
+    }
+    &:hover {
+      @apply bg-surface-container;
+    }
+  }
+  .tabs-scroll-container {
+    display: flex;
+    align-items: center;
+    gap: var(--px-4);
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    flex:1;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    &::-webkit-scrollbar {
+      display: none; /* Chrome Safari */
+    }
+  }
+  .tabs-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    background: var(--color-accent1);
+    border: 1px solid var(--color-accent1);
+    color: var(--color-on-surface-variant);
+    cursor: pointer;
+    transition: all var(--transition-duration-200);
+    border-radius: 50%;
+    
+    &:hover {
+      background-color: var(--color-surface-container);
+      color: var(--color-on-surface);
+    }
+    
+    &:active {
+      background-color: var(--color-surface-container-high);
+    }
+  }
+ 
+}
+/* Dashboard Dropdown Box for Club Selection is hidden on Mobile and Tablet Sidebar */
+@layer components {
+  .dashboard-dropdown {
+    @apply hidden;
+  }
+  @media (min-width: 1024px) {
+    .dashboard-dropdown {
+      @apply flex items-center gap-3 p-0 bg-surface-container-highest;
+    }
+  }
+
+  .dashboard-select {
+    @apply hidden;
+  }
+  @media (min-width: 1024px) {
+    .dashboard-select {
+      @apply block;
     }
   }
 }
@@ -2293,6 +2414,43 @@
     }
   }
 }
+/* === BADGE COMPONENT CLASSES === */
+@layer components {
+  .badge {
+    @apply inline-flex items-center justify-center gap-1 shrink-0;
+    @apply rounded-full px-2 overflow-hidden whitespace-nowrap;
+    @apply label-sm;
+    width: 16px;
+    height: 16px;
+    border: 1px transparent;
+    box-sizing: border-box;
+  }
+
+  .badge-primary {
+    @apply bg-primary text-on-primary;
+  }
+  .badge-secondary {
+    @apply bg-secondary text-on-secondary;
+  }
+  .badge-tertiary {
+    @apply bg-tertiary text-on-tertiary;
+  }
+  .badge-accent1 {
+    @apply bg-accent1 text-on-accent1;
+  }
+  .badge-accent2 {
+    @apply bg-accent2 text-on-accent2;
+  }
+  .badge-outlined {
+    @apply border border-on-surface-variant text-on-surface;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+  .badge-destructive {
+    @apply bg-error text-on-error;
+  }
+}
+
 /* === ANIMATED BACKGROUND COMPONENT === */
 @layer components {
   @keyframes spotlight-1 {

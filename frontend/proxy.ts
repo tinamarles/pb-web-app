@@ -15,8 +15,8 @@ const secret = new TextEncoder().encode(simpleKey);
 
 // Define your dashboard routes
 const DASHBOARD_ROUTES = {
-  member: '/dashboard/member',
-  public: '/dashboard/public',
+  member: '/dashboard/overview',
+  public: '/dashboard/discover',
 };
 
 // Define public routes that do not require authentication
@@ -68,34 +68,24 @@ export async function proxy(request: NextRequest) {
     //  return NextResponse.redirect(new URL(`/auth-redirect?to=${userDashboardPath}`, request.url));
     }
 
-    /*
-    // PREVIOUS LOGIC: Redirect to the correct dashboard based on role
-    if (pathname.startsWith('/dashboard') && !pathname.startsWith(userDashboardPath)) {
-      return NextResponse.redirect(new URL(userDashboardPath, request.url));
-    }
-    */
+    // ✅ ROUTE PROTECTION: Feed vs Dashboard based on user role
 
-    // ✅ NEW LOGIC: Only protect role-specific dashboard homes
-  
-    // ✅ TYPE-SAFE: Define all role-specific dashboard homes
-    const allRoleDashboards: string[] = Object.values(DASHBOARD_ROUTES);
-    // 1. Redirect /dashboard root to role-based home
-    if (pathname === '/dashboard') {
-      return NextResponse.redirect(new URL(userDashboardPath, request.url));
-    }
-
-    // 2. Block access to wrong role's dashboard home
-    
-    if (allRoleDashboards.includes(pathname)) {
-      // User is trying to access a role-specific home
-      if (pathname !== userDashboardPath) {
-        // It's not THEIR home - redirect to their correct home
-        return NextResponse.redirect(new URL(userDashboardPath, request.url));
+    // 1. Protect feed routes (public users only)
+    if (pathname.startsWith('/feed')) {
+      if (userRole !== 'public') {
+        console.log('🔄 Member user trying to access feed, redirecting to dashboard');
+        return NextResponse.redirect(new URL('/dashboard/overview', request.url));
       }
     }
 
-  // 3. All other /dashboard/* sub-routes (leaderboard, clubs, etc.) pass through ✅
-
+    // 2. Protect dashboard routes (member users only)
+    if (pathname.startsWith('/dashboard')) {
+      if (userRole !== 'member') {
+        console.log('🔄 Public user trying to access dashboard, redirecting to feed');
+        return NextResponse.redirect(new URL('/feed/discover', request.url));
+      }
+    }
+    
   } catch (error) {
     console.error('Authentication error:', error);
     
@@ -112,5 +102,12 @@ export async function proxy(request: NextRequest) {
 
 // Specify which paths the middleware should run on
 export const config = {
-  matcher: ['/', '/login', '/signup', '/dashboard/:path*', '/profile/:path*', '/profile/setup', '/testavatar'],
+  matcher: ['/', 
+          '/login', 
+          '/signup', 
+          '/dashboard/:path*', 
+          '/feed/:path*',
+          '/profile/:path*', 
+          '/profile/setup', 
+        ],
 };

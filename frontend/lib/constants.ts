@@ -13,6 +13,9 @@
  * Gender values
  * Maps to Django: public.constants.Gender
  */
+
+import { BadgeVariant } from "@/ui";
+
 export const Gender = {
   FEMALE: 1,
   MALE: 2,
@@ -145,6 +148,14 @@ export const RoleTypeValues: Record<string, RoleTypeValue> = {
   "Captain": RoleType.CAPTAIN,
   "Instructor": RoleType.INSTRUCTOR,
   "Club Member": RoleType.MEMBER,
+};
+
+export const RoleBadgeVariants: Record<RoleTypeValue, BadgeVariant> = {
+  [RoleType.ADMIN]: "primary",
+  [RoleType.CAPTAIN]: "secondary",
+  [RoleType.INSTRUCTOR]: "tertiary",
+  [RoleType.ORGANIZER]: "accent2",    // Use outlined instead
+  [RoleType.MEMBER]: "accent1",        // Use outlined instead
 };
 
 // =====================================================

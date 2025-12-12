@@ -399,3 +399,30 @@ class ClubMembership(models.Model):
         if is_new and not self.roles.exists():
             self.roles.add(Role.objects.get(name=RoleType.MEMBER))
 
+    @property
+    def can_manage_club(self) -> bool:
+        return self.roles.filter(can_manage_club=True).exists()
+    
+    @property
+    def can_manage_members(self) -> bool:
+        return self.roles.filter(can_manage_members=True).exists()
+    
+    @property
+    def can_create_training(self) -> bool:
+        return self.roles.filter(can_create_training=True).exists()
+    
+    @property
+    def can_manage_leagues(self) -> bool:
+        return self.roles.filter(can_manage_leagues=True).exists()
+    
+    @property
+    def can_manage_league_sessions(self) -> bool:
+        return self.roles.filter(can_manage_league_sessions=True).exists()
+    
+    @property
+    def can_cancel_league_sessions(self) -> bool:
+        return self.roles.filter(can_cancel_league_sessions=True).exists()
+    
+    @property
+    def can_manage_courts(self) -> bool:
+        return self.roles.filter(can_manage_courts=True).exists()
