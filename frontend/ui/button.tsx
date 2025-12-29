@@ -4,6 +4,9 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "./utils";
 import { Icon } from "./icon";
+import * as React from "react";
+import Link from "next/link";
+import type { LinkProps } from "next/link";
 
 // Button variants using your CSS utilities system
 export type ButtonVariant =
@@ -13,31 +16,57 @@ export type ButtonVariant =
   | "outlined"
   | "highlighted"
   | "dismiss"
-  | "error";
+  | "error"
+  | "default";
 export type ButtonSize = "sm" | "md" | "lg" | "cta";
 
-export interface ButtonProps extends React.ComponentProps<"button"> {
+// Base props shared by both button and link versions
+export type BaseButtonProps = {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  asChild?: boolean;
   label?: string;
   icon?: string;
   iconOnly?: boolean;
-}
+  className?: string;
+  children?: React.ReactNode;
+  disabled?: boolean;
+  active?: boolean;
+};
 
-export function Button({
-  className,
-  variant = "filled",
-  size = "md",
-  asChild = false,
-  label,
-  icon,
-  iconOnly = false,
-  children,
-  ...props
-}: ButtonProps) {
-  const Comp = asChild ? Slot : "button";
+// Button-specific props (when href is NOT provided)
+type ButtonAsButtonProps = BaseButtonProps & {
+  asChild?: boolean;
+  href?: never;
+  type?: "button" | "submit" | "reset";
+} & Omit<React.ComponentProps<"button">, keyof BaseButtonProps>;
 
+// Link-specific props (when href IS provided)
+type ButtonAsLinkProps = BaseButtonProps & {
+  asChild?: never;
+  href: string;
+  type?: never;
+} & Omit<LinkProps, keyof BaseButtonProps | "href">;
+
+// Union type: either button OR link, never both
+export type ButtonProps = ButtonAsButtonProps | ButtonAsLinkProps;
+
+export function Button(props: ButtonProps) {
+  const {
+    className,
+    variant = "filled",
+    size = "md",
+    label,
+    icon,
+    iconOnly = false,
+    children,
+    ...restProps
+  } = props; 
+
+  // Type guards and destructuring
+  const asChild = "asChild" in props ? props.asChild : false;
+  const href = "href" in props ? props.href : undefined;
+  const type = "type" in props ? props.type : "button";
+  
   // Auto-apply icon="close" for dismiss variant if no icon provided
   const resolvedIcon = icon ?? (variant === "dismiss" ? "close" : undefined);
 
@@ -52,6 +81,7 @@ export function Button({
     variant === "highlighted" && "btn-highlighted",
     variant === "error" && "btn-destructive",
     variant === "dismiss" && "btn-dismiss",
+    variant === "default" && "btn-default",
 
     // Size classes from your utilities.css
     size === "sm" && "btn-sm",
@@ -76,6 +106,17 @@ export function Button({
         </>
       );
     }
+    // ✅ asChild + icon: Clone child and inject icon into its children
+    if (asChild && resolvedIcon && children && React.isValidElement(children)) {
+      const childElement = children as React.ReactElement<{ children?: React.ReactNode }>;
+      return React.cloneElement(childElement, {}, 
+        <>
+          <Icon name={resolvedIcon} />
+          {childElement.props.children}
+        </>
+      );
+    }
+
     // If children are provided, use them (allows for custom content)
     if (children) {
       return children;
@@ -95,9 +136,44 @@ export function Button({
     );
   };
 
+    const content = renderContent();
+
+  // Render as Link when href is provided
+  if (href) {
+    return (
+      <Link
+        href={href}
+        data-slot="button"
+        className={buttonClasses}
+        {...(restProps as Omit<LinkProps, "href">)}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  // Render as Slot when asChild is true
+  if (asChild) {
+    return (
+      <Slot
+        data-slot="button"
+        className={buttonClasses}
+        {...restProps}
+      >
+        {content}
+      </Slot>
+    );
+  }
+
+  // Render as regular button
   return (
-    <Comp data-slot="button" className={buttonClasses} {...props}>
-      {renderContent()}
-    </Comp>
+    <button
+      data-slot="button"
+      className={buttonClasses}
+      type={type}
+      {...(restProps as React.ComponentProps<"button">)}
+    >
+      {content}
+    </button>
   );
 }

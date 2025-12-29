@@ -1,4 +1,4 @@
-import { ProfileSidebar } from "@/components/ProfileSidebar";
+import { ProfileSidebar } from "@/components/profile/ProfileSidebar";
 
 export default function ProfileSidebarSlot() {
   return <ProfileSidebar />;

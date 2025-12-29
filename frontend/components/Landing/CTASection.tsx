@@ -50,10 +50,9 @@ export function CTASection() {
                 size="cta"
                 className="w-full sm:w-auto bg-on-primary text-primary hover:bg-on-primary/90"
                 icon="arrowright"
-                asChild
-              >
-                <Link href="/signup">Sign Up for Free</Link>
-              </Button>
+                href="/signup"
+                label="Sign Up for Free"
+              />
             </div>
           </div>
         </div>

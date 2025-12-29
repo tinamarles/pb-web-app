@@ -1,6 +1,6 @@
 // app/(sidebarLayout)/dashboard/layout.tsx
 
-import { DashboardHeader } from "@/components/DashboardHeader";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 
 export default function DashboardLayout({
   children,
@@ -8,9 +8,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-      <>
-        <DashboardHeader />
-        {children}
-      </>
+    <>
+      <DashboardHeader />
+      {children}
+    </>
   );
 }

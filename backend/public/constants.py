@@ -14,6 +14,7 @@ class MembershipStatus(models.IntegerChoices):
     SUSPENDED = 3, "Suspended"
     CANCELLED = 4, "Cancelled"
     BLOCKED = 5, "Blocked"
+    EXPIRED = 6, "Expired"
 
 class SkillLevel(models.IntegerChoices):
     """Club membership skill levels (assessment-based)"""
@@ -138,4 +139,59 @@ class MLPGameType(models.IntegerChoices):
     MIXED_DOUBLES_2 = 4, 'Mixed Doubles 2'
     DREAMBREAKER = 5, 'DreamBreaker'
 
+# ==============================================
+# NOTIFICATIONS MODULE
+# ==============================================
+class NotificationType(models.IntegerChoices):
+    """All notification types across all phases."""
+    
+    # System (1-9)
+    SYSTEM_MESSAGE = 1, "System Message"
+    
+    # Events (10-19)
+    EVENT_REMINDER = 10, "Event Reminder"
+    EVENT_UPDATED = 11, "Event Updated"
+    EVENT_CANCELLED = 12, "Event Cancelled"
+    EVENT_INVITATION = 13, "Event Invitation"
+    
+    # League/Matches (20-29)
+    LEAGUE_MATCH_SCHEDULED = 20, "Match Scheduled"
+    LEAGUE_RESULTS_POSTED = 21, "Results Posted"
+    LEAGUE_STANDINGS_UPDATED = 22, "Standings Updated"
+    LEAGUE_ANNOUNCEMENT = 23, "League Announcement"
+    LEAGUE_INVITATION = 24, "League Invitation"
+    LEAGUE_SESSION_REMINDER = 25, "Session Reminder"
+    LEAGUE_SESSION_CANCELLED = 26, "Session Cancelled"
+    
+    # Memberships/Club (30-39)
+    MEMBERSHIP_EXPIRING = 30, "Membership Expiring"
+    MEMBERSHIP_RENEWED = 31, "Membership Renewed"
+    RENEWAL_PERIOD_OPEN = 32, "Renewal Period Open"
+    MEMBERSHIP_APPROVED = 33, "Membership Approved"
+    MEMBERSHIP_REJECTED = 34, "Membership Rejected"
+    CLUB_ANNOUNCEMENT = 35, "Club Announcement"
+    MEMBERSHIP_SUSPENDED = 36, "Membership Suspended"
+    
+    # Messages (40-49) - Phase 5.x (FUTURE)
+    DIRECT_MESSAGE = 40, "Direct Message"
+    MENTION = 41, "Mentioned in Message"
+    
+    # Social (50-59) - Phase 6+ (FUTURE)
+    NEW_FOLLOWER = 50, "New Follower"
+    PARTNER_REQUEST = 51, "Partner Request"
+    
+    # Milestones (60-69)
+    MILESTONE_GAMES_50 = 60, "50 Games Played"
+    MILESTONE_GAMES_100 = 61, "100 Games Played"
+    MILESTONE_GAMES_500 = 62, "500 Games Played"
+    MILESTONE_WIN_STREAK = 63, "Win Streak"
+    MILESTONE_RANK_IMPROVED = 64, "Rank Improved"
+    
+    # Admin/Roles (70-79)
+    ROLE_ASSIGNED = 70, "Role Assigned"
+    ROLE_REMOVED = 71, "Role Removed"
+    
+    # System Admin (80-89)
+    SYSTEM_MAINTENANCE = 80, "System Maintenance"
+    SYSTEM_UPDATE = 81, "System Update"
 # ... etc for all status/type fields

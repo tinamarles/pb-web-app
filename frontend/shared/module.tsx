@@ -56,6 +56,7 @@ export const Module = memo(function Module({
     // 2. Pathname-based dynamic titles
     if (pathname.startsWith("/dashboard")) return "Dashboard";
     if (pathname.startsWith("/profile")) return "Profile";
+    if (pathname.startsWith("/admin")) return "Admin Dashboard";
 
     // 3. Fallback to moduleData.title
     const moduleData = getModuleData(type);
@@ -189,7 +190,7 @@ export const Module = memo(function Module({
         id: "dashboard",
         icon: "dashboard",
         label: "Dashboard",
-        href: "/dashboard",
+        href: resolvedDashboardHref,
         active: pathname === resolvedDashboardHref,
       },
       {

@@ -14,7 +14,7 @@
  * Maps to Django: public.constants.Gender
  */
 
-import { BadgeVariant } from "@/ui";
+import type { BadgeVariant } from "@/ui";
 
 export const Gender = {
   FEMALE: 1,
@@ -22,7 +22,7 @@ export const Gender = {
   UNSPECIFIED: 3,
 } as const;
 
-export type GenderValue = typeof Gender[keyof typeof Gender];
+export type GenderValue = (typeof Gender)[keyof typeof Gender];
 
 export const GenderLabels: Record<GenderValue, string> = {
   [Gender.FEMALE]: "Female",
@@ -32,10 +32,10 @@ export const GenderLabels: Record<GenderValue, string> = {
 
 // Reverse mapping: label → value (for form submissions)
 export const GenderValues: Record<string, GenderValue> = {
-  "Female": Gender.FEMALE,
-  "Male": Gender.MALE,
-  "Unspecified": Gender.UNSPECIFIED,
-  "Other": Gender.UNSPECIFIED,  // Alias for backwards compatibility
+  Female: Gender.FEMALE,
+  Male: Gender.MALE,
+  Unspecified: Gender.UNSPECIFIED,
+  Other: Gender.UNSPECIFIED, // Alias for backwards compatibility
 };
 
 /**
@@ -48,9 +48,11 @@ export const MembershipStatus = {
   SUSPENDED: 3,
   CANCELLED: 4,
   BLOCKED: 5,
+  EXPIRED: 6,
 } as const;
 
-export type MembershipStatusValue = typeof MembershipStatus[keyof typeof MembershipStatus];
+export type MembershipStatusValue =
+  (typeof MembershipStatus)[keyof typeof MembershipStatus];
 
 export const MembershipStatusLabels: Record<MembershipStatusValue, string> = {
   [MembershipStatus.PENDING]: "Pending",
@@ -58,15 +60,17 @@ export const MembershipStatusLabels: Record<MembershipStatusValue, string> = {
   [MembershipStatus.SUSPENDED]: "Suspended",
   [MembershipStatus.CANCELLED]: "Cancelled",
   [MembershipStatus.BLOCKED]: "Blocked",
+  [MembershipStatus.EXPIRED]: "Expired",
 };
 
 // Reverse mapping: label → value (for form submissions)
 export const MembershipStatusValues: Record<string, MembershipStatusValue> = {
-  "Pending": MembershipStatus.PENDING,
-  "Active": MembershipStatus.ACTIVE,
-  "Suspended": MembershipStatus.SUSPENDED,
-  "Cancelled": MembershipStatus.CANCELLED,
-  "Blocked": MembershipStatus.BLOCKED,
+  Pending: MembershipStatus.PENDING,
+  Active: MembershipStatus.ACTIVE,
+  Suspended: MembershipStatus.SUSPENDED,
+  Cancelled: MembershipStatus.CANCELLED,
+  Blocked: MembershipStatus.BLOCKED,
+  Expired: MembershipStatus.EXPIRED,
 };
 
 /**
@@ -79,7 +83,7 @@ export const SkillLevel = {
   ADVANCED_PLUS: 3,
 } as const;
 
-export type SkillLevelValue = typeof SkillLevel[keyof typeof SkillLevel];
+export type SkillLevelValue = (typeof SkillLevel)[keyof typeof SkillLevel];
 
 export const SkillLevelLabels: Record<SkillLevelValue, string> = {
   [SkillLevel.OPEN]: "Open (Not Assessed)",
@@ -104,20 +108,23 @@ export const RegistrationStatus = {
   CLOSED: 3,
 } as const;
 
-export type RegistrationStatusValue = typeof RegistrationStatus[keyof typeof RegistrationStatus];
+export type RegistrationStatusValue =
+  (typeof RegistrationStatus)[keyof typeof RegistrationStatus];
 
-export const RegistrationStatusLabels: Record<RegistrationStatusValue, string> = {
-  [RegistrationStatus.OPEN]: "Open",
-  [RegistrationStatus.WAITLIST]: "Waitlist",
-  [RegistrationStatus.CLOSED]: "Closed",
-};
+export const RegistrationStatusLabels: Record<RegistrationStatusValue, string> =
+  {
+    [RegistrationStatus.OPEN]: "Open",
+    [RegistrationStatus.WAITLIST]: "Waitlist",
+    [RegistrationStatus.CLOSED]: "Closed",
+  };
 
 // Reverse mapping: label → value (for form submissions)
-export const RegistrationStatusValues: Record<string, RegistrationStatusValue> = {
-  "Open": RegistrationStatus.OPEN,
-  "Waitlist": RegistrationStatus.WAITLIST,
-  "Closed": RegistrationStatus.CLOSED,
-};
+export const RegistrationStatusValues: Record<string, RegistrationStatusValue> =
+  {
+    Open: RegistrationStatus.OPEN,
+    Waitlist: RegistrationStatus.WAITLIST,
+    Closed: RegistrationStatus.CLOSED,
+  };
 
 /**
  * Role Type
@@ -131,7 +138,7 @@ export const RoleType = {
   MEMBER: 5,
 } as const;
 
-export type RoleTypeValue = typeof RoleType[keyof typeof RoleType];
+export type RoleTypeValue = (typeof RoleType)[keyof typeof RoleType];
 
 export const RoleTypeLabels: Record<RoleTypeValue, string> = {
   [RoleType.ADMIN]: "Admin",
@@ -143,10 +150,10 @@ export const RoleTypeLabels: Record<RoleTypeValue, string> = {
 
 // Reverse mapping: label → value (for form submissions)
 export const RoleTypeValues: Record<string, RoleTypeValue> = {
-  "Admin": RoleType.ADMIN,
-  "Organizer": RoleType.ORGANIZER,
-  "Captain": RoleType.CAPTAIN,
-  "Instructor": RoleType.INSTRUCTOR,
+  Admin: RoleType.ADMIN,
+  Organizer: RoleType.ORGANIZER,
+  Captain: RoleType.CAPTAIN,
+  Instructor: RoleType.INSTRUCTOR,
   "Club Member": RoleType.MEMBER,
 };
 
@@ -154,8 +161,8 @@ export const RoleBadgeVariants: Record<RoleTypeValue, BadgeVariant> = {
   [RoleType.ADMIN]: "primary",
   [RoleType.CAPTAIN]: "secondary",
   [RoleType.INSTRUCTOR]: "tertiary",
-  [RoleType.ORGANIZER]: "accent2",    // Use outlined instead
-  [RoleType.MEMBER]: "accent1",        // Use outlined instead
+  [RoleType.ORGANIZER]: "accent2", // Use outlined instead
+  [RoleType.MEMBER]: "accent1", // Use outlined instead
 };
 
 // =====================================================
@@ -172,7 +179,7 @@ export const LeagueType = {
   MLP: 3,
 } as const;
 
-export type LeagueTypeValue = typeof LeagueType[keyof typeof LeagueType];
+export type LeagueTypeValue = (typeof LeagueType)[keyof typeof LeagueType];
 
 export const LeagueTypeLabels: Record<LeagueTypeValue, string> = {
   [LeagueType.STANDARD]: "Standard (Rotating Partners)",
@@ -198,7 +205,8 @@ export const GenerationFormat = {
   MANUAL: 3,
 } as const;
 
-export type GenerationFormatValue = typeof GenerationFormat[keyof typeof GenerationFormat];
+export type GenerationFormatValue =
+  (typeof GenerationFormat)[keyof typeof GenerationFormat];
 
 export const GenerationFormatLabels: Record<GenerationFormatValue, string> = {
   [GenerationFormat.ROUND_ROBIN]: "Round-Robin",
@@ -225,9 +233,13 @@ export const LeagueParticipationStatus = {
   DROPPED: 5,
 } as const;
 
-export type LeagueParticipationStatusValue = typeof LeagueParticipationStatus[keyof typeof LeagueParticipationStatus];
+export type LeagueParticipationStatusValue =
+  (typeof LeagueParticipationStatus)[keyof typeof LeagueParticipationStatus];
 
-export const LeagueParticipationStatusLabels: Record<LeagueParticipationStatusValue, string> = {
+export const LeagueParticipationStatusLabels: Record<
+  LeagueParticipationStatusValue,
+  string
+> = {
   [LeagueParticipationStatus.ACTIVE]: "Active",
   [LeagueParticipationStatus.RESERVE]: "Reserve - Waiting for spot",
   [LeagueParticipationStatus.INJURED]: "Injured - Temporarily out",
@@ -236,8 +248,11 @@ export const LeagueParticipationStatusLabels: Record<LeagueParticipationStatusVa
 };
 
 // Reverse mapping: label → value (for form submissions)
-export const LeagueParticipationStatusValues: Record<string, LeagueParticipationStatusValue> = {
-  "Active": LeagueParticipationStatus.ACTIVE,
+export const LeagueParticipationStatusValues: Record<
+  string,
+  LeagueParticipationStatusValue
+> = {
+  Active: LeagueParticipationStatus.ACTIVE,
   "Reserve - Waiting for spot": LeagueParticipationStatus.RESERVE,
   "Injured - Temporarily out": LeagueParticipationStatus.INJURED,
   "On Holiday - Temporarily out": LeagueParticipationStatus.HOLIDAY,
@@ -259,7 +274,7 @@ export const DayOfWeek = {
   SUNDAY: 6,
 } as const;
 
-export type DayOfWeekValue = typeof DayOfWeek[keyof typeof DayOfWeek];
+export type DayOfWeekValue = (typeof DayOfWeek)[keyof typeof DayOfWeek];
 
 export const DayOfWeekLabels: Record<DayOfWeekValue, string> = {
   [DayOfWeek.MONDAY]: "Monday",
@@ -273,13 +288,13 @@ export const DayOfWeekLabels: Record<DayOfWeekValue, string> = {
 
 // Reverse mapping: label → value (for form submissions)
 export const DayOfWeekValues: Record<string, DayOfWeekValue> = {
-  "Monday": DayOfWeek.MONDAY,
-  "Tuesday": DayOfWeek.TUESDAY,
-  "Wednesday": DayOfWeek.WEDNESDAY,
-  "Thursday": DayOfWeek.THURSDAY,
-  "Friday": DayOfWeek.FRIDAY,
-  "Saturday": DayOfWeek.SATURDAY,
-  "Sunday": DayOfWeek.SUNDAY,
+  Monday: DayOfWeek.MONDAY,
+  Tuesday: DayOfWeek.TUESDAY,
+  Wednesday: DayOfWeek.WEDNESDAY,
+  Thursday: DayOfWeek.THURSDAY,
+  Friday: DayOfWeek.FRIDAY,
+  Saturday: DayOfWeek.SATURDAY,
+  Sunday: DayOfWeek.SUNDAY,
 };
 
 /**
@@ -292,7 +307,8 @@ export const RecurrenceType = {
   MONTHLY: 3,
 } as const;
 
-export type RecurrenceTypeValue = typeof RecurrenceType[keyof typeof RecurrenceType];
+export type RecurrenceTypeValue =
+  (typeof RecurrenceType)[keyof typeof RecurrenceType];
 
 export const RecurrenceTypeLabels: Record<RecurrenceTypeValue, string> = {
   [RecurrenceType.WEEKLY]: "Weekly",
@@ -302,7 +318,7 @@ export const RecurrenceTypeLabels: Record<RecurrenceTypeValue, string> = {
 
 // Reverse mapping: label → value (for form submissions)
 export const RecurrenceTypeValues: Record<string, RecurrenceTypeValue> = {
-  "Weekly": RecurrenceType.WEEKLY,
+  Weekly: RecurrenceType.WEEKLY,
   "Every other week": RecurrenceType.BI_WEEKLY,
   "Once a month": RecurrenceType.MONTHLY,
 };
@@ -317,18 +333,25 @@ export const LeagueAttendanceStatus = {
   ABSENT: 3,
 } as const;
 
-export type LeagueAttendanceStatusValue = typeof LeagueAttendanceStatus[keyof typeof LeagueAttendanceStatus];
+export type LeagueAttendanceStatusValue =
+  (typeof LeagueAttendanceStatus)[keyof typeof LeagueAttendanceStatus];
 
-export const LeagueAttendanceStatusLabels: Record<LeagueAttendanceStatusValue, string> = {
+export const LeagueAttendanceStatusLabels: Record<
+  LeagueAttendanceStatusValue,
+  string
+> = {
   [LeagueAttendanceStatus.ATTENDING]: "Attending",
   [LeagueAttendanceStatus.CANCELLED]: "Cancelled",
   [LeagueAttendanceStatus.ABSENT]: "Absent (no-show)",
 };
 
 // Reverse mapping: label → value (for form submissions)
-export const LeagueAttendanceStatusValues: Record<string, LeagueAttendanceStatusValue> = {
-  "Attending": LeagueAttendanceStatus.ATTENDING,
-  "Cancelled": LeagueAttendanceStatus.CANCELLED,
+export const LeagueAttendanceStatusValues: Record<
+  string,
+  LeagueAttendanceStatusValue
+> = {
+  Attending: LeagueAttendanceStatus.ATTENDING,
+  Cancelled: LeagueAttendanceStatus.CANCELLED,
   "Absent (no-show)": LeagueAttendanceStatus.ABSENT,
 };
 
@@ -347,7 +370,8 @@ export const AffiliationType = {
   SHARED: 4,
 } as const;
 
-export type AffiliationTypeValue = typeof AffiliationType[keyof typeof AffiliationType];
+export type AffiliationTypeValue =
+  (typeof AffiliationType)[keyof typeof AffiliationType];
 
 export const AffiliationTypeLabels: Record<AffiliationTypeValue, string> = {
   [AffiliationType.PRIORITY]: "Priority Access",
@@ -376,7 +400,7 @@ export const BookingType = {
   OTHER: 5,
 } as const;
 
-export type BookingTypeValue = typeof BookingType[keyof typeof BookingType];
+export type BookingTypeValue = (typeof BookingType)[keyof typeof BookingType];
 
 export const BookingTypeLabels: Record<BookingTypeValue, string> = {
   [BookingType.PRACTICE]: "Practice Session",
@@ -390,9 +414,9 @@ export const BookingTypeLabels: Record<BookingTypeValue, string> = {
 export const BookingTypeValues: Record<string, BookingTypeValue> = {
   "Practice Session": BookingType.PRACTICE,
   "Casual Play": BookingType.CASUAL,
-  "Lesson": BookingType.LESSON,
+  Lesson: BookingType.LESSON,
   "Drill Session": BookingType.DRILL,
-  "Other": BookingType.OTHER,
+  Other: BookingType.OTHER,
 };
 
 /**
@@ -411,7 +435,7 @@ export const BlockType = {
   MAINTENANCE: 9,
 } as const;
 
-export type BlockTypeValue = typeof BlockType[keyof typeof BlockType];
+export type BlockTypeValue = (typeof BlockType)[keyof typeof BlockType];
 
 export const BlockTypeLabels: Record<BlockTypeValue, string> = {
   [BlockType.LEAGUE]: "League",
@@ -427,13 +451,13 @@ export const BlockTypeLabels: Record<BlockTypeValue, string> = {
 
 // Reverse mapping: label → value (for form submissions)
 export const BlockTypeValues: Record<string, BlockTypeValue> = {
-  "League": BlockType.LEAGUE,
+  League: BlockType.LEAGUE,
   "Competitive Play": BlockType.COMPETITIVE,
   "Recreative Play": BlockType.RECREATIVE,
   "Skill Restricted (3.5+, 4.0+, etc.)": BlockType.SKILL_RESTRICTED,
   "Public Open Play": BlockType.PUBLIC,
   "Drill/Training": BlockType.DRILL,
-  "Tournament": BlockType.TOURNAMENT,
+  Tournament: BlockType.TOURNAMENT,
   "Blocked/Reserved": BlockType.BLOCKED,
   "Maintenance/Closed": BlockType.MAINTENANCE,
 };
@@ -452,7 +476,7 @@ export const MatchType = {
   MLP: 3,
 } as const;
 
-export type MatchTypeValue = typeof MatchType[keyof typeof MatchType];
+export type MatchTypeValue = (typeof MatchType)[keyof typeof MatchType];
 
 export const MatchTypeLabels: Record<MatchTypeValue, string> = {
   [MatchType.SINGLES]: "Singles",
@@ -462,8 +486,8 @@ export const MatchTypeLabels: Record<MatchTypeValue, string> = {
 
 // Reverse mapping: label → value (for form submissions)
 export const MatchTypeValues: Record<string, MatchTypeValue> = {
-  "Singles": MatchType.SINGLES,
-  "Doubles": MatchType.DOUBLES,
+  Singles: MatchType.SINGLES,
+  Doubles: MatchType.DOUBLES,
   "MLP Team Match": MatchType.MLP,
 };
 
@@ -478,7 +502,7 @@ export const MatchFormat = {
   BEST_OF_5: 3,
 } as const;
 
-export type MatchFormatValue = typeof MatchFormat[keyof typeof MatchFormat];
+export type MatchFormatValue = (typeof MatchFormat)[keyof typeof MatchFormat];
 
 export const MatchFormatLabels: Record<MatchFormatValue, string> = {
   [MatchFormat.BEST_OF_1]: "Best of 1 (Single Game)",
@@ -502,7 +526,7 @@ export const ScoreFormat = {
   RALLY: 2,
 } as const;
 
-export type ScoreFormatValue = typeof ScoreFormat[keyof typeof ScoreFormat];
+export type ScoreFormatValue = (typeof ScoreFormat)[keyof typeof ScoreFormat];
 
 export const ScoreFormatLabels: Record<ScoreFormatValue, string> = {
   [ScoreFormat.SIDEOUT]: "Side-out Scoring",
@@ -528,7 +552,7 @@ export const MatchStatus = {
   CANCELLED: 6,
 } as const;
 
-export type MatchStatusValue = typeof MatchStatus[keyof typeof MatchStatus];
+export type MatchStatusValue = (typeof MatchStatus)[keyof typeof MatchStatus];
 
 export const MatchStatusLabels: Record<MatchStatusValue, string> = {
   [MatchStatus.PENDING]: "Pending - Players invited",
@@ -543,10 +567,10 @@ export const MatchStatusLabels: Record<MatchStatusValue, string> = {
 export const MatchStatusValues: Record<string, MatchStatusValue> = {
   "Pending - Players invited": MatchStatus.PENDING,
   "Accepted - All players confirmed": MatchStatus.ACCEPTED,
-  "Scheduled": MatchStatus.SCHEDULED,
+  Scheduled: MatchStatus.SCHEDULED,
   "In Progress": MatchStatus.IN_PROGRESS,
   "Completed - Results entered": MatchStatus.COMPLETED,
-  "Cancelled": MatchStatus.CANCELLED,
+  Cancelled: MatchStatus.CANCELLED,
 };
 
 /**
@@ -562,7 +586,7 @@ export const MLPGameType = {
   DREAMBREAKER: 5,
 } as const;
 
-export type MLPGameTypeValue = typeof MLPGameType[keyof typeof MLPGameType];
+export type MLPGameTypeValue = (typeof MLPGameType)[keyof typeof MLPGameType];
 
 export const MLPGameTypeLabels: Record<MLPGameTypeValue, string> = {
   [MLPGameType.WOMEN_DOUBLES]: "Women's Doubles",
@@ -578,7 +602,274 @@ export const MLPGameTypeValues: Record<string, MLPGameTypeValue> = {
   "Men's Doubles": MLPGameType.MEN_DOUBLES,
   "Mixed Doubles 1": MLPGameType.MIXED_DOUBLES_1,
   "Mixed Doubles 2": MLPGameType.MIXED_DOUBLES_2,
-  "DreamBreaker": MLPGameType.DREAMBREAKER,
+  DreamBreaker: MLPGameType.DREAMBREAKER,
+};
+
+// ============================================
+// NOTIFICATION TYPES
+// ============================================
+
+export const NotificationType = {
+  // System (1-9)
+  SYSTEM_MESSAGE: 1,
+
+  // Events (10-19)
+  EVENT_REMINDER: 10,
+  EVENT_UPDATED: 11,
+  EVENT_CANCELLED: 12,
+  EVENT_INVITATION: 13,
+
+  // League/Matches (20-29)
+  LEAGUE_MATCH_SCHEDULED: 20,
+  LEAGUE_RESULTS_POSTED: 21,
+  LEAGUE_STANDINGS_UPDATED: 22,
+  LEAGUE_ANNOUNCEMENT: 23,
+  LEAGUE_INVITATION: 24,
+  LEAGUE_SESSION_REMINDER: 25,
+  LEAGUE_SESSION_CANCELLED: 26,
+
+  // Memberships/Club (30-39)
+  MEMBERSHIP_EXPIRING: 30,
+  MEMBERSHIP_RENEWED: 31,
+  RENEWAL_PERIOD_OPEN: 32,
+  MEMBERSHIP_APPROVED: 33,
+  MEMBERSHIP_REJECTED: 34,
+  CLUB_ANNOUNCEMENT: 35,
+  MEMBERSHIP_SUSPENDED: 36,
+
+  // Messages (40-49) - Phase 5.x
+  DIRECT_MESSAGE: 40,
+  MENTION: 41,
+
+  // Social (50-59) - Phase 6+
+  NEW_FOLLOWER: 50,
+  PARTNER_REQUEST: 51,
+
+  // Milestones (60-69)
+  MILESTONE_GAMES_50: 60,
+  MILESTONE_GAMES_100: 61,
+  MILESTONE_GAMES_500: 62,
+  MILESTONE_WIN_STREAK: 63,
+  MILESTONE_RANK_IMPROVED: 64,
+
+  // Admin/Roles (70-79)
+  ROLE_ASSIGNED: 70,
+  ROLE_REMOVED: 71,
+
+  // System Admin (80-89)
+  SYSTEM_MAINTENANCE: 80,
+  SYSTEM_UPDATE: 81,
+} as const;
+
+export type NotificationTypeValue =
+  (typeof NotificationType)[keyof typeof NotificationType];
+
+export const NotificationTypeLabels: Record<NotificationTypeValue, string> = {
+  [NotificationType.SYSTEM_MESSAGE]: "System Message",
+  [NotificationType.EVENT_REMINDER]: "Event Reminder",
+  [NotificationType.EVENT_UPDATED]: "Event Updated",
+  [NotificationType.EVENT_CANCELLED]: "Event Cancelled",
+  [NotificationType.EVENT_INVITATION]: "Event Invitation",
+  [NotificationType.LEAGUE_MATCH_SCHEDULED]: "Match Scheduled",
+  [NotificationType.LEAGUE_RESULTS_POSTED]: "Results Posted",
+  [NotificationType.LEAGUE_STANDINGS_UPDATED]: "Standings Updated",
+  [NotificationType.LEAGUE_ANNOUNCEMENT]: "League Announcement",
+  [NotificationType.LEAGUE_INVITATION]: "League Invitation",
+  [NotificationType.LEAGUE_SESSION_REMINDER]: "Session Reminder",
+  [NotificationType.LEAGUE_SESSION_CANCELLED]: "Session Cancelled",
+  [NotificationType.MEMBERSHIP_EXPIRING]: "Membership Expiring",
+  [NotificationType.MEMBERSHIP_RENEWED]: "Membership Renewed",
+  [NotificationType.RENEWAL_PERIOD_OPEN]: "Renewal Period Open",
+  [NotificationType.MEMBERSHIP_APPROVED]: "Membership Approved",
+  [NotificationType.MEMBERSHIP_REJECTED]: "Membership Rejected",
+  [NotificationType.MEMBERSHIP_SUSPENDED]: "Membership Suspended",
+  [NotificationType.CLUB_ANNOUNCEMENT]: "Club Announcement",
+  [NotificationType.DIRECT_MESSAGE]: "Direct Message",
+  [NotificationType.MENTION]: "Mentioned in Message",
+  [NotificationType.NEW_FOLLOWER]: "New Follower",
+  [NotificationType.PARTNER_REQUEST]: "Partner Request",
+  [NotificationType.MILESTONE_GAMES_50]: "50 Games Played",
+  [NotificationType.MILESTONE_GAMES_100]: "100 Games Played",
+  [NotificationType.MILESTONE_GAMES_500]: "500 Games Played",
+  [NotificationType.MILESTONE_WIN_STREAK]: "Win Streak",
+  [NotificationType.MILESTONE_RANK_IMPROVED]: "Rank Improved",
+  [NotificationType.ROLE_ASSIGNED]: "Role Assigned",
+  [NotificationType.ROLE_REMOVED]: "Role Removed",
+  [NotificationType.SYSTEM_MAINTENANCE]: "System Maintenance",
+  [NotificationType.SYSTEM_UPDATE]: "System Update",
+};
+
+export const NotificationTypeValues: Record<string, NotificationTypeValue> = {
+  "System Message": NotificationType.SYSTEM_MESSAGE,
+  "Event Reminder": NotificationType.EVENT_REMINDER,
+  "Event Updated": NotificationType.EVENT_UPDATED,
+  "Event Cancelled": NotificationType.EVENT_CANCELLED,
+  "Event Invitation": NotificationType.EVENT_INVITATION,
+  "Match Scheduled": NotificationType.LEAGUE_MATCH_SCHEDULED,
+  "Results Posted": NotificationType.LEAGUE_RESULTS_POSTED,
+  "Standings Updated": NotificationType.LEAGUE_STANDINGS_UPDATED,
+  "League Announcement": NotificationType.LEAGUE_ANNOUNCEMENT,
+  "League Invitation": NotificationType.LEAGUE_INVITATION,
+  "Session Reminder": NotificationType.LEAGUE_SESSION_REMINDER,
+  "Session Cancelled": NotificationType.LEAGUE_SESSION_CANCELLED,
+  "Membership Expiring": NotificationType.MEMBERSHIP_EXPIRING,
+  "Membership Renewed": NotificationType.MEMBERSHIP_RENEWED,
+  "Renewal Period Open": NotificationType.RENEWAL_PERIOD_OPEN,
+  "Membership Approved": NotificationType.MEMBERSHIP_APPROVED,
+  "Membership Rejected": NotificationType.MEMBERSHIP_REJECTED,
+  "Membership Suspended": NotificationType.MEMBERSHIP_SUSPENDED,
+  "Club Announcement": NotificationType.CLUB_ANNOUNCEMENT,
+  "Direct Message": NotificationType.DIRECT_MESSAGE,
+  "Mentioned in Message": NotificationType.MENTION,
+  "New Follower": NotificationType.NEW_FOLLOWER,
+  "Partner Request": NotificationType.PARTNER_REQUEST,
+  "50 Games Played": NotificationType.MILESTONE_GAMES_50,
+  "100 Games Played": NotificationType.MILESTONE_GAMES_100,
+  "500 Games Played": NotificationType.MILESTONE_GAMES_500,
+  "Win Streak": NotificationType.MILESTONE_WIN_STREAK,
+  "Rank Improved": NotificationType.MILESTONE_RANK_IMPROVED,
+  "Role Assigned": NotificationType.ROLE_ASSIGNED,
+  "Role Removed": NotificationType.ROLE_REMOVED,
+  "System Maintenance": NotificationType.SYSTEM_MAINTENANCE,
+  "System Update": NotificationType.SYSTEM_UPDATE,
+};
+
+/**
+ * Notification Categories (Semantic grouping)
+ * Maps to Django: public.constants.NotificationCategory
+ * Used for filtering, display organization, and color coding
+ */
+export const NotificationCategory = {
+  SYSTEM: "System",
+  EVENT: "Event",
+  LEAGUE: "League",
+  CLUB: "Club",
+  MESSAGE: "Message",
+  SOCIAL: "Social",
+  MILESTONE: "Milestone",
+  ADMIN: "Admin",
+} as const;
+
+export type NotificationCategoryValue =
+  (typeof NotificationCategory)[keyof typeof NotificationCategory];
+
+/**
+ * Map each NotificationType to its Category
+ * Used for filtering notifications by category
+ */
+export const NotificationTypeCategory: Record<
+  NotificationTypeValue,
+  NotificationCategoryValue
+> = {
+  [NotificationType.SYSTEM_MESSAGE]: NotificationCategory.SYSTEM,
+  [NotificationType.EVENT_REMINDER]: NotificationCategory.EVENT,
+  [NotificationType.EVENT_UPDATED]: NotificationCategory.EVENT,
+  [NotificationType.EVENT_CANCELLED]: NotificationCategory.EVENT,
+  [NotificationType.EVENT_INVITATION]: NotificationCategory.EVENT,
+  [NotificationType.LEAGUE_MATCH_SCHEDULED]: NotificationCategory.LEAGUE,
+  [NotificationType.LEAGUE_RESULTS_POSTED]: NotificationCategory.LEAGUE,
+  [NotificationType.LEAGUE_STANDINGS_UPDATED]: NotificationCategory.LEAGUE,
+  [NotificationType.LEAGUE_ANNOUNCEMENT]: NotificationCategory.LEAGUE,
+  [NotificationType.LEAGUE_INVITATION]: NotificationCategory.LEAGUE,
+  [NotificationType.LEAGUE_SESSION_REMINDER]: NotificationCategory.LEAGUE,
+  [NotificationType.LEAGUE_SESSION_CANCELLED]: NotificationCategory.LEAGUE,
+  [NotificationType.MEMBERSHIP_EXPIRING]: NotificationCategory.CLUB,
+  [NotificationType.MEMBERSHIP_RENEWED]: NotificationCategory.CLUB,
+  [NotificationType.RENEWAL_PERIOD_OPEN]: NotificationCategory.CLUB,
+  [NotificationType.MEMBERSHIP_APPROVED]: NotificationCategory.CLUB,
+  [NotificationType.MEMBERSHIP_REJECTED]: NotificationCategory.CLUB,
+  [NotificationType.MEMBERSHIP_SUSPENDED]: NotificationCategory.CLUB,
+  [NotificationType.CLUB_ANNOUNCEMENT]: NotificationCategory.CLUB,
+  [NotificationType.DIRECT_MESSAGE]: NotificationCategory.MESSAGE,
+  [NotificationType.MENTION]: NotificationCategory.MESSAGE,
+  [NotificationType.NEW_FOLLOWER]: NotificationCategory.SOCIAL,
+  [NotificationType.PARTNER_REQUEST]: NotificationCategory.SOCIAL,
+  [NotificationType.MILESTONE_GAMES_50]: NotificationCategory.MILESTONE,
+  [NotificationType.MILESTONE_GAMES_100]: NotificationCategory.MILESTONE,
+  [NotificationType.MILESTONE_GAMES_500]: NotificationCategory.MILESTONE,
+  [NotificationType.MILESTONE_WIN_STREAK]: NotificationCategory.MILESTONE,
+  [NotificationType.MILESTONE_RANK_IMPROVED]: NotificationCategory.MILESTONE,
+  [NotificationType.ROLE_ASSIGNED]: NotificationCategory.ADMIN,
+  [NotificationType.ROLE_REMOVED]: NotificationCategory.ADMIN,
+  [NotificationType.SYSTEM_MAINTENANCE]: NotificationCategory.SYSTEM,
+  [NotificationType.SYSTEM_UPDATE]: NotificationCategory.SYSTEM,
+};
+
+/**
+ * Map each NotificationType to a Badge Variant (severity-based)
+ * Severity hierarchy: ERROR > WARNING > SUCCESS > INFO > DEFAULT
+ *
+ * - ERROR (Red): Cancellations, rejections, critical issues
+ * - WARNING (Orange): Expiring, pending, needs urgent attention
+ * - SUCCESS (Green): Approvals, achievements, positive events
+ * - INFO (Blue): Updates, changes, general information
+ * - DEFAULT (Gray): Standard notifications
+ *
+ * NOTE: Uses BadgeVariant type from @/ui (imported at top of file)
+ */
+export const NotificationTypeBadgeVariant: Record<
+  NotificationTypeValue,
+  BadgeVariant
+> = {
+  // ERROR severity
+  [NotificationType.EVENT_CANCELLED]: "error",
+  [NotificationType.LEAGUE_SESSION_CANCELLED]: "error",
+  [NotificationType.MEMBERSHIP_REJECTED]: "error",
+  [NotificationType.MEMBERSHIP_SUSPENDED]: "error",
+  [NotificationType.ROLE_REMOVED]: "error",
+
+  // WARNING severity
+  [NotificationType.MEMBERSHIP_EXPIRING]: "warning",
+  [NotificationType.RENEWAL_PERIOD_OPEN]: "warning",
+  [NotificationType.SYSTEM_MAINTENANCE]: "warning",
+
+  // SUCCESS severity
+  [NotificationType.MEMBERSHIP_APPROVED]: "success",
+  [NotificationType.MEMBERSHIP_RENEWED]: "success",
+  [NotificationType.MILESTONE_GAMES_50]: "success",
+  [NotificationType.MILESTONE_GAMES_100]: "success",
+  [NotificationType.MILESTONE_GAMES_500]: "success",
+  [NotificationType.MILESTONE_WIN_STREAK]: "success",
+  [NotificationType.MILESTONE_RANK_IMPROVED]: "success",
+  [NotificationType.ROLE_ASSIGNED]: "success",
+
+  // INFO severity
+  [NotificationType.EVENT_UPDATED]: "info",
+  [NotificationType.LEAGUE_RESULTS_POSTED]: "info",
+  [NotificationType.LEAGUE_STANDINGS_UPDATED]: "info",
+  [NotificationType.LEAGUE_ANNOUNCEMENT]: "info",
+  [NotificationType.CLUB_ANNOUNCEMENT]: "info",
+  [NotificationType.SYSTEM_UPDATE]: "info",
+  [NotificationType.DIRECT_MESSAGE]: "info",
+  [NotificationType.MENTION]: "info",
+
+  // DEFAULT severity (standard notifications)
+  [NotificationType.SYSTEM_MESSAGE]: "default",
+  [NotificationType.EVENT_REMINDER]: "default",
+  [NotificationType.EVENT_INVITATION]: "default",
+  [NotificationType.LEAGUE_MATCH_SCHEDULED]: "default",
+  [NotificationType.LEAGUE_INVITATION]: "default",
+  [NotificationType.LEAGUE_SESSION_REMINDER]: "default",
+  [NotificationType.NEW_FOLLOWER]: "default",
+  [NotificationType.PARTNER_REQUEST]: "default",
+};
+
+/**
+ * Severity levels for badge variants (used for "worst wins" logic)
+ * Higher number = more severe
+ */
+export const BadgeVariantSeverity: Record<BadgeVariant, number> = {
+  error: 4, // Most severe
+  warning: 3,
+  success: 2,
+  info: 1,
+  default: 0,
+  primary: 0,
+  secondary: 0,
+  tertiary: 0,
+  outlined: 0,
+  accent1: 0,
+  accent2: 0,
 };
 
 // =====================================================
@@ -624,7 +915,9 @@ export function getSkillLevelLabel(value: SkillLevelValue): string {
 /**
  * Get label for registration status value
  */
-export function getRegistrationStatusLabel(value: RegistrationStatusValue): string {
+export function getRegistrationStatusLabel(
+  value: RegistrationStatusValue
+): string {
   return RegistrationStatusLabels[value] || "Unknown";
 }
 
@@ -654,7 +947,9 @@ export function getGenerationFormatLabel(value: GenerationFormatValue): string {
 /**
  * Get label for league participation status value
  */
-export function getLeagueParticipationStatusLabel(value: LeagueParticipationStatusValue): string {
+export function getLeagueParticipationStatusLabel(
+  value: LeagueParticipationStatusValue
+): string {
   return LeagueParticipationStatusLabels[value] || "Unknown";
 }
 
@@ -675,7 +970,9 @@ export function getRecurrenceTypeLabel(value: RecurrenceTypeValue): string {
 /**
  * Get label for league attendance status value
  */
-export function getLeagueAttendanceStatusLabel(value: LeagueAttendanceStatusValue): string {
+export function getLeagueAttendanceStatusLabel(
+  value: LeagueAttendanceStatusValue
+): string {
   return LeagueAttendanceStatusLabels[value] || "Unknown";
 }
 
@@ -742,97 +1039,247 @@ export function getMLPGameTypeLabel(value: MLPGameTypeValue): string {
 // =====================================================
 // BADGE/CHIP STYLING HELPERS
 // =====================================================
+/**
+ * Map MembershipStatus to Badge Variant
+ *
+ * - ACTIVE → "success" (green)
+ * - PENDING → "warning" (orange)
+ * - SUSPENDED → "error" (red)
+ * - CANCELLED → "default" (gray)
+ * - BLOCKED → "error" (red)
+ */
+export const MembershipStatusBadgeVariant: Record<
+  MembershipStatusValue,
+  BadgeVariant
+> = {
+  [MembershipStatus.ACTIVE]: "success",
+  [MembershipStatus.PENDING]: "warning",
+  [MembershipStatus.SUSPENDED]: "error",
+  [MembershipStatus.CANCELLED]: "error",
+  [MembershipStatus.BLOCKED]: "error",
+  [MembershipStatus.EXPIRED]: "error",
+};
 
 /**
- * Get CSS class for membership status badge
+ * Map RegistrationStatus to Badge Variant
+ *
+ * - OPEN → "success" (green)
+ * - WAITLIST → "warning" (orange)
+ * - CLOSED → "error" (red)
  */
-export function getMembershipStatusClass(status: MembershipStatusValue): string {
-  switch (status) {
-    case MembershipStatus.PENDING:
-      return "badge-warning";
-    case MembershipStatus.ACTIVE:
-      return "badge-success";
-    case MembershipStatus.SUSPENDED:
-      return "badge-error";
-    case MembershipStatus.CANCELLED:
-      return "badge-neutral";
-    case MembershipStatus.BLOCKED:
-      return "badge-error";
-    default:
-      return "badge-neutral";
-  }
+export const RegistrationStatusBadgeVariant: Record<
+  RegistrationStatusValue,
+  BadgeVariant
+> = {
+  [RegistrationStatus.OPEN]: "success",
+  [RegistrationStatus.WAITLIST]: "warning",
+  [RegistrationStatus.CLOSED]: "error",
+};
+
+/**
+ * Map LeagueParticipationStatus to Badge Variant
+ *
+ * - ACTIVE → "success" (green)
+ * - RESERVE → "warning" (orange)
+ * - INJURED → "error" (red)
+ * - HOLIDAY → "info" (blue)
+ * - DROPPED → "default" (gray)
+ */
+export const LeagueParticipationStatusBadgeVariant: Record<
+  LeagueParticipationStatusValue,
+  BadgeVariant
+> = {
+  [LeagueParticipationStatus.ACTIVE]: "success",
+  [LeagueParticipationStatus.RESERVE]: "warning",
+  [LeagueParticipationStatus.INJURED]: "error",
+  [LeagueParticipationStatus.HOLIDAY]: "info",
+  [LeagueParticipationStatus.DROPPED]: "default",
+};
+
+/**
+ * Map LeagueAttendanceStatus to Badge Variant
+ *
+ * - ATTENDING → "success" (green)
+ * - CANCELLED → "warning" (orange)
+ * - ABSENT → "error" (red)
+ */
+export const LeagueAttendanceStatusBadgeVariant: Record<
+  LeagueAttendanceStatusValue,
+  BadgeVariant
+> = {
+  [LeagueAttendanceStatus.ATTENDING]: "success",
+  [LeagueAttendanceStatus.CANCELLED]: "warning",
+  [LeagueAttendanceStatus.ABSENT]: "error",
+};
+
+/**
+ * Map MatchStatus to Badge Variant
+ *
+ * - PENDING → "warning" (orange)
+ * - ACCEPTED → "info" (blue)
+ * - SCHEDULED → "primary" (brand color)
+ * - IN_PROGRESS → "success" (green)
+ * - COMPLETED → "success" (green)
+ * - CANCELLED → "error" (red)
+ */
+export const MatchStatusBadgeVariant: Record<MatchStatusValue, BadgeVariant> = {
+  [MatchStatus.PENDING]: "warning",
+  [MatchStatus.ACCEPTED]: "info",
+  [MatchStatus.SCHEDULED]: "primary",
+  [MatchStatus.IN_PROGRESS]: "success",
+  [MatchStatus.COMPLETED]: "success",
+  [MatchStatus.CANCELLED]: "error",
+};
+
+/**
+ * Get badge variant for membership status
+ * Usage: <Badge variant={getMembershipStatusBadgeVariant(status)} />
+ */
+export function getMembershipStatusBadgeVariant(
+  status: MembershipStatusValue
+): BadgeVariant {
+  return MembershipStatusBadgeVariant[status] || "default";
 }
 
 /**
- * Get CSS class for registration status badge
+ * Get badge variant for registration status
+ * Usage: <Badge variant={getRegistrationStatusBadgeVariant(status)} />
  */
-export function getRegistrationStatusClass(status: RegistrationStatusValue): string {
-  switch (status) {
-    case RegistrationStatus.OPEN:
-      return "badge-success";
-    case RegistrationStatus.WAITLIST:
-      return "badge-warning";
-    case RegistrationStatus.CLOSED:
-      return "badge-error";
-    default:
-      return "badge-neutral";
-  }
+export function getRegistrationStatusBadgeVariant(
+  status: RegistrationStatusValue
+): BadgeVariant {
+  return RegistrationStatusBadgeVariant[status] || "default";
 }
 
 /**
- * Get CSS class for league participation status badge
+ * Get badge variant for league participation status
+ * Usage: <Badge variant={getLeagueParticipationStatusBadgeVariant(status)} />
  */
-export function getLeagueParticipationStatusClass(status: LeagueParticipationStatusValue): string {
-  switch (status) {
-    case LeagueParticipationStatus.ACTIVE:
-      return "badge-success";
-    case LeagueParticipationStatus.RESERVE:
-      return "badge-warning";
-    case LeagueParticipationStatus.INJURED:
-      return "badge-error";
-    case LeagueParticipationStatus.HOLIDAY:
-      return "badge-info";
-    case LeagueParticipationStatus.DROPPED:
-      return "badge-neutral";
-    default:
-      return "badge-neutral";
-  }
+export function getLeagueParticipationStatusBadgeVariant(
+  status: LeagueParticipationStatusValue
+): BadgeVariant {
+  return LeagueParticipationStatusBadgeVariant[status] || "default";
 }
 
 /**
- * Get CSS class for league attendance status badge
+ * Get badge variant for league attendance status
+ * Usage: <Badge variant={getLeagueAttendanceStatusBadgeVariant(status)} />
  */
-export function getLeagueAttendanceStatusClass(status: LeagueAttendanceStatusValue): string {
-  switch (status) {
-    case LeagueAttendanceStatus.ATTENDING:
-      return "badge-success";
-    case LeagueAttendanceStatus.CANCELLED:
-      return "badge-warning";
-    case LeagueAttendanceStatus.ABSENT:
-      return "badge-error";
-    default:
-      return "badge-neutral";
-  }
+export function getLeagueAttendanceStatusBadgeVariant(
+  status: LeagueAttendanceStatusValue
+): BadgeVariant {
+  return LeagueAttendanceStatusBadgeVariant[status] || "default";
 }
 
 /**
- * Get CSS class for match status badge
+ * Get badge variant for match status
+ * Usage: <Badge variant={getMatchStatusBadgeVariant(status)} />
  */
-export function getMatchStatusClass(status: MatchStatusValue): string {
-  switch (status) {
-    case MatchStatus.PENDING:
-      return "badge-warning";
-    case MatchStatus.ACCEPTED:
-      return "badge-info";
-    case MatchStatus.SCHEDULED:
-      return "badge-primary";
-    case MatchStatus.IN_PROGRESS:
-      return "badge-success";
-    case MatchStatus.COMPLETED:
-      return "badge-success";
-    case MatchStatus.CANCELLED:
-      return "badge-error";
-    default:
-      return "badge-neutral";
+export function getMatchStatusBadgeVariant(
+  status: MatchStatusValue
+): BadgeVariant {
+  return MatchStatusBadgeVariant[status] || "default";
+}
+
+// --- NOTIFICATIONS MODULE HELPERS ---
+
+/**
+ * Get badge variant for a notification type
+ * Returns the severity-based color variant for the notification
+ *
+ * Usage:
+ * const variant = getNotificationBadgeVariant(NotificationType.EVENT_CANCELLED);
+ * // Returns: "error"
+ */
+export function getNotificationBadgeVariant(
+  type: NotificationTypeValue
+): BadgeVariant {
+  return NotificationTypeBadgeVariant[type] || "default";
+}
+
+/**
+ * Get "worst" (most severe) badge variant from array of notification types
+ * Used when multiple notification types apply to one menu item
+ * Severity hierarchy: ERROR > WARNING > SUCCESS > INFO > DEFAULT
+ *
+ * Usage:
+ * const types = [NotificationType.MEMBERSHIP_EXPIRING, NotificationType.MEMBERSHIP_REJECTED];
+ * const variant = getWorstBadgeVariant(types);
+ * // Returns: "error" (because REJECTED is ERROR, which beats WARNING)
+ *
+ * @param types - Array of notification type values
+ * @returns Badge variant for most severe notification type
+ */
+export function getWorstBadgeVariant(
+  types: NotificationTypeValue[]
+): BadgeVariant {
+  if (types.length === 0) return "default";
+
+  let worstVariant: BadgeVariant = "default";
+  let worstSeverity = 0;
+
+  for (const type of types) {
+    const variant = NotificationTypeBadgeVariant[type] || "default";
+    const severity = BadgeVariantSeverity[variant];
+
+    if (severity > worstSeverity) {
+      worstSeverity = severity;
+      worstVariant = variant;
+    }
   }
+
+  return worstVariant;
+}
+
+/**
+ * Get "worst" badge variant from array of unread notifications
+ * Filters by notification type and returns most severe variant
+ *
+ * Usage:
+ * // Get worst variant for membership-related notifications
+ * const variant = getWorstBadgeVariantForNotifications(
+ *   notifications,
+ *   [NotificationType.MEMBERSHIP_EXPIRING, NotificationType.MEMBERSHIP_REJECTED]
+ * );
+ *
+ * @param notifications - Array of notifications
+ * @param types - Notification types to consider (optional, defaults to all types)
+ * @returns Badge variant for most severe unread notification
+ */
+export function getWorstBadgeVariantForNotifications(
+  notifications: { notificationType: NotificationTypeValue; isRead: boolean }[],
+  types?: NotificationTypeValue | NotificationTypeValue[]
+): BadgeVariant {
+  // Filter unread notifications
+  let filtered = notifications.filter((n) => !n.isRead);
+
+  // Further filter by types if provided
+  if (types) {
+    const typeArray = Array.isArray(types) ? types : [types];
+    filtered = filtered.filter((n) => typeArray.includes(n.notificationType));
+  }
+
+  // Get unique types from filtered notifications
+  const uniqueTypes = Array.from(
+    new Set(filtered.map((n) => n.notificationType))
+  );
+
+  // Return worst variant
+  return getWorstBadgeVariant(uniqueTypes);
+}
+
+/**
+ * Get notification category
+ */
+export function getNotificationCategory(
+  type: NotificationTypeValue
+): NotificationCategoryValue {
+  return NotificationTypeCategory[type] || NotificationCategory.SYSTEM;
+}
+
+/**
+ * Get notification type label
+ */
+export function getNotificationTypeLabel(type: NotificationTypeValue): string {
+  return NotificationTypeLabels[type] || "Unknown";
 }

@@ -162,7 +162,7 @@ export const apiResponseModule: ModuleConfig[] = [
       {
         icon: "dashboard",
         label: "Dashboard",
-        url: "/dashboard",
+        url: "/dashboard/overview",
       },
       {
         icon: "sparkles",
@@ -263,7 +263,7 @@ export const apiResponseModule: ModuleConfig[] = [
       {
         icon: "dashboard",
         label: "Dashboard",
-        url: "/dashboard",
+        url: "/dashboard/overview",
       },
       {
         icon: "sparkles",

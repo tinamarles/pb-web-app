@@ -1,6 +1,6 @@
 // frontend/lib/definitions.ts
 
-import * as C from '@/lib/constants';
+import * as C from "@/lib/constants";
 
 // Token Response delivered by JWT
 export interface JWTResponse {
@@ -39,13 +39,13 @@ export interface Role {
 
 export interface ClubMembershipType {
   id?: number;
-  name: string;  // e.g., "Resident", "Non-Resident", "Junior"
-  description?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  name: string; // e.g., "Resident", "Non-Resident", "Junior"
+  description?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
   requiresApproval?: boolean;
   registrationOpenDate?: string | null;
   registrationCloseDate?: string | null;
-  currentMemberCount?: number;  // ✅ From @property
-  isAtCapacity?: boolean;       // ✅ From @property
+  currentMemberCount?: number; // ✅ From @property
+  isAtCapacity?: boolean; // ✅ From @property
   annualFee?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -58,8 +58,8 @@ export interface ClubMembershipSkillLevel {
     description = models.TextField(blank=True, null=True)
   */
   id?: number;
-  level: C.SkillLevelValue; 
-  description?: string; 
+  level: C.SkillLevelValue;
+  description?: string;
 }
 
 export interface MemberClub {
@@ -70,12 +70,12 @@ export interface MemberClub {
   id?: number;
   name: string;
   shortName?: string;
-  description?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  phoneNumber?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  email?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  websiteUrl?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  logoUrl?: string;  // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  address?: Address | null;  // ✅ FIXED: Django ForeignKey with null=True, blank=True
+  description?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  phoneNumber?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  email?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  websiteUrl?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  logoUrl?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  address?: Address | null; // ✅ FIXED: Django ForeignKey with null=True, blank=True
   autoapproval: boolean; // default=False in Django
 }
 
@@ -92,7 +92,6 @@ export interface Club extends MemberClub {
 }
 
 export interface ClubMembership {
-
   id?: number;
   club: MemberClub; // required in Django
   roles: Role[];
@@ -121,19 +120,19 @@ export interface ClubMembership {
 export interface PublicUser {
   id?: number;
   username: string;
-  firstName?: string;  // Django AbstractUser has blank=True
-  lastName?: string;  // Django AbstractUser has blank=True
-  email?: string;  // Required but optional in response
-  profilePictureUrl?: string;  // ✅ blank=True only - NO null!
-  skillLevel?: number | null;  // ✅ null=True - NULL OK
+  firstName?: string; // Django AbstractUser has blank=True
+  lastName?: string; // Django AbstractUser has blank=True
+  email?: string; // Required but optional in response
+  profilePictureUrl?: string; // ✅ blank=True only - NO null!
+  skillLevel?: number | null; // ✅ null=True - NULL OK
   isCoach?: boolean;
-  homePhone?: string;  // ✅ blank=True only - NO null!
-  mobilePhone?: string;  // ✅ blank=True only - NO null!
-  workPhone?: string;  // ✅ blank=True only - NO null!
-  location?: string;  // ✅ blank=True only - NO null!
-  dob?: string | null;  // ✅ null=True - NULL OK
-  gender: C.GenderValue;  // Has default, not null
-  bio?: string;  // ✅ blank=True only - NO null!
+  homePhone?: string; // ✅ blank=True only - NO null!
+  mobilePhone?: string; // ✅ blank=True only - NO null!
+  workPhone?: string; // ✅ blank=True only - NO null!
+  location?: string; // ✅ blank=True only - NO null!
+  dob?: string | null; // ✅ null=True - NULL OK
+  gender: C.GenderValue; // Has default, not null
+  bio?: string; // ✅ blank=True only - NO null!
   createdAt?: string;
   updatedAt?: string;
   // themePreference?: Theme;
@@ -146,6 +145,44 @@ export interface MemberUser extends PublicUser {
 
 // The union type representing the possible API responses
 export type User = PublicUser | MemberUser;
+
+// +++ Notifications +++
+export interface Notification {
+  id: number;
+  notificationType: C.NotificationTypeValue;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  readAt?: string | null; // ISO 8601 format, null if unread
+  actionUrl?: string;
+  actionLabel?: string | null; // Label for action button (e.g., "View Match")
+
+  // Related objects (ForeignKeys serialized as nested objects)
+  club?: {
+    id: number;
+    name: string;
+  } | null;
+
+  league?: {
+    id: number;
+    name: string;
+  } | null;
+
+  match?: {
+    id: number;
+    // Additional match fields as needed
+  } | null;
+
+  senderInfo?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  };
+  // Additional flexible data (e.g., milestone details, match scores)
+  metadata?: Record<string, unknown>;
+}
 
 // +++ Form specific types
 
@@ -192,4 +229,8 @@ export interface AuthUserContextType {
   logout: () => Promise<void>;
   isMemberUser: boolean; // NEW
   refetchUser: () => Promise<void>; // NEW
+  notifications: Notification[]; // ← ADD
+  unreadCount: number; // ← ADD
+  markNotificationAsRead: (notificationId: number) => Promise<void>; // ← ADD
+  dismissNotification: (notificationId: number) => Promise<void>; // ← ADD
 }

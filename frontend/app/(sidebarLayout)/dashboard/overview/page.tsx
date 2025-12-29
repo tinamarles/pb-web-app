@@ -1,15 +1,17 @@
-import { Metadata } from 'next'
+import { Metadata } from 'next';
+import { OverviewPage } from '@/components/dashboard/overviewPage';
+
 
 export const metadata: Metadata = {  
   title: 'Member Dashboard | PickleHub',  
   description: 'View your leagues, matches, and club activities.',  
 }
 
-export default function MemberDashboardPage() {
+export default function DashboardOverviewPage() {
 
   return (
-    <div>
-      <h2 className="title-lg">MEMBER - Overview - DASHBOARD</h2>
-    </div>
+    
+        <OverviewPage/>
+    
   );
 }

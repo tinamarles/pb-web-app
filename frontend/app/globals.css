@@ -51,9 +51,13 @@
   --lightgrey-80: #bdc8d0; /* -80 value */
   --lightgrey-94: #eceff1; /* -94 value */
   --ex-info-60: #3192fc; /* -60 value */
-  --ex-success-70: #2bc374; /* -70 value */
+  --ex-success-50: #2ed17d; /* -50 value */
+  --ex-success-60: #58da97; /* -60 value */
+  --ex-success-40: #25a764; /* -40 value */
+  --ex-success-20: #125432; /* -20 value */
   --ex-error-60: #f75b5c; /* -60 value */
   --ex-warning-70: #f9920d; /* -70 value */
+  --ex-info: #3192fc;
 
   /* ============================= */
   /* +++ SPACING Primitives    +++ */
@@ -118,7 +122,7 @@
 
   /* Secondary color - Teal */
   --color-secondary: var(--teal-50);
-  --color-on-secondary: var(--neutral-30);
+  --color-on-secondary: var(--neutral-94);
 
   /* Tertiary color - Yellow */
   --color-tertiary: var(--yellow-90);
@@ -134,11 +138,14 @@
   --color-error: var(--ex-error-60);
   --color-on-error: var(--error-100);
 
-  --color-success: var(--ex-success-70);
-  --color-on-success: var(--success-100);
+  --color-success: var(--ex-success-50);
+  --color-on-success: var(--neutral-98);
 
   --color-warning: var(--ex-warning-70);
-  --color-on-warning: var(--warning-100);
+  --color-on-warning: var(--neutral-100);
+
+  --color-info: var(--ex-info);
+  --color-on-info: var(--neutral-100);
 
   /* Surface color tokens */
 
@@ -179,9 +186,13 @@
 
   /* Secondary color - Teal */
   --color-secondary: var(--teal-70);
+  --color-on-secondary: var(--neutral-30);
 
   --color-accent1: var(--darkgrey-40);
   --color-on-accent1: var(--neutral-94);
+
+  --color-success: var(--ex-success-60);
+  --color-on-success: var(--ex-success-20);
 
   /* Tertiary color - Yellow ==> same as for light*/
   /* Keep error, success, warning the same as light theme */
@@ -720,6 +731,44 @@
       @apply gap-md; /* 12px */
     }
   }
+
+  /* +++ PANEL component +++ */
+  /* Left side:   List 
+     Right side: Details 
+  */
+
+  .panel {
+    @apply flex flex-1 overflow-hidden;
+  }
+  .panel-list {
+    @apply flex flex-col gap-sm;
+    @apply p-md overflow-y-auto;
+    @apply w-full md:w-2/5 lg:w-1/2;
+    @apply border-r border-outline-variant;
+  }
+
+  .panel-list-item {
+    position: relative;
+    @apply w-full text-left;
+    @apply p-md rounded-lg;
+    @apply bg-surface-container;
+    @apply border border-outline-variant;
+    @apply transition-all duration-200;
+  }
+
+  .panel-list-item:hover,
+  .panel-list-item-selected {
+    @apply bg-surface-container-high;
+    @apply border-primary;
+  }
+
+  .panel-detail {
+    @apply hidden md:flex flex-col;
+    @apply w-3/5 lg:w-2/3;
+    @apply overflow-y-auto;
+  }
+
+
   /* +++ HEADER Component +++ */
   .header {
     @apply sticky top-0 z-50;
@@ -927,7 +976,7 @@
 
   .page__header {
     @apply flex items-start;
-    @apply gap-md p-md;
+    @apply gap-md p-0;
     @apply bg-surface;
   }
   @media (min-width: 640px) {
@@ -1052,7 +1101,6 @@
       right: -4px;
       border: 2px solid var(--color-on-secondary);
       @apply flex items-center justify-center;
-      @apply min-w-[20px] h-[20px];
       @apply px-xs;
       @apply rounded-full;
       @apply bg-secondary text-on-secondary;
@@ -1802,7 +1850,7 @@
       @apply cursor-pointer shrink-0 icon-md self-center;
     }
     &.active {
-      @apply bg-primary text-on-primary; 
+      @apply bg-primary text-on-primary;
     }
     &:hover {
       @apply bg-surface-container;
@@ -1814,7 +1862,7 @@
     gap: var(--px-4);
     overflow-x: auto;
     scroll-behavior: smooth;
-    flex:1;
+    flex: 1;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
     &::-webkit-scrollbar {
@@ -1828,23 +1876,21 @@
     width: 40px;
     height: 40px;
     flex-shrink: 0;
-    background: var(--color-accent1);
     border: 1px solid var(--color-accent1);
     color: var(--color-on-surface-variant);
     cursor: pointer;
     transition: all var(--transition-duration-200);
     border-radius: 50%;
-    
+
     &:hover {
       background-color: var(--color-surface-container);
       color: var(--color-on-surface);
     }
-    
+
     &:active {
       background-color: var(--color-surface-container-high);
     }
   }
- 
 }
 /* Dashboard Dropdown Box for Club Selection is hidden on Mobile and Tablet Sidebar */
 @layer components {
@@ -1863,6 +1909,28 @@
   @media (min-width: 1024px) {
     .dashboard-select {
       @apply block;
+    }
+  }
+}
+/* Dashboard Header */
+@layer components {
+  .badge-list {
+    @apply flex items-center gap-2;
+  }
+  .dashboard-header {
+    @apply flex flex-col gap-sm flex-1 justify-between;
+    max-width: calc(100% - 112px);
+  }
+  @media screen and (max-width: 696px) {
+    .badge-list {
+      /*  width: calc(100% - 90px); */
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .badge-list::-webkit-scrollbar {
+      display: none; /* Hides the scrollbar visual */
+      width: 0px; /* Optional: ensures no space is reserved */
     }
   }
 }
@@ -2188,6 +2256,27 @@
       @apply focus-ring-base;
     }
   }
+  /* Added 2025-12-26 - standard button to use for tertiary actions */
+  .btn-default {
+    /* base-style */
+    @apply btn-base;
+    @apply bg-surface-variant text-on-surface-variant;
+    @apply rounded border border-outline;
+    &:disabled {
+      @apply disabled-item;
+    }
+    &:hover {
+      @apply bg-surface-variant/30;
+    }
+    &:focus-visible {
+      --tw-ring-color: color-mix(
+        in srgb,
+        var(--color-primary),
+        transparent 80%
+      );
+      @apply focus-ring-base;
+    }
+  }
   /* 2025-11-26 Added dismiss variant */
   .btn-subtle,
   .btn-dismiss {
@@ -2446,8 +2535,27 @@
     padding-left: 7px;
     padding-right: 7px;
   }
-  .badge-destructive {
+  .badge-error {
     @apply bg-error text-on-error;
+  }
+  .badge-success {
+    @apply bg-success text-on-success;
+  }
+  .badge-warning {
+    @apply bg-warning text-on-warning;
+  }
+  .badge-default {
+    @apply bg-surface-variant text-on-surface-variant border border-outline;
+  }
+  .badge-info {
+    @apply bg-info text-on-info;
+  }
+  .badge-sm {
+    width: 6px;
+    height: 6px;
+    min-width: 6px;
+    min-height: 6px;
+    padding: 0;
   }
 }
 

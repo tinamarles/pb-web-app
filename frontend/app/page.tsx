@@ -1,7 +1,5 @@
-import { LandingPage } from "@/page-components/Landing/landing";
+import { LandingPage } from "@/components/Landing/landing";
 
 export default function App() {
-
   return <LandingPage />;
-
 }

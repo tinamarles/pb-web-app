@@ -64,6 +64,11 @@ import {
   PencilRuler,
   LoaderCircle,
   Image,
+  Megaphone,
+  UserCheck,
+  DollarSign,
+  Ticket,
+  Tickets,
 
 } from "lucide-react";
 
@@ -108,17 +113,19 @@ const iconMap = {
   community: Users,
   members: Users,
   achievements: Trophy,
+  announcements: Megaphone,
   courts: LandPlot,
   clubs: Goal,
   leagues: Sword,
   coaches: Rocket,
   privacy: ShieldUser,
   preferences: Wrench,
+  subscriptions: DollarSign,
+  event: Ticket,
+  events: Tickets,
   'account-settings': UserLock,
   'add-notification': BellPlus,
 
-  // Default fallback
-  default: Star,
   // Form Controls - Radio Buttons
   'radio-checked': IoMdRadioButtonOn,
   'radio-unchecked': IoMdRadioButtonOff,
@@ -136,6 +143,7 @@ const iconMap = {
   signout: LogOut,
   signin: LogIn,
   help: MessageCircleQuestionMark,
+  register: UserCheck,
 
   // Form & Input Icons
   calendar: Calendar,
@@ -147,6 +155,8 @@ const iconMap = {
   lock: IoIosLock,
   camera: Camera,
   picture: Image,
+  preferred: Star,
+  star: Star,
 
   // Navigation & Communication
   sparkles: Sparkles,
@@ -177,6 +187,7 @@ const iconMap = {
   info: Info,
   reset: RotateCw,
   loading: LoaderCircle,
+  default: Info,
 
   // Navigation Arrows
   chevrondown: ChevronDown,

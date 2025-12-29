@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge, Icon, Avatar, SelectOption } from "@/ui";
 import { RoleBadgeVariants, RoleTypeLabels } from "@/lib/constants";
-import { ClubSwitcherModal } from "./ClubSwitcherModal";
+import { ClubSwitcherModal } from "../ClubSwitcherModal";
 import { DASHBOARD_NAV_ITEMS } from "@/data";
 
 export function DashboardHeader() {
@@ -63,7 +63,7 @@ export function DashboardHeader() {
           size="md"
           className="rounded-xs"
         />
-        <div className="flex flex-col gap-sm flex-1 justify-between">
+        <div className="dashboard-header">
           {/* Club Name + Star */}
           <div className="flex items-center gap-2 flex-1">
             <h2 className="title-md text-on-surface-variant">{club.name}</h2>
@@ -73,7 +73,7 @@ export function DashboardHeader() {
           </div>
           {/* Role Badges */}
           {roles && roles.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="badge-list">
               {roles.map((role) => (
                 <Badge
                   key={role.id || role.name}
@@ -90,8 +90,7 @@ export function DashboardHeader() {
   };
 
   return (
-    <div className="page__header pl-0">
-      
+    <div className="page__header pl-0 pr-0">
       {/* DESKTOP VERSION (≥1024px) - Static Card (Dropdown is in Sidebar!) */}
       <div className="hidden lg:flex lg:w-full lg:gap-md">{renderHeader()}</div>
 
@@ -105,7 +104,12 @@ export function DashboardHeader() {
             >
               {renderHeader()}
               {/* Dropdown Chevron (visual affordance) */}
-              <Icon name="chevrondown" size="xl" bordered className="text-on-surface-variant" />
+              <Icon
+                name="chevrondown"
+                size="xl"
+                bordered
+                className="text-on-surface-variant"
+              />
             </button>
           ) : (
             <>{renderHeader()}</>

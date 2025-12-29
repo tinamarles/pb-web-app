@@ -1,8 +1,15 @@
 "use client";
 import { useDashboard } from "@/providers/DashboardProvider";
 import { Avatar, Select, type SelectOption } from "@/ui";
+import Link from "next/link";
 
-export function ClubDropdown() {
+export interface ClubDropdownProps {
+  context?: 'admin' | 'dashboard'; // Default: 'dashboard'
+}
+
+export function ClubDropdown({
+  context = 'dashboard'
+}: ClubDropdownProps) {
   const { selectedClubId, setSelectedClub, currentMembership, memberships } =
     useDashboard();
 
@@ -11,6 +18,31 @@ export function ClubDropdown() {
     return null;
   }
 
+  // ADMIN Context: Always show Current club + View Public Page
+  if (context === 'admin') {
+    return (
+      <div className="flex flex-col">
+        <div className="dashboard-dropdown bg-transparent">
+          <Avatar
+            src={currentMembership.club.logoUrl || undefined}
+            name={currentMembership.club.name}
+            size="sm"
+            className="rounded-none"
+          />
+          <div className="flex flex-col gap-xs">
+            <span className="body-sm truncate">
+              {currentMembership.club.shortName || currentMembership.club.name}
+            </span>
+            
+            <Link href='/dashboard/overview' className="label-md text-primary">
+              View Public Club Page
+            </Link>
+          </div>
+        </div>
+        
+      </div>
+    )
+  }
   // Create options array for Select
   const clubOptions: SelectOption<number>[] = memberships.map((m) => ({
     value: m.club.id!,

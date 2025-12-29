@@ -17,12 +17,19 @@ export type BadgeVariant =
         "secondary" | 
         "tertiary" | 
         "outlined" | 
-        "destructive" | 
+        "error" | 
         "accent1" | 
-        "accent2";
+        "accent2" |
+        "warning" |
+        "success" |
+        "info" |
+        "default";
+
+export type BadgeSize = "default" | "sm";
 
 export interface BadgeProps extends React.ComponentProps<"span"> {
   variant?: BadgeVariant;
+  size?: BadgeSize;
   asChild?: boolean;
   label?: string;
   icon?: string;
@@ -31,6 +38,7 @@ export interface BadgeProps extends React.ComponentProps<"span"> {
 export function Badge({
   className,
   variant = "primary",
+  size = "default",
   asChild = false,
   label,
   icon,
@@ -48,13 +56,23 @@ export function Badge({
     variant === "accent1" && "badge-accent1",
     variant === "accent2" && "badge-accent2",
     variant === "outlined" && "badge-outlined",
-    variant === "destructive" && "badge-destructive",
+    variant === "error" && "badge-error",
+    variant === "warning" && "badge-warning",
+    variant === "success" && "badge-success",
+    variant === "default" && "badge-default",
+    variant === "info" && "badge-info",
+    // Size variant - sm for notification bell red dot
+    size === "sm" && "badge-sm",
     
     className
   );
 
   // Determine what to render based on props
   const renderContent = () => {
+    // Size="sm" is typically just a dot (no content)
+    if (size === "sm") {
+      return null;  // Empty badge - just a colored circle
+    }
     // If children are provided, use them (allows for custom content)
     if (children) {
       return children;
@@ -68,7 +86,7 @@ export function Badge({
     // Combinations: Icon + Label, Label only, Icon only
     return (
       <>
-        {icon && <Icon name={icon} />}
+        {icon && <Icon name={icon} size="sm"/>}
         {label}
       </>
     );

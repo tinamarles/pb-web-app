@@ -27,6 +27,7 @@ urlpatterns = [
     # App-specific API URLs
     path('api/members/', include('members.urls')),
     path('api/profile/', include('users.urls')),
+    path('api/notifications/', include('notifications.urls')),
     # Use include to attach the URLs from the single, master router
     path('api/', include(router.urls)),
 ]

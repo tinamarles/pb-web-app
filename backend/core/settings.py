@@ -64,7 +64,8 @@ INSTALLED_APPS = [
     'public',
     'users',
     'matches',
-    'courts'
+    'courts',
+    'notifications',
 ]
 
 MIDDLEWARE = [

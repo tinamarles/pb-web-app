@@ -1,6 +1,6 @@
 // app/(sidebarLayout)/profile/layout.tsx
 
-import { ProfileHeader } from "@/components/ProfileHeader";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
 
 export default function ProfileLayout({
   children,
@@ -8,9 +8,9 @@ export default function ProfileLayout({
   children: React.ReactNode;
 }) {
   return (
-      <>
-        <ProfileHeader />
-        {children}
-      </>
+    <>
+      <ProfileHeader />
+      {children}
+    </>
   );
 }

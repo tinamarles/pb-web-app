@@ -68,20 +68,18 @@ export function HeroSection() {
                 size="cta"
                 className="w-full sm:w-auto"
                 icon="arrowright"
-                asChild
-              >
-                <Link href="/signup">Start Playing Today</Link>
-              </Button>
+                href="/signup"
+                label="Start Playing Today"
+              />
 
               <Button
                 variant="outlined"
                 size="cta"
                 className="w-full bg-background hover:bg-primary/80 sm:w-auto"
                 icon="signin"
-                asChild
-              >
-                <Link href="/login">Sign In</Link>
-              </Button>
+                href="/login"
+                label="Sign In"
+              />
             </div>
 
             {/* Quick Stats */}

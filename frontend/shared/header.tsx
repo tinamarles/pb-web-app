@@ -7,6 +7,7 @@ import { useState, memo, useCallback } from "react";
 import {
   Button,
   ButtonItem,
+  Badge,
   NavigationButtonItem,
   Logo,
   LogoConfig,
@@ -66,7 +67,7 @@ export const Header = memo(function Header({
   // Only keep mobile menu state - Dropdown component handles its own state
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const { user, logout } = useAuth();
+  const { user, logout, unreadCount } = useAuth();
 
   const toggleMenu = useCallback(() => {
     setIsMenuOpen((prev) => !prev);
@@ -155,6 +156,7 @@ export const Header = memo(function Header({
         >
           {link.submenu!.map((item) => (
             <MenuItem
+              context="dropdown"
               key={item.url}
               icon={item.icon}
               label={item.label}
@@ -167,19 +169,17 @@ export const Header = memo(function Header({
 
     // Regular link without submenu
     return (
-      <Button key={link.href} asChild variant="subtle" size="md">
-        <Link
-          href={link.href}
-          className={`${link.active ? "active" : ""} ${
-            link.disabled ? "disabled" : ""
-          }`}
-        >
-          {link.icon && typeof link.icon === "string" && (
-            <Icon name={link.icon} />
-          )}
-          {link.label}
-        </Link>
-      </Button>
+      <Button
+        key={link.href}
+        variant="subtle"
+        size="md"
+        href={link.href}
+        icon={link.icon}
+        label={link.label}
+        className={`${link.active ? "active" : ""} ${
+          link.disabled ? "disabled" : ""
+        }`}
+      />
     );
   };
 
@@ -214,21 +214,16 @@ export const Header = memo(function Header({
   const renderNavigationButtons = () => {
     if (!navigationButtons.length) return null;
 
-    // For mobile: Button with asChild wrapping Link
-    // For desktop: Button with asChild wrapping Link with full label
-
     return navigationButtons.map((button, index) => (
       <Button
-        key={index}
-        asChild
+        key={button.id || index}
         variant={button.variant || "filled"}
         size={button.size || "md"}
-      >
-        <Link href={button.href}>
-          {button.icon && <Icon name={button.icon} />}
-          {button.label}
-        </Link>
-      </Button>
+        href={button.href} // ✅ Pass href directly!
+        icon={button.icon}
+        label={button.label}
+        disabled={button.disabled}
+      />
     ));
   };
 
@@ -262,8 +257,7 @@ export const Header = memo(function Header({
     const unreadCount = user?.unreadNotifications || 0;
     const hasUnread = unreadCount > 0;
     */
-    const hasUnread = false;
-    const unreadCount = 0;
+    const hasUnread = unreadCount > 0;
 
     return (
       <div className="relative">
@@ -271,11 +265,15 @@ export const Header = memo(function Header({
           variant="subtle"
           size="md"
           icon="notifications"
-          aria-label="Notifications"
+          aria-label={`Notifications${
+            hasUnread ? ` (${unreadCount} unread)` : ""
+          }`}
         />
         {hasUnread && (
-          <span
-            className="absolute top-[6px] right-[6px] w-[8px] h-[8px] rounded-full bg-error"
+          <Badge
+            variant="error"
+            size="sm"
+            className="absolute top-[6px] right-[6px]"
             aria-label={`${unreadCount} unread notifications`}
           />
         )}
@@ -309,19 +307,61 @@ export const Header = memo(function Header({
         align="right"
         hoverEnabled={true}
       >
-        <MenuItem icon="profile" label="Profile" href="/profile/details" />
-        <MenuItem icon="settings" label="Settings" href="/settings" separator />
         <MenuItem
-          icon="memberships"
-          label="Club Memberships"
-          href="/memberships"
+          context="dropdown"
+          icon="add"
+          label="Create Event"
+          href="/event/create"
         />
-        <MenuItem icon="performance" label="Performance" href="/performance" />
-        <MenuItem icon="community" label="Community" href="/community" />
-        <MenuItem icon="blog" label="Personal Blog" href="/blog" separator />
+        <MenuItem
+          context="dropdown"
+          icon="add"
+          label="Create a Club"
+          href="/club/create"
+          separator
+        />
+        <MenuItem
+          context="dropdown"
+          icon="profile"
+          label="Profile"
+          href="/profile/details"
+        />
+        <MenuItem
+          context="dropdown"
+          icon="settings"
+          label="Settings"
+          href="/profile/settings"
+          separator
+        />
+        <MenuItem
+          context="dropdown"
+          icon="memberships"
+          label="Memberships"
+          href="/profile/memberships"
+        />
+        <MenuItem
+          context="dropdown"
+          icon="performance"
+          label="Performance"
+          href="/profile/performance"
+        />
+        <MenuItem
+          context="dropdown"
+          icon="community"
+          label="Community"
+          href="/profile/community"
+        />
+        <MenuItem
+          context="dropdown"
+          icon="blog"
+          label="Personal Blog"
+          href="/profile/blog"
+          separator
+        />
 
         {/* Sign Out Button - Centered */}
         <MenuItem
+          context="dropdown"
           icon="signout"
           iconBordered={false}
           label="Sign Out"
@@ -342,11 +382,13 @@ export const Header = memo(function Header({
       {/* Back Button - Mobile/Tablet only */}
       {back && backHref && (
         <div className="header__logo lg:hidden">
-          <Button asChild variant="subtle" size="md" aria-label="Go back">
-            <Link href={backHref}>
-              <Icon name="arrowleft" />
-            </Link>
-          </Button>
+          <Button
+            variant="subtle"
+            size="md"
+            aria-label="Go back"
+            href={backHref}
+            icon="arrowleft"
+          />
         </div>
       )}
 

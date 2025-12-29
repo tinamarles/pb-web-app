@@ -11,14 +11,12 @@ export {
 export { Icon, type IconProps, type IconName, type IconSize } from "./icon";
 export { Logo, type LogoProps } from "./logo";
 export { Badge, type BadgeProps, type BadgeVariant } from "./badge";
-export {
-  Sidebar,
-  type SidebarProps,
-  type SidebarItem,
-  type SidebarSection,
-} from "./sidebar";
+export { Sidebar, type SidebarProps } from "./sidebar";
 export { CustomSelect, type CustomSelectProps } from "./customSelect";
-export { Select, type SelectProps, type SelectOption} from "./select";
+export { DateDisplay, type DateDisplayProps } from "./dateDisplay";
+export { ExpiryDate, type ExpiryDateProps } from "./expiryDate";
+export { PeriodDate, type PeriodDateProps } from "./periodDate";
+export { Select, type SelectProps, type SelectOption } from "./select";
 export { FormField, type FormFieldProps } from "./formField";
 export { Avatar, type AvatarProps, type AvatarSize } from "./avatar";
 export { Sheet, type SheetProps } from "./sheet";
@@ -47,4 +45,10 @@ export { MenuItem, type MenuItemProps } from "./menuItem";
 
 // TYPES
 
-export type { ButtonItem, LogoConfig, NavigationButtonItem } from "./types";
+export type {
+  ButtonItem,
+  LogoConfig,
+  NavigationButtonItem,
+  SidebarItem,
+  SidebarSection,
+} from "./types";

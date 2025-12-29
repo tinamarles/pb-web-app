@@ -100,13 +100,10 @@ export const MoreMenuPage = memo(function MoreMenuPage() {
               {section.items.map((item) => (
                 <MenuItem
                   key={item.href || item.label}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
+                  item={item} // ✅ Pass the whole item object!
                   context="moremenu"
                   showTrailing
                   trailingIcon="chevronright"
-                  disabled={item.disabled}
                 />
               ))}
             </div>

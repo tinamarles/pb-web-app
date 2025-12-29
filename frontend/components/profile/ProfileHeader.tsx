@@ -96,23 +96,23 @@ export function ProfileHeader() {
   }
 
   return (
-    <div className="page__header">
+    <div className="page__header pl-0 pr-0">
       <Avatar
-        size="xl"
+        size="lg"
         src={user.profilePictureUrl ?? undefined}
         name={`${user.firstName} ${user.lastName}`}
       />
-      <div className="flex-1 flex flex-col justify-between h-[64px] sm:h-[96px]">
-        <h1 className="title-md sm:title-lg emphasized">
+      <div className="flex-1 flex flex-col justify-between h-[64px] sm:h-[64px]">
+        <h1 className="title-md sm:title-md emphasized">
           {user.firstName} {user.lastName}
         </h1>
         <div className="flex items-center gap-xs text-on-surface-variant">
-          <Icon name="profile" className="icon-md sm:icon-lg" />
-          <span className="body-sm sm:body-lg">@{user.username}</span>
+          <Icon name="profile" className="icon-md sm:icon-md" />
+          <span className="body-sm sm:body-sm">@{user.username}</span>
         </div>
         <div className="flex items-center gap-xs text-on-surface-variant">
-          <Icon name="location" className="icon-md sm:icon-lg" />
-          <span className="body-sm sm:body-lg">{user.location}</span>
+          <Icon name="location" className="icon-md sm:icon-md" />
+          <span className="body-sm sm:body-sm">{user.location}</span>
         </div>
       </div>
 
@@ -138,6 +138,7 @@ export function ProfileHeader() {
             onWidgetClose={handleWidgetClose}
           />
           <MenuItem
+            context="dropdown"
             label="Delete image"
             icon="delete"
             iconBordered={false}

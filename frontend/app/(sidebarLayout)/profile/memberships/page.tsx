@@ -1,11 +1,17 @@
-import { PlaceholderPage } from "@/components/PlaceholderPage";
+import { Metadata } from 'next';
+import { OverviewPage } from '@/components/dashboard/overviewPage';
+import { MembershipsPage } from '@/components/profile/membershipsPage';
 
-export default function MembershipsPage() {
-  // Trigger the not-found.tsx page
+export const metadata: Metadata = {  
+  title: 'Memberships Page | PickleHub',  
+  description: 'View all your Memberships and Subscriptions.',  
+}
+
+export default function ProfileMembershipsPage() {
+
   return (
-    <>
-        <h1 className="title-lg text-secondary">Your Memberships</h1>
-        <PlaceholderPage />
-    </>
-  )
+    
+        <MembershipsPage/>
+    
+  );
 }

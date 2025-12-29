@@ -1,5 +1,5 @@
 // Layout for Login and SignUp page
-import { AnimatedBackground } from "@/page-components/Landing/AnimatedBackground";
+import { AnimatedBackground } from "@/components/Landing/AnimatedBackground";
 import { Module } from "@/shared";
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

@@ -139,3 +139,5 @@ class CustomUserSerializer(serializers.ModelSerializer):
                   'bio',
                   ]
         read_only_fields = ['email']
+
+        

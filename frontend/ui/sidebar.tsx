@@ -7,21 +7,7 @@
 
 import { MenuItem } from "./menuItem";
 import { ReactNode } from "react";
-
-export interface SidebarItem {
-  icon: string;
-  label: string;
-  href?: string | undefined;
-  active?: boolean;
-  badgeCount?: number;
-  showAlert?: boolean;
-  disabled?: boolean;
-}
-
-export interface SidebarSection {
-  items: SidebarItem[];
-  separator?: boolean; // Show separator before this section
-}
+import type { SidebarItem, SidebarSection } from "./types";
 
 export interface SidebarProps {
   items?: SidebarItem[]; // Deprecated: use sections instead
@@ -56,12 +42,7 @@ export function Sidebar({ items, sections, header, className = "" }: SidebarProp
               <MenuItem
                 key={item.href}
                 context="sidebar"
-                icon={item.icon}
-                label={item.label}
-                href={item.href}
-                active={item.active}
-                badgeCount={item.badgeCount}
-                showAlert={item.showAlert}
+                item={item}
               />
             ))}
           </div>

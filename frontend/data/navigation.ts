@@ -1,13 +1,5 @@
 // app/data/navigation.ts
-// === MODIFICATION LOG ===
-// Date: 2025-11-20 UTC
-// Modified by: Assistant
-// Changes: MERGED Figma and Next.js navigation.ts versions
-// Purpose: Single file supporting BOTH sidebar nav (profile/dashboard) AND MorePage sections
-// Previous: Two separate incompatible versions causing type conflicts
-// New: Flexible NavItem interface, all navigation data in one place
-// ========================
-
+import { NotificationType, NotificationTypeValue } from "@/lib/constants";
 // ============================================
 // TYPE DEFINITIONS
 // ============================================
@@ -22,6 +14,7 @@ export interface NavItem {
   href?: string; // Optional: some items have onClick instead
   disabled?: boolean; // Optional: disable navigation item
   onClick?: string; // Optional: action ID for items without href (e.g., "signout")
+  badgeCount?: NotificationTypeValue | NotificationTypeValue[];
 }
 
 /**
@@ -69,16 +62,38 @@ export const PROFILE_NAV_ITEMS: NavItem[] = [
     label: "Memberships",
     href: "/profile/memberships",
     icon: "memberships",
+    badgeCount: [
+      // Multiple membership-related types
+      NotificationType.MEMBERSHIP_EXPIRING,
+      NotificationType.MEMBERSHIP_RENEWED,
+      NotificationType.RENEWAL_PERIOD_OPEN,
+      NotificationType.MEMBERSHIP_APPROVED,
+      NotificationType.MEMBERSHIP_REJECTED,
+      NotificationType.MEMBERSHIP_SUSPENDED,
+    ],
   },
   {
     label: "Performance",
     href: "/profile/performance",
     icon: "performance",
+    badgeCount: [
+      // Milestone notifications
+      NotificationType.MILESTONE_GAMES_50,
+      NotificationType.MILESTONE_GAMES_100,
+      NotificationType.MILESTONE_GAMES_500,
+      NotificationType.MILESTONE_WIN_STREAK,
+      NotificationType.MILESTONE_RANK_IMPROVED,
+    ],
   },
   {
     label: "Community",
     href: "/profile/community",
     icon: "community",
+    badgeCount: [
+      // Social notifications
+      NotificationType.NEW_FOLLOWER,
+      NotificationType.PARTNER_REQUEST,
+    ],
   },
   {
     label: "Personal Blog",
@@ -100,17 +115,33 @@ export const DASHBOARD_NAV_ITEMS: NavItem[] = [
   {
     label: "Overview",
     href: "/dashboard/overview",
-    icon: "dashboard",
+    icon: "home",
   },
   {
-    label: "Club Notifications",
+    label: "Announcements",
     href: "/dashboard/notifications",
-    icon: "notifications",
+    icon: "announcements",
+    badgeCount: NotificationType.CLUB_ANNOUNCEMENT,
+  },
+  {
+    label: "Club Events",
+    href: "/dashboard/events",
+    icon: "events",
+    badgeCount: NotificationType.EVENT_INVITATION,
   },
   {
     label: "Club Leagues",
     href: "/dashboard/leagues",
     icon: "leagues",
+    badgeCount: [
+      NotificationType.LEAGUE_ANNOUNCEMENT,
+      NotificationType.LEAGUE_INVITATION,
+      NotificationType.LEAGUE_RESULTS_POSTED,
+      NotificationType.LEAGUE_SESSION_CANCELLED,
+      NotificationType.LEAGUE_STANDINGS_UPDATED,
+      NotificationType.LEAGUE_SESSION_REMINDER,
+      NotificationType.LEAGUE_MATCH_SCHEDULED,
+    ],
   },
   {
     label: "Leaderboard",
@@ -125,18 +156,34 @@ export const DASHBOARD_NAV_ITEMS: NavItem[] = [
   {
     label: "Club Details",
     href: "/dashboard/clubdetails",
-    icon: "show",
+    icon: "clubs",
   },
 ];
 // ✅ ADD: Admin navigation items (conditionally rendered in sidebar)
 export const DASHBOARD_ADMIN_ITEMS: NavItem[] = [
+  { label: "Admin Dashboard", href: "/admin/settings", icon: "dashboard" },
+];
+
+// ✅ ADD: Admin navigation items
+export const ADMIN_NAV_ITEMS: NavItem[] = [
   // Key feature for League Captains on League Day: allows check-in,
   // round management ('complete', 'in-progress', mid-session player changes, etc)
-  { label: "League Session", href: "/dashboard/league-day-[sessionId]", icon: "leagues" },
+  // { label: "League Session", href: "/dashboard/league-day-[sessionId]", icon: "leagues" },
   // only for bulk admin feature - such as accepting join request, import/export data etc.
-  { label: "Manage Members", href: "/dashboard/admin-members", icon: "members" },
-  { label: "Court Schedule", href: "/dashboard/admin-courts", icon: "court-schedule" },
-  { label: "Training", href: "/dashboard/admin-training", icon: "coaches" },
+  // { label: "Manage Members", href: "/dashboard/admin-members", icon: "members" },
+  // { label: "Court Schedule", href: "/dashboard/admin-courts", icon: "court-schedule" },
+  // { label: "Training", href: "/dashboard/admin-training", icon: "coaches" },
+  { label: "Reports", href: "/admin/reports", icon: "chart" },
+  { label: "Calendar", href: "/admin/schedule", icon: "calendar" },
+  { label: "Events", href: "/admin/events", icon: "events" },
+  { label: "Memberships", href: "/admin/memberships", icon: "memberships" },
+  { label: "Members", href: "/admin/members", icon: "members" },
+  {
+    label: "Announcements",
+    href: "/admin/notifications",
+    icon: "announcements",
+  },
+  { label: "Settings", href: "/admin/settings", icon: "settings" },
 ];
 
 // ✅ ADD: Feed navigation items (public users)
@@ -152,7 +199,6 @@ export const FEED_NAV_ITEMS: NavItem[] = [
 
 /**
  * MORE MENU SECTIONS
- * Used in: /app/(sidebarLayout)/more/page.tsx
  *
  * Organized into sections for better mobile UX:
  * - Settings: Account, privacy, notifications, appearance, home screen
@@ -243,7 +289,7 @@ export const MORE_MENU_FOOTER_LINKS: FooterLink[] = [
 export const navigation: NavigationConfig = {
   profile: PROFILE_NAV_ITEMS,
   dashboard: DASHBOARD_NAV_ITEMS,
-  admin: DASHBOARD_ADMIN_ITEMS,
+  admin: ADMIN_NAV_ITEMS,
   feed: FEED_NAV_ITEMS,
 };
 

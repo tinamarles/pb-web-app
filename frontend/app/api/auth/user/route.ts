@@ -33,11 +33,29 @@ export async function GET(_req: Request) {
       );
     }
 
-    // 3. Parse the Django response and assert the type
-    const userData: User = await djangoResponse.json();
+  // 3. Parse the Django response
+  const userData: User = await djangoResponse.json();
 
-    // 4. Return the user data to the client
-    return NextResponse.json(userData);
+  // 4. Fetch notifications
+  const notificationsResponse = await fetch(`${API_BASE_URL}/api/notifications/`, {
+    headers: { 
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!notificationsResponse.ok) {
+    throw new Error('Failed to fetch notifications');
+  }
+
+  const notificationsData = await notificationsResponse.json();
+
+  // 5. Return combined response (user data + notifications)
+  return NextResponse.json({
+    ...userData,  // spread user data
+    notifications: notificationsData.notifications,
+    unreadCount: notificationsData.unread_count
+  });
   } catch (error) {
     console.error("Error getting User data:", error);
     return NextResponse.json(
