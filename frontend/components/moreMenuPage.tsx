@@ -1,21 +1,14 @@
 "use client";
 
-// === MODIFICATION LOG ===
-// Date: 2025-11-19 UTC
-// Modified by: Assistant
-// Changes: Major refactor - use navigation.ts data and CSS classes instead of inline styles
-// Previous: Hardcoded section arrays, inline styles everywhere, repetitive mapping code
-// New: Import from navigation.ts, use CSS classes from globals.css, single sections.map()
-// Impact: DRY principle, CSS-driven design, single source of truth, no inline styles
-// Backup: /backups/MorePage-backup-2025-11-19.md
-// ========================
-
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import Link from "next/link";
 import { Icon, Avatar, Button, MenuItem } from "@/ui";
 import { useAuth } from "@/providers/AuthUserProvider";
-import { Module } from "@/shared";
+// import { Module } from "@/shared";
+import { ModuleClientOnly as Module } from "@/shared";
 import { MORE_MENU_SECTIONS, MORE_MENU_FOOTER_LINKS } from "@/data";
+import { calculateBadge } from "@/lib/badgeUtils";
+import { SidebarItem } from "@/ui";
 
 /**
  * MorePage - Mobile menu page for authenticated users
@@ -33,19 +26,49 @@ import { MORE_MENU_SECTIONS, MORE_MENU_FOOTER_LINKS } from "@/data";
  * Navigation data comes from /data/navigation.ts
  * Styling uses CSS classes from /styles/globals.css (NO inline styles!)
  *
+ * THREE LAYER ARCHITECTURE:
+ * - LAYER 1 (Definition): NavItem[] from navigation.ts (semantic - NotificationTypeValue)
+ * - LAYER 2 (Transform): This component transforms to SidebarItem[] (concrete - number + BadgeVariant)
+ * - LAYER 3 (Display): MenuItem receives SidebarItem and just renders (DUMB)
+ *
  * USAGE:
  * Route: /more
  * Accessed from BottomNav "More" button
  */
-export const MoreMenuPage = memo(function MoreMenuPage() {
-  const { user, logout } = useAuth();
 
-  if (!user) return null;
+export const MoreMenuPage = memo(function MoreMenuPage() {
+  const { user, logout, notifications } = useAuth();
+
+  // ✅ LAYER 2: Transform NavSection[] → sections with SidebarItem[]
+  // Memoize to prevent unnecessary recalculations
+  // IMPORTANT: useMemo MUST be called before any early returns (Rules of Hooks!)
+  const transformedSections = useMemo(() => {
+    return MORE_MENU_SECTIONS.map((section) => ({
+      ...section,
+      items: section.items.map((item) => {
+        // Calculate badge using unified logic
+        const badge = calculateBadge(item.badgeCount, notifications);
+
+        // Transform NavItem → SidebarItem (concrete props)
+        return {
+          icon: item.icon,
+          label: item.label,
+          href: item.href,
+          badgeCount: badge?.count, // ✅ number (concrete)
+          badgeVariant: badge?.variant, // ✅ BadgeVariant (concrete)
+          disabled: item.disabled,
+        } as SidebarItem;
+      }),
+    }));
+  }, [notifications]); // Recalculate when notifications change
 
   // Handle sign out
   const handleSignOut = async () => {
     await logout();
   };
+
+  // Early return AFTER all hooks (Rules of Hooks!)
+  if (!user) return null;
 
   return (
     <Module type="more">
@@ -89,7 +112,8 @@ export const MoreMenuPage = memo(function MoreMenuPage() {
         </div>
 
         {/* Menu Sections - Single map! */}
-        {MORE_MENU_SECTIONS.map((section) => (
+        {/* ✅ LAYER 3: Pass SidebarItem[] to MenuItem (concrete props) */}
+        {transformedSections.map((section) => (
           <div key={section.id} className="more-menu__section">
             <div className="more-menu__section-header">
               <div className="more-menu__section-header-inner">
@@ -100,8 +124,8 @@ export const MoreMenuPage = memo(function MoreMenuPage() {
               {section.items.map((item) => (
                 <MenuItem
                   key={item.href || item.label}
-                  item={item} // ✅ Pass the whole item object!
                   context="moremenu"
+                  item={item}
                   showTrailing
                   trailingIcon="chevronright"
                 />

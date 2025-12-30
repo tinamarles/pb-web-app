@@ -105,7 +105,7 @@ export function BottomNav({ items = [], className = "" }: BottomNavProps) {
           {isMore && user ? (
             // Show user avatar for "More" button
             <Avatar
-              size="sm"
+              size="xs"
               src={user.profilePictureUrl || undefined}
               name={
                 user.firstName && user.lastName
@@ -116,7 +116,7 @@ export function BottomNav({ items = [], className = "" }: BottomNavProps) {
             />
           ) : (
             // For FAB: show dynamic icon based on menu state
-            <Icon name={item.icon} className="icon-lg" />
+            <Icon name={item.icon} className="icon-xl" />
           )}
           {/* Badge */}
           {item.badge && item.badge > 0 && (

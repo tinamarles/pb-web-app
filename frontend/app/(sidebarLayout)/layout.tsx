@@ -1,7 +1,7 @@
 // app/(sidebarLayout)/layout.tsx
-import { Module } from "@/shared";
+// import { Module } from "@/shared";
+import { ModuleClientOnly as Module } from "@/shared";
 import { DashboardProvider } from "@/providers/DashboardProvider";
-
 
 export default function SidebarLayout({
   children,

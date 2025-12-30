@@ -1,5 +1,5 @@
 "use client";
-import { memo, ReactNode, useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/providers/AuthUserProvider";
 import { Header, HeaderProps, LinkItem } from "./header";
@@ -16,12 +16,7 @@ import {
 
 // Import action handlers for dynamic function calling
 import { executeAction } from "./utils";
-
-export interface ModuleProps {
-  type: string; // Module type (matches JSON data)
-  children: ReactNode; // Page content to render inside module
-  title?: string; // Optional title override for dashboard modules
-}
+import { ModuleProps } from "./types";
 
 export const Module = memo(function Module({
   type,
@@ -36,8 +31,12 @@ export const Module = memo(function Module({
 
   // Detect mobile viewport (< 1024px = lg breakpoint)
   useEffect(() => {
+    
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
+      const width = window.innerWidth;
+      const isMobileViewport = width < 1024;
+      
+      setIsMobile(isMobileViewport);
     };
 
     checkMobile();
@@ -217,7 +216,7 @@ export const Module = memo(function Module({
         active: pathname === "/clubs",
       },
       {
-        type: "link",
+        type: "more",
         id: "more",
         icon: "menu", // This will be replaced with user avatar in BottomNav
         label: "More",
@@ -231,6 +230,7 @@ export const Module = memo(function Module({
   const headerProps = prepHeaderProps();
   const bottomNavItems = shouldShowBottomNav ? buildBottomNavItems() : [];
 
+  // Client render
   return (
     <div className="module-container">
       <Header {...headerProps} />

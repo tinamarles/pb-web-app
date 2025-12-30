@@ -1,4 +1,6 @@
-import { Module } from "@/shared";
+'use client';
+// import { Module } from "@/shared";
+import { ModuleClientOnly as Module } from "@/shared";
 import { HeroSection } from "./HeroSection";
 import { FeaturesSection } from "./FeaturesSection";
 import { HowItWorksSection } from "./HowItWorksSection";

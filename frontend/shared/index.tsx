@@ -9,6 +9,7 @@ export {
   type SubmenuItem,
 } from "./header";
 export { Module } from "./module";
+export { ModuleClientOnly } from './ModuleClientOnly';
 export {
   BottomNav,
   type BottomNavItem,
@@ -17,6 +18,7 @@ export {
 
 // TYPES
 export type { ActionHandler } from "./utils";
+export type { ModuleProps } from "./types";
 
 // UTILITIES
 // Export utility functions

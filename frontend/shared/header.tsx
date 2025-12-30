@@ -17,6 +17,7 @@ import {
   Dropdown,
   MenuItem,
 } from "@/ui";
+import { cn } from "@/ui/utils";
 
 import { useAuth } from "@/providers/AuthUserProvider";
 
@@ -64,6 +65,8 @@ export const Header = memo(function Header({
   back = false,
   backHref = "",
 }: HeaderProps) {
+
+
   // Only keep mobile menu state - Dropdown component handles its own state
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -130,14 +133,17 @@ export const Header = memo(function Header({
   };
 
   // NAVIGATION ITEM RENDER (with or without dropdown)
-  const renderNavItem = (link: LinkItem) => {
+  const renderNavItem = (link: LinkItem, index: number) => {
     const hasSubmenu = link.submenu && link.submenu.length > 0;
+
+    // 🔧 FIX: Use consistent key strategy - label + index to ensure uniqueness
+    const linkKey = `${link.label}-${index}`;
 
     if (hasSubmenu) {
       // Link with submenu - use Dropdown component
       return (
         <Dropdown
-          key={link.label}
+          key={linkKey}
           trigger={
             <Button
               variant="subtle"
@@ -170,7 +176,7 @@ export const Header = memo(function Header({
     // Regular link without submenu
     return (
       <Button
-        key={link.href}
+        key={linkKey}
         variant="subtle"
         size="md"
         href={link.href}
@@ -187,7 +193,7 @@ export const Header = memo(function Header({
   const renderLinks = () => {
     if (!hasLinks) return null;
 
-    return links.map((link) => renderNavItem(link));
+    return links.map((link, index) => renderNavItem(link, index));
   };
 
   // BUTTONS RENDER
@@ -371,9 +377,11 @@ export const Header = memo(function Header({
       </Dropdown>
     );
   };
-
+  
   return (
-    <header className={`header ${className}`}>
+    
+    <header className={cn('header', className)}>
+
       {/* Logo Container - Desktop shows logo, Mobile/Tablet shows back button if back=true */}
       {logo && logo.variant && !back && (
         <div className="header__logo">{renderLogo()}</div>

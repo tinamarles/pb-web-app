@@ -28,10 +28,10 @@ function generatePickleballHoles(N: number, radius: number) {
     // Only include holes on the visible hemisphere (z >= 0)
     if (z >= 0) {
       holes.push({
-        x: x,
-        y: -y, // Flip Y for SVG coordinate system
-        z: z,
-        distanceFromCenter: Math.sqrt(x * x + y * y) / radius,
+        x: Number(x.toFixed(6)), // 🔧 Round to 6 decimal places
+        y: Number((-y).toFixed(6)), // 🔧 Flip Y and round
+        z: Number(z.toFixed(6)), // 🔧 Round z
+        distanceFromCenter: Number((Math.sqrt(x * x + y * y) / radius).toFixed(6)),
       });
     }
   }

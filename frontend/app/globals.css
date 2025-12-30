@@ -244,10 +244,9 @@
   /* Avatar sizes: xl, lg, md for the avatar; sm, xs, 2xs for the upload-button on top */
   --avatar-xl: var(--px-96);
   --avatar-lg: var(--px-64);
-  --avatar-md: var(
-    --px-48
-  ); /* this avatar currently has no image upload button as too small */
+  --avatar-md: var(--px-48); /* this avatar currently has no image upload button as too small */
   --avatar-sm: var(--px-40);
+  --avatar-xs: var(--px-24);
   --avatar-btn-xl: var(--px-40); /* container button-xl on avatar-xl*/
   --avatar-btn-lg: var(--px-36); /* container button-lg currently not used */
   --avatar-btn-md: var(--px-28); /* container button-md on avatar-lg */
@@ -255,9 +254,7 @@
   /* Icon sizes - used within buttons, input fields, navigation items */
   --icon-sm: var(--px-16);
   --icon-md: var(--px-18);
-  --icon-lg: var(
-    --px-20
-  ); /* used for inputField icons like email, phone, password lock, location */
+  --icon-lg: var(--px-20); /* used for inputField icons like email, phone, password lock, location */
   --icon-xl: var(--px-24);
   --icon-2xl: var(--px-32);
   --icon-5xl: var(--px-80);
@@ -274,6 +271,7 @@
   --icon-av-lg: var(--px-40); /* icon for generic avatar-lg */
   --icon-av-md: var(--px-28); /* icon for generic avatar-md */
   --icon-av-sm: var(--px-24); /* icon for generic avatar-sm */
+  --icon-av-xs: var(--px-16);
 
   --w-sidebar: var(--px-240);
   --w-sidebar-tablet: var(--px-130);
@@ -2210,6 +2208,19 @@
 
     .avatar-icon {
       @apply icon-av-sm text-on-primary;
+    }
+  }
+
+  .avatar-xs {
+    @apply av-xs avatar-container;
+    @apply transition-all duration-200;
+
+    .avatar-text {
+      @apply label-sm text-on-primary;
+    }
+
+    .avatar-icon {
+      @apply icon-av-xs text-on-primary;
     }
   }
 }
