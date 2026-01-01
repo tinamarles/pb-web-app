@@ -736,36 +736,37 @@
   */
 
   .panel {
-    @apply flex flex-1 overflow-hidden;
+    @apply flex flex-1 overflow-hidden gap-md;
   }
   .panel-list {
-    @apply flex flex-col gap-sm;
-    @apply p-md overflow-y-auto;
-    @apply w-full md:w-2/5 lg:w-1/2;
-    @apply border-r border-outline-variant;
+    @apply flex flex-col gap-sm shrink-0;
+    @apply p-0 overflow-y-auto;
+    @apply w-full md:w-2/5;
   }
 
   .panel-list-item {
-    position: relative;
-    @apply w-full text-left;
-    @apply p-md rounded-lg;
-    @apply bg-surface-container;
-    @apply border border-outline-variant;
+    @apply flex w-full;
+    @apply p-sm pl-0 gap-sm;
+    @apply border-b border-outline-variant;
     @apply transition-all duration-200;
   }
 
   .panel-list-item:hover,
   .panel-list-item-selected {
     @apply bg-surface-container-high;
-    @apply border-primary;
+    @apply border-l-2 border-primary;
+  }
+
+  .panel-list-item:hover {
+    @apply cursor-pointer;
   }
 
   .panel-detail {
-    @apply hidden md:flex flex-col;
-    @apply w-3/5 lg:w-2/3;
+    @apply hidden flex-col md:flex md:flex-1 md:grow;
+    @apply rounded-lg border border-outline-variant bg-surface-container-lowest;
+    @apply w-full;
     @apply overflow-y-auto;
   }
-
 
   /* +++ HEADER Component +++ */
   .header {
@@ -2452,9 +2453,7 @@
     border-top-left-radius: var(--radius-xl);
     border-top-right-radius: var(--radius-xl);
     box-shadow: var(--elevation-4);
-    max-height: calc(
-      90vh - 84px
-    ); /* Adjust max height to account for nav + FAB */
+    max-height: calc(90vh - 84px); /* Adjust max height to account for nav + FAB */
     overflow-y: auto;
     animation: sheet-slide-in 300ms ease-out;
     @apply flex flex-col;
@@ -2513,6 +2512,168 @@
       }
     }
   }
+
+  /* ===== 🎯 SHEET MODES (data-mode attribute) ===== */
+  /* Purpose: Control slide-in direction independent of breakpoints */
+  /* Usage: <Sheet mode="right"> or <Sheet mode="bottom"> or <Sheet mode="left"> or <Sheet mode="center"> */
+  /* No mode = default responsive behavior (bottom → right → center based on breakpoint) */
+  
+  /* MODE: RIGHT - Always slide from right (all breakpoints) */
+  /* Use case: Notification panel, side menus */
+  .sheet-content[data-mode="right"] {
+    bottom: 0;
+    left: auto;
+    right: 0;
+    max-width: 100%;
+    max-height: 100vh;
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: var(--radius-xl);
+    animation: sheet-slide-in-right 300ms ease-out;
+    transform: none; /* Override centered transform */
+  }
+  @keyframes sheet-slide-in-right {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  
+  /* MODE: LEFT - Always slide from left (all breakpoints) */
+  /* Use case: Navigation drawers, filter panels */
+  .sheet-content[data-mode="left"] {
+    bottom: 0;
+    left: 0;
+    right: auto;
+    max-width: 100%;
+    max-height: 100vh;
+    border-top-left-radius: 0;
+    border-top-right-radius: var(--radius-xl);
+    border-bottom-right-radius: var(--radius-xl);
+    border-bottom-left-radius: 0;
+    animation: sheet-slide-in-left 300ms ease-out;
+    transform: none; /* Override centered transform */
+  }
+  
+  @keyframes sheet-slide-in-left {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  
+  /* MODE: BOTTOM - Always slide from bottom (all breakpoints) */
+  /* Use case: Action sheets, settings panels */
+  .sheet-content[data-mode="bottom"] {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    max-height: 90vh;
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    animation: sheet-slide-in-bottom 300ms ease-out;
+    transform: none; /* Override centered transform */
+  }
+  
+  @keyframes sheet-slide-in-bottom {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  
+  /* MODE: CENTER - Always centered modal (all breakpoints) */
+  /* Use case: Dialogs, confirmations, forms */
+  .sheet-content[data-mode="center"] {
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: var(--radius-xl);
+    animation: sheet-fade-in 300ms ease-out;
+  }
+  
+  @keyframes sheet-fade-in {
+    from { 
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+    to { 
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  /* MODE: responsive-right - Bottom on mobile, right on tablet+ */
+  .sheet-content[data-mode="responsive-right"] {
+    /* Mobile (default): bottom */
+    bottom: var(--h-bottomNav);
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    max-height: calc(100vh - var(--h-bottomNav));
+    animation: sheet-slide-in-bottom 300ms ease-out;
+  }
+
+  @media (min-width: 640px) {
+    .sheet-content[data-mode="responsive-right"] {
+      /* Tablet+: right */
+      top: var(--h-header-mobile);
+      left: auto;
+      right: 0;
+      max-width: calc(100% - var(--w-sidebar-tablet));
+      max-height: calc(100vh - var(--h-bottomNav));
+      animation: sheet-slide-in-right 300ms ease-in-out;
+    }
+  }
+  /* Tablet: Account for tablet sidebar on ALL modes */
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .sheet-content[data-mode="right"],
+    .sheet-content[data-mode="left"],
+    .sheet-content[data-mode="center"],
+    .sheet-content[data-mode="responsive-right"] {
+      max-width: calc(100% - var(--w-sidebar-tablet));
+    }
+  }
+  
+  /* Desktop: Account for desktop sidebar on ALL modes */
+  @media (min-width: 1024px) {
+    .sheet-content[data-mode="right"],
+    .sheet-content[data-mode="left"],
+    .sheet-content[data-mode="center"],
+    .sheet-content[data-mode="responsive-right"] {
+      max-width: calc(100% - var(--w-sidebar));
+    }
+  }
+  
+  /* Mobile adjustments for explicit modes */
+  @media (max-width: 639px) {
+    /* RIGHT mode: Account for bottom nav on mobile */
+    .sheet-content[data-mode="right"] {
+      bottom: var(--h-bottomNav);
+      max-height: calc(100vh - var(--h-bottomNav));
+    }
+    
+    /* LEFT mode: Account for bottom nav on mobile */
+    .sheet-content[data-mode="left"] {
+      bottom: var(--h-bottomNav);
+      max-height: calc(100vh - var(--h-bottomNav));
+    }
+    
+    /* BOTTOM mode: Account for bottom nav on mobile */
+    .sheet-content[data-mode="bottom"] {
+      bottom: var(--h-bottomNav);
+      max-height: calc(90vh - var(--h-bottomNav));
+    }
+
+    /* Responsive-right mode: Account for bottom nav on mobile */
+    .sheet-content[data-mode="responsive-right"] {
+      bottom: var(--h-bottomNav);
+      max-height: calc(90vh - var(--h-bottomNav));
+    }
+  }
+
 }
 /* === BADGE COMPONENT CLASSES === */
 @layer components {

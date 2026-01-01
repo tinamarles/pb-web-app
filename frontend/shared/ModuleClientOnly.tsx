@@ -7,5 +7,7 @@ import { ModuleProps } from './types';
 // This prevents hydration errors since Module uses client-side state (isMobile, useAuth)
 export const ModuleClientOnly = dynamic<ModuleProps>(
   () => import('./module').then(mod => mod.Module),
-  { ssr: false }
+  { ssr: false,
+    
+  }
 );

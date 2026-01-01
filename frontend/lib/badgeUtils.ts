@@ -1,6 +1,7 @@
 import { 
     NotificationTypeValue, 
-    getWorstBadgeVariant } from "./constants";
+    getWorstBadgeVariant,
+    NotificationTypeBadgeVariant } from "./constants";
 
 import { BadgeVariant } from "@/ui";
 import type { Notification } from "./definitions";
@@ -100,3 +101,55 @@ export function shouldShowBadge(
   return calculateBadge(badgeCount, notifications) !== null;
 }
 
+/**
+ * Get badge variant for a specific club membership
+ * Shows ONLY error/warning notifications related to this club
+ * 
+ * 🎯 USE CASE: Display warning/error badge next to club name in memberships list
+ * 
+ * 🎯 LOGIC:
+ * 1. Filter notifications for this specific club (by club.id)
+ * 2. Keep only unread notifications
+ * 3. Keep only error or warning severity
+ * 4. Return worst variant (error > warning) if any found
+ * 
+ * @param clubId - The club ID to filter notifications by
+ * @param notifications - All notifications for the current user
+ * @returns Badge variant ("error" or "warning") or null if no critical notifications
+ * 
+ * @example
+ * // In memberships list
+ * const badgeVariant = getMembershipBadgeVariant(membership.club.id, notifications);
+ * {badgeVariant && (
+ *   <Badge variant={badgeVariant} iconOnly>
+ *     <Icon name="alert-triangle" />
+ *   </Badge>
+ * )}
+ */
+export function getMembershipBadgeVariant(
+  clubId: number | undefined,
+  notifications: Notification[]
+): BadgeVariant | null {
+  // Filter notifications for this specific club
+  const clubNotifications = notifications.filter(n => 
+    n.club?.id === clubId && !n.isRead
+  );
+  
+  // No notifications for this club → no badge
+  if (clubNotifications.length === 0) return null;
+  
+  // Filter for only error/warning severity notifications
+  const criticalNotifications = clubNotifications.filter(n => {
+    const variant = NotificationTypeBadgeVariant[n.notificationType];
+    return variant === 'error' || variant === 'warning';
+  });
+  
+  // No critical notifications → no badge
+  if (criticalNotifications.length === 0) return null;
+  
+  // Extract unique notification types from critical notifications
+  const uniqueTypes = Array.from(new Set(criticalNotifications.map(n => n.notificationType)));
+  
+  // Use existing helper to get worst variant (error > warning)
+  return getWorstBadgeVariant(uniqueTypes);
+}

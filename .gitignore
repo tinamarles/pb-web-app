@@ -65,4 +65,4 @@ Node package manager cache and dependencies
 /frontend/pages/
 
 # This line ignores any file that starts with an underscore inside the `frontend` directory.
-/frontend/*/_
+/frontend/*/_.turbo-cache/
