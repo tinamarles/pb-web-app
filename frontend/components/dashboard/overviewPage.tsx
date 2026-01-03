@@ -32,7 +32,7 @@ export function OverviewPage() {
   return (
     <div className=''>
       {/* Hero Section */}
-      <div className='flex flex-col sm:flex-row bg-secondary'>
+      <div className='flex flex-col lg:flex-row bg-secondary'>
         {/* Left column: Todays activities */}
         <div className = 'flex flex-col flex-1 flex-start p-md'>
           <p className='title-md emphasized text-on-secondary mb-md'>My Activities Today</p>
@@ -72,7 +72,7 @@ export function OverviewPage() {
                     <ExpiryDate
                       date={currentMembership.registrationEndDate}
                       format='short'
-                      nullText='Life time'
+                      nullText='Lifetime'
                       warningDays={30}
                       className='title-sm emphasized'
                     />

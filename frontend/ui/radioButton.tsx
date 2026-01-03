@@ -44,6 +44,7 @@ export const RadioButton = React.forwardRef<HTMLInputElement, RadioButtonProps>(
         <label htmlFor={id} className="radio-label">
           <Icon 
             name={checked ? 'radio-checked' : 'radio-unchecked'} 
+            size='sm'
           />
         </label>
         

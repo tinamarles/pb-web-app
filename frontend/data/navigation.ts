@@ -24,6 +24,7 @@ export interface NavSection {
   title: string; // Section title (e.g., "Settings", "Features")
   id: string; // Unique ID for the section
   items: NavItem[]; // Items in this section
+  separator?: boolean;  // ✅ NEW! Show separator before this section
 }
 
 /**
@@ -231,6 +232,7 @@ export const MORE_MENU_SECTIONS: NavSection[] = [
   {
     title: "Features",
     id: "features",
+    separator: false,
     items: [
       {
         icon: "memberships",
@@ -249,6 +251,7 @@ export const MORE_MENU_SECTIONS: NavSection[] = [
   {
     title: "Resources",
     id: "resources",
+    separator: false,
     items: [
       { icon: "courts", label: "Courts", href: "/courts" },
       { icon: "coaches", label: "Coaches", href: "/coaches" },
@@ -259,6 +262,7 @@ export const MORE_MENU_SECTIONS: NavSection[] = [
   {
     title: "Learn",
     id: "learn",
+    separator: false,
     items: [
       { icon: "sparkles", label: "Explore Our Features", href: "/explore" },
     ],

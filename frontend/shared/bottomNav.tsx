@@ -1,15 +1,15 @@
 "use client";
 
 import {
-  Button,
   Icon,
   Avatar,
   MenuItem,
   Dropdown,
-  type TriggerRenderFunction,
 } from "@/ui";
+import { MoreMenuSheet } from "@/components/moreMenuSheet";
 import Link from "next/link";
 import { useAuth } from "@/providers/AuthUserProvider";
+import { useState } from "react";
 
 export interface BottomNavItem {
   type: "link" | "fab" | "more";
@@ -46,6 +46,9 @@ export interface BottomNavProps {
 export function BottomNav({ items = [], className = "" }: BottomNavProps) {
   const { user } = useAuth();
 
+  // State for MoreMenuSheet
+  const [isMoreSheetOpen, setIsMoreSheetOpen] = useState(false);
+
   // Quick Actions menu items (same as header dropdown)
   const quickActionsItems = [
     { icon: "calendar", label: "View Your Schedule", href: "/schedule" },
@@ -58,6 +61,8 @@ export function BottomNav({ items = [], className = "" }: BottomNavProps) {
   const renderNavItem = (item: BottomNavItem) => {
     const isFAB = item.type === "fab";
     const isMore = item.type === "more";
+    // ✅ Active state: For "more", active when sheet is open (not pathname!)
+    const isActive = isMore ? isMoreSheetOpen : item.active;
     const baseClasses = `bottom-nav__item ${item.active ? "active" : ""}`;
     const fabClasses = isFAB ? "bottom-nav__item--fab" : "";
 
@@ -121,7 +126,7 @@ export function BottomNav({ items = [], className = "" }: BottomNavProps) {
           {/* Badge */}
           {item.badge && item.badge > 0 && (
             <span className="bottom-nav__badge">
-              {item.badge > 99 ? "99+" : item.badge}
+              {item.badge > 9 ? "9+" : item.badge}
             </span>
           )}
         </div>
@@ -130,6 +135,20 @@ export function BottomNav({ items = [], className = "" }: BottomNavProps) {
         <span className="bottom-nav__label">{item.label}</span>
       </>
     );
+
+    // ✅ For 'more' type: Render as button that triggers sheet
+    if (isMore) {
+      return (
+        <button
+          key={item.id}
+          className={`${baseClasses} ${fabClasses}`}
+          onClick={() => setIsMoreSheetOpen(true)}
+          aria-label={item.label}
+        >
+          {content}
+        </button>
+      );
+    }
 
     // For 'link' or 'more' with href: Render as Link
     if (item.href) {
@@ -160,6 +179,8 @@ export function BottomNav({ items = [], className = "" }: BottomNavProps) {
   return (
     <nav className={`bottom-nav ${className}`}>
       {items.map((item) => renderNavItem(item))}
+      {/* MoreMenuSheet */}
+      <MoreMenuSheet isOpen={isMoreSheetOpen} onClose={() => setIsMoreSheetOpen(false)} />
     </nav>
   );
 }

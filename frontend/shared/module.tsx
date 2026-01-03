@@ -220,8 +220,8 @@ export const Module = memo(function Module({
         id: "more",
         icon: "menu", // This will be replaced with user avatar in BottomNav
         label: "More",
-        href: "/more",
-        active: pathname === "/more",
+        // href: "/more",
+        // active: pathname === "/more",
       },
     ];
   };

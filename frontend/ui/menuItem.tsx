@@ -35,6 +35,7 @@ type MoreMenuItemComponentProps = {
   showTrailing?: boolean;
   trailingIcon?: string;
   className?: string;
+  onClick?: () => void; // added so MoreMenuSheet can close when navigating
 };
 
 /** Props for MenuItem when  context='moremenu' (WITH context) */
@@ -188,12 +189,13 @@ function MoreMenuItem({
   showTrailing,
   trailingIcon = "chevronright",
   className = "",
+  onClick
 }: MoreMenuItemComponentProps) {
   const content = (
     <>
       {/* Leading Icon with Badge/Alert positioned on it */}
       <div className="relative">
-        <Icon name={item.icon} size="xl" bordered={iconBordered} />
+        <Icon name={item.icon} size="sm" bordered={iconBordered} />
 
         {/* Badge (notification count) - positioned on icon */}
         {/* ✅ FIXED (2025-12-29): Now receives concrete badgeCount (number) from MorePage LAYER 2 transform */}
@@ -229,13 +231,7 @@ function MoreMenuItem({
       href={item.href}
       className={itemClasses}
       aria-disabled={item.disabled}
-      onClick={(e) => {
-        console.log("🖱️ MENUITEM CLICK:", {
-          href: item.href,
-          label: item.label,
-          context: "moremenu",
-        });
-      }}
+      onClick={onClick}
     >
       {content}
     </Link>

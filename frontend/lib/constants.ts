@@ -1060,6 +1060,15 @@ export const MembershipStatusBadgeVariant: Record<
   [MembershipStatus.EXPIRED]: "error",
 };
 
+export const SkillLevelBadgeVariant: Record<
+  SkillLevelValue,
+  BadgeVariant
+> = {
+  [SkillLevel.OPEN]: "default",
+  [SkillLevel.INTERMEDIATE_PLUS]: "info",
+  [SkillLevel.ADVANCED_PLUS]: "tertiary"
+};
+
 /**
  * Map RegistrationStatus to Badge Variant
  *
@@ -1179,6 +1188,15 @@ export function getMatchStatusBadgeVariant(
   status: MatchStatusValue
 ): BadgeVariant {
   return MatchStatusBadgeVariant[status] || "default";
+}
+/**
+ * Get badge variant for skill Level
+ * Usage: <Badge variant={getSkillLevelBadgeVariant(level)} />
+ */
+export function getSkillLevelBadgeVariant(
+  level: SkillLevelValue
+): BadgeVariant {
+  return SkillLevelBadgeVariant[level] || "default";
 }
 
 // --- NOTIFICATIONS MODULE HELPERS ---

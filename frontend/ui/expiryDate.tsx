@@ -78,6 +78,6 @@ function getExpiryColorClass(
     return "text-warning";
   } else {
     // Safe
-    return "text-on-surface-variant";
+    return "text-info";
   }
 }
