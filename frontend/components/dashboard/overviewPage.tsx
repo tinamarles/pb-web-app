@@ -7,7 +7,6 @@ import { useDashboard } from '@/providers/DashboardProvider';
 import { useAuth } from '@/providers/AuthUserProvider';
 import { NotificationType } from '@/lib/constants';
 import { PendingInvitations } from './PendingInvitations';
-import Link from "next/link";
 
 export function OverviewPage() {
 
@@ -111,6 +110,15 @@ export function OverviewPage() {
                     label='Register'
                     icon='register'
                   />
+                  {(currentMembership.canManageMembers || currentMembership.canManageClub) && (
+                    <Button
+                      variant='outlined'
+                      size='sm'
+                      label='Edit Membership'
+                      icon='edit'
+                      href={`/admin/members/${currentMembership.id}`}
+                    />
+                  )}
                   <Button
                     variant='outlined' 
                     size='sm'

@@ -26,16 +26,15 @@ export const Module = memo(function Module({
   // Added functionality to ensure mobile versions use a bottomNav Bar
 
   const { user, isMemberUser } = useAuth();
-  const pathname = usePathname() || '/';
+  const pathname = usePathname() || "/";
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect mobile viewport (< 1024px = lg breakpoint)
   useEffect(() => {
-    
     const checkMobile = () => {
       const width = window.innerWidth;
       const isMobileViewport = width < 1024;
-      
+
       setIsMobile(isMobileViewport);
     };
 
@@ -212,8 +211,8 @@ export const Module = memo(function Module({
         id: "clubs",
         icon: "clubs",
         label: "Clubs",
-        href: "/clubs",
-        active: pathname === "/clubs",
+        href: "/club/list",
+        active: pathname === "/club/list",
       },
       {
         type: "more",

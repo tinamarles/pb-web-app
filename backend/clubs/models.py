@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import date
 from public.models import Address
-from public.constants import SkillLevel, RoleType, MembershipStatus
+from public.constants import SkillLevel, RoleType, MembershipStatus, ClubType
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -257,6 +257,11 @@ class Club(models.Model):
 
     """
     # Required fields
+    club_type = models.IntegerField(
+        choices=ClubType,
+        default=ClubType.OFFICIAL
+        )
+    
     name = models.CharField(max_length=255)
     
     # Optional fields
@@ -274,6 +279,7 @@ class Club(models.Model):
     email = models.EmailField(blank=True) 
     website_url = models.URLField(max_length=200, blank=True)
     logo_url = models.URLField(max_length=200, blank=True)
+    banner_url = models.URLField(max_length=200, blank=True)
     
     # Many-to-Many to User through ClubMembership
     members = models.ManyToManyField(

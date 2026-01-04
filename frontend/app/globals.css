@@ -12,6 +12,8 @@
   --elevation-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
+   --tw-shadow-color: rgba(0,0,0,0.8);
+
   /* Primitives (the Atoms) */
 
   /* ======================== */
@@ -116,6 +118,7 @@
 
 /* ===== COLOR DESIGN TOKENS ===== */
 @theme {
+ 
   /* Primary color - Purple */
   --color-primary: var(--purple-40);
   --color-on-primary: var(--neutral-100);
@@ -699,6 +702,61 @@
   }
 }
 
+/* Club List component */
+@layer components {
+  .clubList-Header {
+    width: 100%;
+    position: relative;
+    background-size: cover;
+    background-position: 50%;
+    background-repeat: no-repeat;
+    box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, .2);
+    height: 100px;
+  }
+  @media (min-width: 1024px) {
+    .clubList-Header {
+      height: 200px;
+    }
+  }
+  
+  .clubList-Header-text {
+    position: absolute;
+    z-index: 20;
+    text-shadow: 0 2px 3px rgba(0, 0, 0, .8);
+    margin-left: 2rem;
+    margin-right: 2rem;
+    margin-top: 2rem;
+    text-align: center;
+    @apply display-sm strong text-on-primary;
+  }
+  @media (min-width: 1024px) {
+    .clubList-Header-text {
+      @apply display-md mt-[4.5rem];
+    }
+  }
+
+  .clubList-search {
+    position: absolute;
+    bottom: -40px;
+    max-width: 700px;
+    width: 100%;
+    border-radius: 5px;
+    padding: 0 16px;
+  }
+  .clubList-search .clubList-search-content {
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    background-color: var(--color-primary);
+    padding: 10px 15px 10px 40px;
+    height: 100px;
+  }
+  .clubList-container {
+    max-width: 80rem;
+    width: 100%;
+    margin: auto;
+  }
+}
 /* === LAYOUT CONTAINER CLASSES === */
 @layer components {
   /* +++ Module container responsible for creating the header props, render the header and the footer +++ */

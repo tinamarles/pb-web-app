@@ -16,6 +16,24 @@
 
 import type { BadgeVariant } from "@/ui";
 
+export const ClubType = {
+  PERSONAL: 1,
+  OFFICIAL: 2,
+} as const;
+
+export type ClubTypeValue = (typeof ClubType)[keyof typeof ClubType];
+
+export const ClubTypeLabels: Record<ClubTypeValue, string> = {
+  [ClubType.PERSONAL]: "Personal Club",
+  [ClubType.OFFICIAL]: "Official Club",
+};
+
+// Reverse mapping: label → value (for form submissions)
+export const ClubTypeValues: Record<string, ClubTypeValue> = {
+  Personal: ClubType.PERSONAL,
+  Official: ClubType.OFFICIAL,
+};
+
 export const Gender = {
   FEMALE: 1,
   MALE: 2,
@@ -877,7 +895,23 @@ export const BadgeVariantSeverity: Record<BadgeVariant, number> = {
 // =====================================================
 
 // --- USER & CLUB MODULE HELPERS ---
-
+/**
+ * Get label for ClubType value
+ */
+export function getClubTypeLabel(value: ClubTypeValue | null | undefined): string {
+  if (value === null || value === undefined) return "Not specified";
+  return ClubTypeLabels[value] || "Unknown";
+}
+/**
+ * Get ClubType options array for form selects (in correct order)
+ * Usage: <FormField variant="select" options={getClubTypeOptions()} />
+ */
+export function getClubTypeOptions(): string[] {
+  return [
+    ClubTypeLabels[ClubType.PERSONAL],
+    ClubTypeLabels[ClubType.OFFICIAL],
+  ];
+}
 /**
  * Get label for gender value
  */

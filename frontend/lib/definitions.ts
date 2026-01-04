@@ -2,6 +2,19 @@
 
 import * as C from "@/lib/constants";
 
+// Generic Type for dynamic route params
+export type PageProps<
+  TParams = Record<string, string>,
+  TSearchParams = Record<string, string | string[]>
+>
+ = {
+  params: Promise<TParams>;
+  searchParams?: Promise<TSearchParams>;
+};
+
+// 🎯 Empty object type (for when you don't need params or searchParams)
+export type EmptyObject = Record<string, never>;
+
 // Token Response delivered by JWT
 export interface JWTResponse {
   access: string;
@@ -69,6 +82,8 @@ export interface MemberClub {
   */
   id?: number;
   name: string;
+  clubType: C.ClubTypeValue;
+  bannerUrl?: string;
   shortName?: string;
   description?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
   phoneNumber?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)

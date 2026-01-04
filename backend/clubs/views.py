@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from .models import Club, ClubMembership, Role
 from .serializers import ClubSerializer, ClubMembershipSerializer
 from .permissions import IsClubAdmin, ClubMembershipPermissions # Import the custom permission
+from public.constants import RoleType
 
 class ClubViewSet(viewsets.ModelViewSet):
     """
@@ -22,10 +23,10 @@ class ClubViewSet(viewsets.ModelViewSet):
         as an admin member of the new club.
         """
         # Save the club instance
-        club = serializer.save()
+        club = serializer.save(created_by=self.request.user)
 
-        # Get or create the 'Admin' role
-        admin_role, created = Role.objects.get_or_create(name='Admin')
+        # Get or create the 'Admin' role - needs to be updated to use the constants! 
+        admin_role, created = Role.objects.get_or_create(name=RoleType.ADMIN)
 
         # Create the ClubMembership for the user who created the club
         club_membership = ClubMembership.objects.create(

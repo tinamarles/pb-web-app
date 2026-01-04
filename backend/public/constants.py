@@ -3,6 +3,10 @@ from django.db import models
 # USER & CLUB MODULE
 # ==============================================
 
+class ClubType(models.IntegerChoices):
+    PERSONAL = 1, "Personal Club"
+    OFFICIAL = 2, "Official Club"
+
 class Gender(models.IntegerChoices):
     FEMALE = 1, "Female"
     MALE = 2, "Male"

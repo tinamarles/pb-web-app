@@ -1,7 +1,7 @@
 "use client";
 
 import { Notification } from "@/lib/definitions";
-import { Icon, Button, Avatar } from "@/ui";
+import { Button, Avatar } from "@/ui";
 import { useRouter } from "next/navigation";
 
 interface InvitationNotificationProps {
@@ -69,12 +69,20 @@ export function InvitationNotification({
 
       {/* Actions */}
       <div className="flex justify-between gap-sm">
-        <Button variant="filled" onClick={handleViewEvent}>
-          View Event
-        </Button>
-        <Button variant="outlined" onClick={handleDismiss}>
-          Dismiss
-        </Button>
+        <Button 
+          variant="filled" 
+          onClick={handleViewEvent}
+          label="View Event"
+          size="sm"
+        />
+        <Button 
+          variant="outlined"
+          icon="close"
+          size='sm'
+          onClick={handleDismiss}
+          label="Dismiss"
+          className="border-error text-error"
+        />
       </div>
     </div>
   );

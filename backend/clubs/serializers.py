@@ -51,6 +51,8 @@ class NestedClubSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
+            'banner_url',
+            'club_type',
             'short_name',
             'description',
             'phone_number',
@@ -82,6 +84,8 @@ class ClubSerializer(serializers.ModelSerializer):
         # in the perform_create() method of the ViewSet, so this
         # serializer's create method will be overridden.
         return super().create(validated_data)
+    
+    
 
 # Serializer for member users, including related information
 # This is the serializer used for Member Users 

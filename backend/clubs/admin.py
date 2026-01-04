@@ -83,12 +83,14 @@ class ClubAdmin(admin.ModelAdmin):
     list_display = (
         'name_display',
         'short_name',
+        'club_type_display',  # ✅ NEW!
         'member_count',
         'autoapproval_display',
         'has_contact',
         'created_at'
     )
     list_filter = (
+        'club_type',  # ✅ NEW!
         'autoapproval',
         'created_at'
     )
@@ -104,7 +106,7 @@ class ClubAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'short_name', 'description')
+            'fields': ('club_type', 'name', 'short_name', 'description')  # ✅ Added club_type
         }),
         ('Location', {
             'fields': ('address',)
@@ -114,7 +116,7 @@ class ClubAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Branding', {
-            'fields': ('logo_url',),
+            'fields': ('logo_url', 'banner_url'),  # ✅ Added banner_url
             'classes': ('collapse',)
         }),
         ('Membership Settings', {
@@ -143,6 +145,15 @@ class ClubAdmin(admin.ModelAdmin):
         return obj.name
     name_display.short_description = 'Name'
     
+    # ✅ NEW METHOD!
+    def club_type_display(self, obj):
+        """Visual indicator for club type"""
+        if obj.club_type == 1:  # PERSONAL
+            return format_html('<span style="color: purple;">👤 Personal</span>')
+        else:  # OFFICIAL (2)
+            return format_html('<span style="color: blue;">🏢 Official</span>')
+    club_type_display.short_description = 'Type'
+    
     def member_count(self, obj):
         """Count active members"""
         count = obj.club_memberships.filter(status=2).count()  # ACTIVE status
@@ -161,7 +172,6 @@ class ClubAdmin(admin.ModelAdmin):
         has_info = bool(obj.email or obj.phone_number or obj.website_url)
         return '✓' if has_info else '-'
     has_contact.short_description = 'Contact Info'
-
 
 # ==========================================
 # CLUB MEMBERSHIP ADMIN

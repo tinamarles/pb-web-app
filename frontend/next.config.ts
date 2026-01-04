@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "www.freepik.com",
+        pathname: "/**",
+      },
     ],
   },
 

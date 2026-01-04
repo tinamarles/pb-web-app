@@ -75,7 +75,7 @@ export const apiResponseModule: ModuleConfig[] = [
           {
             icon: "clubs",
             label: "Clubs",
-            url: "/clubs",
+            url: "/club/list",
           },
           {
             icon: "courts",
@@ -172,7 +172,7 @@ export const apiResponseModule: ModuleConfig[] = [
           {
             icon: "clubs",
             label: "Clubs",
-            url: "/clubs",
+            url: "/club/list",
           },
           {
             icon: "courts",
@@ -273,7 +273,7 @@ export const apiResponseModule: ModuleConfig[] = [
           {
             icon: "clubs",
             label: "Clubs",
-            url: "/clubs",
+            url: "/club/list",
           },
           {
             icon: "courts",
@@ -478,7 +478,7 @@ export const apiResponseModule: ModuleConfig[] = [
           {
             icon: "clubs",
             label: "Clubs",
-            url: "/clubs",
+            url: "/club/list",
           },
           {
             icon: "courts",
@@ -561,7 +561,7 @@ export const apiResponseModule: ModuleConfig[] = [
           {
             icon: "clubs",
             label: "Clubs",
-            url: "/clubs",
+            url: "/club/list",
           },
           {
             icon: "courts",
