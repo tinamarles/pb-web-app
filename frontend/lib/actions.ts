@@ -1,8 +1,9 @@
 // frontend/lib/actions.ts
-'use server';
+"use server";
 
-import { cookies } from 'next/headers';
-import { revalidatePath } from 'next/cache';
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL;
 
@@ -13,16 +14,48 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL;
  */
 async function getAuthHeaders() {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get('access_token')?.value;
-  
+  const accessToken = cookieStore.get("access_token")?.value;
+
   if (!accessToken) {
-    throw new Error('No access token found - user not authenticated');
+    // ✅ Redirect to login instead of throwing error
+    redirect("/login");
   }
-  
+
   return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${accessToken}`,
   };
+}
+
+/**
+ * Generic custom action PATCH (for non-standard endpoints like /set-preferred/, /archive/, etc.)
+ * @param fullEndpoint - Complete endpoint path (e.g., 'clubs/membership/123/set-preferred')
+ * @param data - Request body
+ * @returns Promise with typed response
+ * @example await customPatch<ClubMembership[]>('clubs/membership/3/set-preferred', { is_preferred_club: true })
+ */
+export async function customPatch<T>(
+  fullEndpoint: string,
+  data: object
+): Promise<T> {
+  if (!API_BASE_URL) {
+    throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
+  }
+
+  const headers = await getAuthHeaders();
+
+  const response = await fetch(`${API_BASE_URL}/api/${fullEndpoint}/`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(JSON.stringify(errorData));
+  }
+
+  return response.json();
 }
 
 /**
@@ -33,19 +66,23 @@ async function getAuthHeaders() {
  */
 export async function get<T>(endpoint: string): Promise<T> {
   if (!API_BASE_URL) {
-    throw new Error('NEXT_PUBLIC_DJANGO_API_URL is not defined');
+    throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
   }
 
   const headers = await getAuthHeaders();
 
   const response = await fetch(`${API_BASE_URL}/api/${endpoint}/`, {
-    cache: 'no-store',
+    cache: "no-store",
     headers,
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(`Failed to fetch data from endpoint: /${endpoint}. ${JSON.stringify(errorData)}`);
+    throw new Error(
+      `Failed to fetch data from endpoint: /${endpoint}. ${JSON.stringify(
+        errorData
+      )}`
+    );
   }
 
   return response.json();
@@ -60,13 +97,13 @@ export async function get<T>(endpoint: string): Promise<T> {
  */
 export async function post<T>(endpoint: string, data: object): Promise<T> {
   if (!API_BASE_URL) {
-    throw new Error('NEXT_PUBLIC_DJANGO_API_URL is not defined');
+    throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
   }
 
   const headers = await getAuthHeaders();
 
   const response = await fetch(`${API_BASE_URL}/api/${endpoint}/`, {
-    method: 'POST',
+    method: "POST",
     headers,
     body: JSON.stringify(data),
   });
@@ -87,15 +124,19 @@ export async function post<T>(endpoint: string, data: object): Promise<T> {
  * @returns Promise with typed response data
  * @example await patch<Club>('clubs', 123, { name: 'Updated Name' })
  */
-export async function patch<T>(endpoint: string, id: number, data: object): Promise<T> {
+export async function patch<T>(
+  endpoint: string,
+  id: number,
+  data: object
+): Promise<T> {
   if (!API_BASE_URL) {
-    throw new Error('NEXT_PUBLIC_DJANGO_API_URL is not defined');
+    throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
   }
 
   const headers = await getAuthHeaders();
 
   const response = await fetch(`${API_BASE_URL}/api/${endpoint}/${id}/`, {
-    method: 'PATCH',
+    method: "PATCH",
     headers,
     body: JSON.stringify(data),
   });
@@ -117,19 +158,23 @@ export async function patch<T>(endpoint: string, id: number, data: object): Prom
  */
 export async function del(endpoint: string, id: number): Promise<number> {
   if (!API_BASE_URL) {
-    throw new Error('NEXT_PUBLIC_DJANGO_API_URL is not defined');
+    throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
   }
 
   const headers = await getAuthHeaders();
 
   const response = await fetch(`${API_BASE_URL}/api/${endpoint}/${id}/`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers,
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(`Failed to delete record from endpoint: /${endpoint}/${id}. ${JSON.stringify(errorData)}`);
+    throw new Error(
+      `Failed to delete record from endpoint: /${endpoint}/${id}. ${JSON.stringify(
+        errorData
+      )}`
+    );
   }
 
   return response.status;
@@ -143,14 +188,14 @@ export async function checkBackendHealth(): Promise<boolean> {
   if (!API_BASE_URL) {
     return false;
   }
-  
+
   try {
-    const response = await fetch(`${API_BASE_URL}/api/`, { 
-      signal: AbortSignal.timeout(5000) 
+    const response = await fetch(`${API_BASE_URL}/api/`, {
+      signal: AbortSignal.timeout(5000),
     });
     return response.ok;
   } catch (error) {
-    console.error('Backend health check failed:', error);
+    console.error("Backend health check failed:", error);
     return false;
   }
 }

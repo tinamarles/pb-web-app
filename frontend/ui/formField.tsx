@@ -129,7 +129,7 @@ export const FormField = memo(function FormField(props: FormFieldProps) {
               value={props.value}
               checked={props.checked}
               onChange={
-                props.onChange as ((checked: boolean) => void) | undefined
+                props.onChange as (() => void) | undefined
               }
               disabled={disabled}
             />

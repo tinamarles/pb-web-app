@@ -17,6 +17,8 @@ export function OverviewPage() {
   const eventInvitations = notifications.filter(
     n => n.notificationType === NotificationType.EVENT_INVITATION && !n.isRead
   );
+  const hasInvitations = eventInvitations.length > 0;
+
   console.log('Event Invitations:', eventInvitations);
   console.log('Notifications from Auth:', notifications)
 
@@ -144,7 +146,7 @@ export function OverviewPage() {
         
       </div>
       {/* Action Buttons */}
-      <div className='flex gap-md p-md'>
+      <div className='flex gap-md p-md px-0'>
         <Button
           variant="default"
           size="sm"
@@ -185,10 +187,17 @@ export function OverviewPage() {
           </div>
           {/* List container */}
           <div className=''>
-            {eventInvitations.length > 0 && (
+            {hasInvitations ? (
               <PendingInvitations 
                 notifications={eventInvitations}
                 onNotificationClick={(id) => markNotificationAsRead(id)}
+              />
+            ) : (
+              <EmptyState
+                  icon='calendar'
+                  title='No Invitations at present'
+                  description='You currently do not have any pending invitations!'
+                  className='text-on-surface bg-surface-container-lowest rounded-md'
               />
             )}
           </div>

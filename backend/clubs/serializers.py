@@ -85,8 +85,6 @@ class ClubSerializer(serializers.ModelSerializer):
         # serializer's create method will be overridden.
         return super().create(validated_data)
     
-    
-
 # Serializer for member users, including related information
 # This is the serializer used for Member Users 
 # - via api endpoint api/auth/user that points to the UserDetailsView in users/views.py
@@ -134,3 +132,160 @@ class ClubMembershipSerializer(serializers.ModelSerializer):
                   'can_cancel_league_sessions', 
                   'can_manage_courts',
                   ]
+        
+class UserClubMembershipUpdateSerializer(serializers.Serializer):
+    """
+    Serializer for USER updating their preferred club.
+    
+    KEY DIFFERENCE: Returns ALL user's memberships (not just one)
+    
+    Use case:
+    - User on /profile/memberships page
+    - User clicks "Set as Preferred"
+    - Frontend needs to re-render entire list
+    
+    Input:
+    - membership_id (in URL)
+    - is_preferred_club: true (in body)
+    
+    Output:
+    - Array of ALL user's ClubMemberships (with updated is_preferred states)
+    """
+    
+    is_preferred_club = serializers.BooleanField(required=True)
+    
+    def update(self, instance, validated_data):
+        """
+        Update preferred club.
+        
+        Steps:
+        1. Unset is_preferred_club on ALL user's memberships
+        2. Set is_preferred_club on target membership
+        3. Return the instance
+        """
+        is_preferred = validated_data.get('is_preferred_club')
+        
+        if is_preferred:
+            user = instance.member
+            
+            # Unset all preferred clubs for this user
+            ClubMembership.objects.filter(
+                member=user,
+                is_preferred_club=True
+            ).update(is_preferred_club=False)
+            
+            # Set THIS membership as preferred
+            instance.is_preferred_club = True
+            instance.save()
+        
+        return instance
+    
+    def to_representation(self, user):
+        """
+        Custom representation: Return ALL memberships for this user.
+        
+        Note: This is called directly from the view with a User object.
+        We bypass serializer.data because it can't handle list returns.
+        """
+        # Fetch ALL memberships for this user
+        memberships = ClubMembership.objects.filter(member=user).select_related('club')
+        
+        # Return serialized array of memberships
+        return ClubMembershipSerializer(memberships, many=True).data
+    
+class AdminClubMembershipUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ADMIN updating membership details.
+    
+    KEY DIFFERENCE: Returns ONLY the updated membership
+    
+    Use case:
+    - Admin on /admin/members/[membershipId] page
+    - Admin editing membership details
+    - Frontend only needs that ONE membership
+    
+    ACTUAL FIELDS FROM ClubMembership MODEL:
+    - type (FK to ClubMembershipType) - Admin can change membership type
+    - roles (ManyToMany to Role) - Admin can assign/remove roles
+    - levels (ManyToMany to ClubMembershipSkillLevel) - Admin can assign skill levels
+    - tags (ManyToMany to Tag) - Admin can add/remove tags (for subscription eligibility)
+    - status (IntegerField with MembershipStatus choices) - Admin can change status
+    - registration_start_date (DateField) - Admin can override
+    - registration_end_date (DateField) - Admin can override
+    - notes (TextField) - NEW field to add for admin notes (not in model yet!)
+    
+    CANNOT UPDATE:
+    - is_preferred_club - OWNER-ONLY field!
+    
+    Input:
+    - membership_id (in URL)
+    - Any of the admin-editable fields (in body)
+    - CANNOT include is_preferred_club!
+    
+    Output:
+    - Single ClubMembership object (the one that was updated)
+    """
+    
+    class Meta:
+        model = ClubMembership
+        fields = [
+            'type',                      # FK to ClubMembershipType - Admin can change
+            'roles',                     # ManyToMany to Role - Admin can assign roles
+            'levels',                    # ManyToMany to ClubMembershipSkillLevel - Admin can assign levels
+            'tags',                      # ManyToMany to Tag - Admin can add tags
+            'status',                    # IntegerField - Admin can change status
+            'registration_start_date',   # DateField - Admin can override
+            'registration_end_date',     # DateField - Admin can override
+            # 'notes',                   # TODO: Add this field to ClubMembership model
+        ]
+        read_only_fields = [
+            'id',
+            'member',                    # Can't reassign user
+            'club',                      # Can't reassign club
+            'is_preferred_club',         # OWNER-ONLY! Admin can't change!
+            'membership_number',         # System-generated
+            'created_at',
+            'updated_at',
+        ]
+    
+    def validate(self, attrs):
+        """
+        Ensure admin is not trying to update is_preferred_club.
+        """
+        if 'is_preferred_club' in self.initial_data:
+            raise serializers.ValidationError({
+                'is_preferred_club': 'Only membership owner can set preferred club'
+            })
+        return attrs
+    
+    def update(self, instance, validated_data):
+        """
+        Standard update - just updates the fields and returns the instance.
+        
+        Handles ManyToMany fields (roles, levels, tags) properly.
+        """
+        # Extract ManyToMany fields
+        roles = validated_data.pop('roles', None)
+        levels = validated_data.pop('levels', None)
+        tags = validated_data.pop('tags', None)
+        
+        # Update regular fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Update ManyToMany fields
+        if roles is not None:
+            instance.roles.set(roles)
+        if levels is not None:
+            instance.levels.set(levels)
+        if tags is not None:
+            instance.tags.set(tags)
+        
+        return instance
+    
+    def to_representation(self, instance):
+        """
+        Return full ClubMembership serialization.
+        """
+        return ClubMembershipSerializer(instance).data

@@ -100,8 +100,26 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
                     </h1>
                     <div className="clubList-search"></div>
                 </div>
+                {/* Action buttons */}
+                <div className="flex justify-between items-center border-b border-outline-variant">
+                    <div className="flex flex-1">
+                        <p className="body-md text-info">
+                            Click a card to view more Information about the club.
+                        </p>
+                    </div>
+                
+                    <div className='flex gap-md pb-sm justify-end'>
+                        <Button
+                            variant="default"
+                            size="sm"
+                            icon="add"
+                            label="Create a Club"
+                        />
+                    </div>
+                </div>
+
                 {/* Show Club Cards */}
-                <div className="clubList-container grid-3">
+                <div className="clubList-container grid-3 xl:grid-cols-4">
                     {clubsToList.map((club) => {
 
                        const memberLabel = club.members!.length == 1 ? 'Member' : 'Members';
@@ -109,7 +127,7 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
                        return (
                             <div
                                 key={club.id}
-                                className="panel-list-item flex-col border rounded-md bg-surface-container-lowest p-sm w-[320px]"
+                                className="panel-list-item flex-col border rounded-md bg-surface-container-lowest p-sm w-[300px]"
                                 onClick={() => handleCardClick(club.id!)}
                             >
                                 <div className="container relative p-0 w-full">
@@ -124,7 +142,7 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
                                     <Badge
                                         variant="tertiary"
                                         label="Joined"
-                                        className="absolute ml-60 mt-4 w-fit rounded-sm"
+                                        className="absolute ml-56 mt-4 w-fit rounded-sm"
                                     />
                                 ) : (
                                     <Button
@@ -132,7 +150,7 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
                                         size="sm"
                                         icon="add"
                                         label="Join"
-                                        className="absolute ml-58 mt-39 w-fit py-xs"
+                                        className="absolute ml-53 mt-40 w-fit py-xs"
                                     />
                                 )}
 
@@ -143,7 +161,7 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
                                     className="absolute mt-15 ml-4 rounded-full border border-secondary shadow-sm shadow-secondary"
                                 />
                                 {/* Content */}
-                                <div className="flex flex-col w-full mt-6">
+                                <div className="flex flex-col w-full mt-8">
                                     <p className="body-md emphasized text-secondary">{club.name}</p>
                                     <p className="body-sm">{club.address?.city}</p>
                                     <p className="label-sm text-secondary">{club.members?.length} {' '} {memberLabel}</p>

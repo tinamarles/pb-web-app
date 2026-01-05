@@ -55,6 +55,7 @@ export const Module = memo(function Module({
     if (pathname.startsWith("/dashboard")) return "Dashboard";
     if (pathname.startsWith("/profile")) return "Profile";
     if (pathname.startsWith("/admin")) return "Admin Dashboard";
+    if (pathname.startsWith("/club")) return "Clubs";
 
     // 3. Fallback to moduleData.title
     const moduleData = getModuleData(type);

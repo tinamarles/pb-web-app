@@ -42,6 +42,7 @@ export function AvatarUploader({
       {({ open }) => {
         return (
           <MenuItem
+            context="dropdown"
             label="Upload Image"
             icon="upload"
             iconBordered={false}

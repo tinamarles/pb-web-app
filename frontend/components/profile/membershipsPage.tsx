@@ -3,6 +3,7 @@ import { EmptyState } from "@/components";
 import { useAuth } from "@/providers/AuthUserProvider";
 import { useState } from "react";
 import { type MemberUser, type ClubMembership } from "@/lib/definitions";
+import { toast } from "sonner";
 import {
   Avatar,
   Button,
@@ -46,8 +47,10 @@ export function MembershipsPage() {
   // ========================================
   // STATE & DATA
   // ========================================
+  
   const { notifications } = useAuth();
-  const { user, isMemberUser } = useAuth();
+  const { user, isMemberUser, refetchUser } = useAuth();
+  const [isUpdatingPreferred, setIsUpdatingPreferred] = useState(false);
   const [selectedMembershipId, setSelectedMembershipId] = useState<
     number | null
   >(null);
@@ -89,16 +92,30 @@ export function MembershipsPage() {
   };
 
   const handleSetPreferred = async (membershipID: number) => {
+    setIsUpdatingPreferred(true);
+    console.log('HandleSetPreferred called');
     try {
-      // TODO: Call API to update preferred club
-      // await updatePreferredClub(membershipId);
+      const response = await fetch('/api/membership/set-preferred', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ membershipId: membershipID }),
+      });
 
-      console.log("Setting preferred club:", membershipID);
+      if (!response.ok) {
+        throw new Error('Failed to set preferred club');
+      }
 
-      // TODO: Update local state or refetch user data
-      // This should trigger a re-render of the memberships list
+      // ✅ Just refetch user data - simpler!
+      await refetchUser();
+      // 3. ✅ SUCCESS! Show feedback
+      toast.success("Preferred Club updated successfully!");
+  
     } catch (error) {
-      console.error("Failed to set preferred club:", error);
+      console.error('Failed to set preferred club:', error);
+      // TODO: Show error toast/notification to user
+      toast.error("Failed to set preferred club! Please try again.");
+    } finally {
+      setIsUpdatingPreferred(false);
     }
   };
 
@@ -238,10 +255,12 @@ export function MembershipsPage() {
               <div className="flex items-center gap-sm">
                 <span className="body-sm">Set Preferred:</span>
                 <RadioButton
+                  id={`preferred-${membership.id}`}
                   name="preferredClub"
                   value={membership.id?.toString()}
                   checked={membership.isPreferredClub}
                   onChange={() => handleSetPreferred(membership.id!)}
+                  disabled={isUpdatingPreferred} // Disabled while updating
                   aria-label="Set as preferred club"
                 />
               </div>

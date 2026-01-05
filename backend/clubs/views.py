@@ -1,8 +1,10 @@
 # pickleball/views.py
 from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Club, ClubMembership, Role
-from .serializers import ClubSerializer, ClubMembershipSerializer
+from .serializers import ClubSerializer, ClubMembershipSerializer, UserClubMembershipUpdateSerializer, AdminClubMembershipUpdateSerializer
 from .permissions import IsClubAdmin, ClubMembershipPermissions # Import the custom permission
 from public.constants import RoleType
 
@@ -93,3 +95,151 @@ class ClubMembershipViewSet(viewsets.ModelViewSet):
 
         # For admin users deleting another user's record, perform the deletion
         instance.delete()
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def set_preferred_club_membership(request, membership_id):
+    """
+    USER endpoint: Set preferred club membership.
+    
+    URL: /api/clubs/membership/<id>/set-preferred/
+    Method: PATCH
+    
+    Permission:
+    - User can ONLY set preferred on THEIR OWN memberships
+    
+    Request body:
+        { "is_preferred_club": true }
+        
+    Returns:
+        Array of ALL user's memberships (with updated is_preferred states)
+        
+    Example response:
+        [
+            {
+                "id": 1,
+                "club": {...},
+                "is_preferred_club": false,  // Was unset
+                ...
+            },
+            {
+                "id": 3,
+                "club": {...},
+                "is_preferred_club": true,   // Target membership
+                ...
+            },
+            {
+                "id": 5,
+                "club": {...},
+                "is_preferred_club": false,
+                ...
+            }
+        ]
+    """
+    try:
+        # Get the membership
+        membership = ClubMembership.objects.get(id=membership_id)
+        
+        # SECURITY: User can ONLY update THEIR OWN memberships
+        if membership.member != request.user:
+            return Response(
+                {'error': 'You can only set preferred club on your own memberships'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Update the membership
+        serializer = UserClubMembershipUpdateSerializer(
+            membership,
+            data=request.data,
+            partial=True
+        )
+        
+        if serializer.is_valid():
+            # Save the update (triggers update() method in serializer)
+            serializer.save()
+            
+            # ✅ Call to_representation() directly with user object
+            # (bypasses .data property which can't handle list returns)
+            user = membership.member
+            data = serializer.to_representation(user)
+            
+            return Response(data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    except ClubMembership.DoesNotExist:
+        return Response(
+            {'error': 'Membership not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated, IsClubAdmin])
+def update_club_membership_admin(request, membership_id):
+    """
+    ADMIN endpoint: Update membership details.
+    
+    URL: /api/clubs/membership/<id>/
+    Method: PATCH
+    
+    Permission:
+    - User must be admin (is_staff or is_superuser)
+    
+    Request body:
+        {
+            "type": 2,
+            "roles": [1, 3],
+            "levels": [2],
+            "tags": [1, 5],
+            "status": 1,
+            "registration_start_date": "2026-01-01",
+            "registration_end_date": "2026-12-31",
+            "notes": "Admin notes here"
+        }
+        
+    Returns:
+        Single ClubMembership object (the one that was updated)
+        
+    Example response:
+        {
+            "id": 3,
+            "club": {...},
+            "member": {...},
+            "type": {...},
+            "roles": [...],
+            "levels": [...],
+            "tags": [...],
+            "status": 1,
+            "registration_start_date": "2026-01-01",
+            "registration_end_date": "2026-12-31",
+            "notes": "Admin notes here",
+            "is_preferred_club": true,  // Cannot be changed by admin!
+            ...
+        }
+    """
+    try:
+        # Get the membership
+        membership = ClubMembership.objects.get(id=membership_id)
+        
+        # Permission already checked by IsAdminUser
+        
+        # Update the membership
+        serializer = AdminClubMembershipUpdateSerializer(
+            membership,
+            data=request.data,
+            partial=True
+        )
+        
+        if serializer.is_valid():
+            serializer.save()
+            
+            # Returns ONLY that membership (no need for all)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    except ClubMembership.DoesNotExist:
+        return Response(
+            {'error': 'Membership not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )

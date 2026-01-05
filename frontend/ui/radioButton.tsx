@@ -15,7 +15,7 @@ export interface RadioButtonProps {
   name?: string;
   value?: string;
   checked?: boolean;
-  onChange?: (checked: boolean) => void;
+  onChange?: () => void;
   disabled?: boolean;
   className?: string;
   'aria-label'?: string;
@@ -34,7 +34,9 @@ export const RadioButton = React.forwardRef<HTMLInputElement, RadioButtonProps>(
           name={name}
           value={value}
           checked={checked}
-          onChange={(e) => onChange?.(e.target.checked)}
+          onChange={(e) => {
+            if (e.target.checked) onChange?.();  // ← Only fire when becoming checked
+          }}
           disabled={disabled}
           className="custom-radio"
           {...props}
