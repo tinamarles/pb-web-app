@@ -1,7 +1,4 @@
-# === CORRECTED ADMIN.PY FOR LEAGUES ===
-# Date: 2025-12-01
-# Corrected to match actual model fields
-# ========================================
+# picklehub/leagues/admin.py
 
 from django.contrib import admin
 from .models import (
@@ -11,7 +8,42 @@ from .models import (
     LeagueAttendance, 
     RoundRobinPattern
 )
+from public.constants import (
+    LeagueParticipationStatus,
+    LeagueAttendanceStatus,
+    LeagueType,
+    SkillLevel
+)
 
+
+# ========================================
+# CUSTOM FILTERS
+# ========================================
+
+class EventLeagueFilter(admin.SimpleListFilter):
+    """
+    Custom filter to show "Events" vs "Leagues" instead of "Yes/No"
+    """
+    title = 'event or league'
+    parameter_name = 'is_event'
+    
+    def lookups(self, request, model_admin):
+        return (
+            ('event', 'Events'),
+            ('league', 'Leagues'),
+        )
+    
+    def queryset(self, request, queryset):
+        if self.value() == 'event':
+            return queryset.filter(is_event=True)
+        if self.value() == 'league':
+            return queryset.filter(is_event=False)
+        return queryset
+
+
+# ========================================
+# INLINES
+# ========================================
 
 class LeagueParticipationInline(admin.TabularInline):
     model = LeagueParticipation
@@ -27,19 +59,25 @@ class LeagueSessionInline(admin.TabularInline):
     show_change_link = True
 
 
+# ========================================
+# LEAGUE ADMIN
+# ========================================
+
 @admin.register(League)
 class LeagueAdmin(admin.ModelAdmin):
     list_display = (
         'name', 
         'club',
-        'league_type',
-        'minimum_skill_level', 
+        'event_type_display',
+        'league_type_display',
+        'skill_level_display', 
         'start_date', 
         'end_date', 
         'is_active',
         'participant_count'
     )
     list_filter = (
+        EventLeagueFilter,  # ✅ FIRST!
         'league_type', 
         'is_active',
         'registration_open',
@@ -48,39 +86,74 @@ class LeagueAdmin(admin.ModelAdmin):
     )
     search_fields = ('name', 'description', 'captain__username', 'club__name')
     ordering = ('-start_date', 'name')
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at', 'participant_count_display')
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'description', 'club', 'captain')
+            'fields': ('name', 'description', 'club', 'captain', 'image_url')
         }),
-        ('League Type & Format', {
+        ('Type & Format', {
             'fields': (
+                'is_event',
                 'league_type',
-                'default_match_format',
+                'default_generation_format',
                 'minimum_skill_level'
             )
         }),
-        ('Registration', {
+        ('Registration Settings', {
             'fields': (
                 'registration_open',
                 'max_participants',
-                'allow_reserves'
+                'allow_reserves',
+                'registration_opens_hours_before',
+                'registration_closes_hours_before'
+            )
+        }),
+        ('Session Settings', {
+            'fields': (
+                'max_spots_per_session',
+                'allow_waitlist'
             )
         }),
         ('Schedule', {
             'fields': ('start_date', 'end_date')
         }),
-        ('Status', {
-            'fields': ('is_active', 'created_at', 'updated_at')
+        ('Status & Metadata', {
+            'fields': ('is_active', 'participant_count_display', 'created_at', 'updated_at')
         }),
     )
     
     inlines = [LeagueParticipationInline, LeagueSessionInline]
     
+    def event_type_display(self, obj):
+        return "Event" if obj.is_event else "League"
+    event_type_display.short_description = 'Type'
+    
+    def league_type_display(self, obj):
+        return obj.get_league_type_display()  # ✅ Django magic!
+    league_type_display.short_description = 'League Type'
+    
+    def skill_level_display(self, obj):
+        """Display minimum skill level as label"""
+        if obj.minimum_skill_level is None:
+            return "Any Level"
+        return str(obj.minimum_skill_level)  # ✅ ForeignKey - just convert to string!
+    skill_level_display.short_description = 'Min. Skill'
+    
     def participant_count(self, obj):
-        return obj.participants.count()
-    participant_count.short_description = 'Participants'
+        """Count active participants for list display"""
+        return obj.participants.filter(
+            league_participations__status=LeagueParticipationStatus.ACTIVE  # ✅ Fixed: league_participations (with 's')
+        ).distinct().count()
+    participant_count.short_description = 'Active Participants'
+    
+    def participant_count_display(self, obj):
+        active = obj.participants.filter(
+            league_participations__status=LeagueParticipationStatus.ACTIVE
+        ).distinct().count()
+        total = obj.participants.count()
+        return f"{active} active / {total} total"
+    participant_count_display.short_description = 'Participants'
 
 
 @admin.register(LeagueParticipation)
@@ -89,7 +162,7 @@ class LeagueParticipationAdmin(admin.ModelAdmin):
         'member', 
         'league', 
         'club_membership',
-        'status', 
+        'status_display',
         'joined_at',
         'exclude_from_rankings',
         'is_active'
@@ -123,8 +196,12 @@ class LeagueParticipationAdmin(admin.ModelAdmin):
         }),
     )
     
+    def status_display(self, obj):
+        return obj.get_status_display()  # ✅ Django magic!
+    status_display.short_description = 'Status'
+    
     def is_active(self, obj):
-        return obj.status == 'active'
+        return obj.status == LeagueParticipationStatus.ACTIVE
     is_active.boolean = True
     is_active.short_description = 'Active'
 
@@ -189,7 +266,7 @@ class LeagueAttendanceAdmin(admin.ModelAdmin):
         'get_member',
         'get_league',
         'session_date',
-        'status',
+        'status_display',
         'cancelled_at'
     )
     list_filter = (
@@ -226,6 +303,10 @@ class LeagueAttendanceAdmin(admin.ModelAdmin):
     def get_league(self, obj):
         return obj.league_participation.league.name
     get_league.short_description = 'League'
+    
+    def status_display(self, obj):
+        return obj.get_status_display()  # ✅ Django magic!
+    status_display.short_description = 'Status'
 
 
 @admin.register(RoundRobinPattern)
@@ -235,10 +316,7 @@ class RoundRobinPatternAdmin(admin.ModelAdmin):
         'num_players',
         'created_at'
     )
-   
-    search_fields = (
-        'name',
-    )
+    search_fields = ('name',)
     readonly_fields = ('created_at',)
     
     fieldsets = (

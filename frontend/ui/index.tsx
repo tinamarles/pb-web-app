@@ -25,6 +25,7 @@ export {
   type LocationAutocompleteProps,
 } from "./locationAutocomplete";
 export { RadioButton } from "./radioButton";
+export { ResponsiveButton, type ResponsiveButtonProps, type ResponsiveButtonConfig} from "./responsiveButton";  
 
 //export { UploadImageButton, type UploadImageButtonProps } from './uploadImageButton';
 //export { AvatarWithUpload, type AvatarWithUploadProps } from './avatarWithUpload';

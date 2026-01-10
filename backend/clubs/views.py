@@ -1,39 +1,93 @@
 # pickleball/views.py
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import viewsets, status
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q, Count
+from django.utils import timezone
 from .models import Club, ClubMembership, Role
-from .serializers import ClubSerializer, ClubMembershipSerializer, UserClubMembershipUpdateSerializer, AdminClubMembershipUpdateSerializer
+from .serializers import (
+    NestedClubSerializer, 
+    ClubSerializer,
+    ClubDetailHomeSerializer,
+    ClubMemberSerializer, 
+    ClubMembershipSerializer, 
+    UserClubMembershipUpdateSerializer, 
+    AdminClubMembershipUpdateSerializer,
+)
+from leagues.models import League
+from leagues.serializers import LeagueSerializer
+from notifications.models import Notification
+from notifications.serializers import NotificationSerializer
 from .permissions import IsClubAdmin, ClubMembershipPermissions # Import the custom permission
-from public.constants import RoleType
+from public.constants import RoleType, MembershipStatus
+
+class ClubMembersPagination(PageNumberPagination):
+    """Pagination for club members list"""
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class ClubViewSet(viewsets.ModelViewSet):
     """
-    A ViewSet for managing Club resources.
-    - Superusers can do anything.
-    - Authenticated users can create and view clubs.
-    - Only club admins can edit or delete a club.
+    ViewSet for Club CRUD operations + custom tab actions
+    
+    STANDARD REST ENDPOINTS (use get_serializer_class()):
+    - GET    /api/clubs/              → list (uses NestedClubSerializer)
+    - POST   /api/clubs/              → create (uses ClubSerializer)
+    - GET    /api/clubs/{id}/         → retrieve (uses NestedClubSerializer)
+    - PATCH  /api/clubs/{id}/         → update (uses ClubSerializer)
+    - DELETE /api/clubs/{id}/         → destroy (uses ClubSerializer)
+    
+    CUSTOM @action ENDPOINTS (instantiate serializers INSIDE methods):
+    - GET    /api/clubs/{id}/home/          → ClubDetailHomeSerializer
+    - GET    /api/clubs/{id}/events/        → LeagueSerializer
+    - GET    /api/clubs/{id}/members/       → ClubMemberSerializer (paginated)
+    - GET    /api/clubs/{id}/subscriptions/ → ClubMembershipTypeSerializer
     """
     queryset = Club.objects.all()
-    serializer_class = ClubSerializer
+    # serializer_class = ClubSerializer
     permission_classes = [IsClubAdmin] # Use the custom permission
 
+    def get_serializer_class(self):
+        """
+        Return serializers for STANDARD REST actions ONLY!
+        
+        IMPORTANT: @action methods instantiate their own serializers!
+        This method is ONLY called for: list, retrieve, create, update, destroy
+        
+        NOT called for: home, events, members, subscriptions (those are @action)
+        """
+        if self.action in ['list', 'retrieve']:
+            return NestedClubSerializer
+        return ClubSerializer
+    
+    
     def perform_create(self, serializer):
         """
         Overrides the create method to automatically set the creator
         as an admin member of the new club.
+        
+        When a user creates a club:
+        1. Save the club with created_by = request.user
+        2. Create ClubMembership for the creator
+        3. Assign ADMIN role to the creator
         """
         # Save the club instance
         club = serializer.save(created_by=self.request.user)
 
         # Get or create the 'Admin' role - needs to be updated to use the constants! 
-        admin_role, created = Role.objects.get_or_create(name=RoleType.ADMIN)
+        admin_role, created = Role.objects.get_or_create(
+            name=RoleType.ADMIN,
+            defaults={'description': 'Club administrator with full permissions'}
+        )
 
         # Create the ClubMembership for the user who created the club
         club_membership = ClubMembership.objects.create(
             member=self.request.user,
-            club=club
+            club=club,
+            status=MembershipStatus.ACTIVE
         )
         
         # Add the 'Admin' role to the new membership
@@ -45,6 +99,200 @@ class ClubViewSet(viewsets.ModelViewSet):
         Superusers can see all clubs. All other users can see all clubs.
         """
         return self.queryset
+    
+    # ========================================
+    # HOME TAB
+    # ========================================
+    @action(detail=True, methods=['get'])
+    def home(self, request, pk=None):
+        """
+        ✅ THE VIEW FETCHES ALL THE DATA!
+        Then passes it as a DICTIONARY to the serializer
+        """
+        from notifications.models import Notification
+        from leagues.models import League
+        from public.constants import NotificationType, MembershipStatus
+        from django.utils import timezone
+        
+        club = self.get_object()
+        
+        # ========================================
+        # FETCH ALL HOME TAB DATA
+        # ========================================
+        
+        # Get latest announcement
+        latest_announcement = Notification.objects.filter(
+            club=club,
+            notification_type=NotificationType.CLUB_ANNOUNCEMENT
+        ).order_by('-created_at').first()
+        
+        # Get all announcements
+        all_announcements = Notification.objects.filter(
+            club=club,
+            notification_type=NotificationType.CLUB_ANNOUNCEMENT
+        ).order_by('-created_at')
+        
+        # Get next event
+        next_event = League.objects.filter(
+            club=club,
+            is_event=True,
+            start_date__gte=timezone.now()
+        ).order_by('start_date').first()
+        
+        # Get top members
+        top_members = ClubMembership.objects.filter(
+            club=club,
+            status=MembershipStatus.ACTIVE
+        ).select_related('member').prefetch_related('roles', 'levels').order_by('-joined_at')[:10]
+        
+        # ========================================
+        # PASS AS DICTIONARY TO SERIALIZER
+        # ========================================
+        
+        # ✅ Create a dictionary with club + all the data
+        data = {
+            'club': club,  # ← Club model instance
+            'latest_announcement': latest_announcement,  # ← Notification instance or None
+            'all_announcements': all_announcements,  # ← QuerySet
+            'top_members': top_members,  # ← QuerySet
+            'next_event': next_event,  # ← League instance or None
+        }
+        
+        # ✅ Pass the DICTIONARY to serializer (not just the club!)
+        serializer = ClubDetailHomeSerializer(data)
+        return Response(serializer.data)
+    
+    # ========================================
+    # EVENTS TAB
+    # ========================================
+    
+    @action(detail=True, methods=['get'])
+    def events(self, request, pk=None):
+        """
+        GET /api/clubs/{id}/events/
+        
+        Returns all events/leagues for this club
+        
+        Query Params:
+        - type: 'league' | 'event' | 'all' (default: 'all')
+        - status: 'upcoming' | 'past' | 'all' (default: 'upcoming')
+        
+        TypeScript Type: ClubEventsResponse
+        """
+        club = self.get_object()
+        
+        # Filter by type
+        event_type = request.query_params.get('type', 'all')
+        queryset = League.objects.filter(club=club)
+        
+        if event_type == 'league':
+            queryset = queryset.filter(is_event=False)
+        elif event_type == 'event':
+            queryset = queryset.filter(is_event=True)
+        
+        # Filter by status
+        status_filter = request.query_params.get('status', 'upcoming')
+        if status_filter == 'upcoming':
+            queryset = queryset.filter(start_date__gte=timezone.now())
+        elif status_filter == 'past':
+            queryset = queryset.filter(end_date__lt=timezone.now())
+        
+        queryset = queryset.order_by('-start_date')
+        
+        # Serialize
+        serializer = LeagueSerializer(queryset, many=True)
+        
+        return Response({
+            'events': serializer.data,
+            'count': queryset.count()
+        })
+    
+    # ========================================
+    # MEMBERS TAB
+    # ========================================
+    
+    @action(detail=True, methods=['get'])
+    def members(self, request, pk=None):
+        """
+        GET /api/clubs/{id}/members/
+        
+        Returns paginated, filterable list of club members
+        
+        Query Params:
+        - role: Filter by role name (e.g., 'coach', 'admin')
+        - level: Filter by skill level (e.g., '3.0', '4.5')
+        - status: Filter by membership status (e.g., 'active', 'pending')
+        - page: Page number (default: 1)
+        - page_size: Results per page (default: 20, max: 100)
+        
+        TypeScript Type: ClubMembersResponse
+        
+        Returns:
+        {
+            "count": 487,
+            "next": "http://api/clubs/345/members/?page=3",
+            "previous": "http://api/clubs/345/members/?page=1",
+            "results": [ ... ClubMember objects ... ]
+        }
+        """
+        club = self.get_object()
+        queryset = ClubMembership.objects.filter(club=club)
+        
+        # ✅ Filter by role
+        role = request.query_params.get('role')
+        if role:
+            queryset = queryset.filter(roles__name=role)
+        
+        # ✅ Filter by status
+        status_param = request.query_params.get('status')
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+        
+        # ✅ Filter by skill level
+        level = request.query_params.get('level')
+        if level:
+            queryset = queryset.filter(levels__level=level)
+        
+        # Prefetch related data for efficiency
+        queryset = queryset.select_related('member').prefetch_related('roles', 'levels')
+        
+        # ✅ Paginate
+        paginator = ClubMembersPagination()
+        page = paginator.paginate_queryset(queryset, request)
+        
+        # Serialize
+        serializer = ClubMemberSerializer(page, many=True)
+        
+        return paginator.get_paginated_response(serializer.data)
+    
+    # ========================================
+    # SUBSCRIPTIONS TAB
+    # ========================================
+    
+    @action(detail=True, methods=['get'])
+    def subscriptions(self, request, pk=None):
+        """
+        GET /api/clubs/{id}/subscriptions/
+        
+        Returns available subscription types/offers for this club
+        
+        TypeScript Type: ClubSubscriptionsResponse
+        """
+        club = self.get_object()
+        
+        # Get all active membership types for this club
+        membership_types = ClubMembershipType.objects.filter(
+            club=club,
+            is_active=True
+        ).order_by('annual_fee')
+        
+        serializer = ClubMembershipTypeSerializer(membership_types, many=True)
+        
+        return Response({
+            'subscriptions': serializer.data,
+            'count': membership_types.count()
+        })
+
     
 class ClubMembershipViewSet(viewsets.ModelViewSet):
     """

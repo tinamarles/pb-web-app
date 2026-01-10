@@ -336,7 +336,7 @@ export const Header = memo(function Header({
           context="dropdown"
           icon="settings"
           label="Settings"
-          href="/profile/settings"
+          href="/profile/settings/account"
           separator
         />
         <MenuItem

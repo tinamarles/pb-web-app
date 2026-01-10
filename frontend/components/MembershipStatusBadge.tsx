@@ -7,7 +7,7 @@ interface MembershipStatusBadgeProps {
   className?: string;
 }
 
-export function MembershipStatusBadge({ status, className = 'w-fit' }: MembershipStatusBadgeProps) {
+export function MembershipStatusBadge({ status, className = 'w-fit label-sm' }: MembershipStatusBadgeProps) {
   // Get the label
   const label = C.MembershipStatusLabels[status];
   const variant = C.MembershipStatusBadgeVariant[status] || 'default';

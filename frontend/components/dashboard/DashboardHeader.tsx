@@ -79,7 +79,7 @@ export function DashboardHeader() {
                   key={role.id || role.name}
                   variant={RoleBadgeVariants[role.name]}
                   label={RoleTypeLabels[role.name]}
-                  className="w-auto"
+                  className="w-auto label-sm"
                 />
               ))}
             </div>

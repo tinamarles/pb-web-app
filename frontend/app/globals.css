@@ -91,12 +91,14 @@
   --px-96: 6rem;
   --px-104: 6.5rem;
   --px-120: 7.5rem;
+  --px-128: 8rem;
   --px-130: 8.125rem;
   --px-160: 10rem;
   --px-192: 12rem;
   --px-240: 15rem;
   --px-256: 16rem;
   --px-320: 20rem;
+  --px-400: 25rem;
   --px-480: 30rem;
 
   /* Static typography variables */
@@ -181,6 +183,10 @@
   --font-header: var(--font-outfit), sans-serif;
   --font-base: var(--font-inter), sans-serif;
   --font-slogan: var(--font-shadows), cursive;
+
+  --font-weight-normal: 300;
+  --font-weight-semibold: 400;
+  --font-weight-bold: 500;
 }
 
 [data-theme="dark"] {
@@ -350,9 +356,9 @@
 @utility subheading-md {
   font-family: var(--font-header);
   /* font-size: var(--text-20px); */
-  font-size: clamp(1.1rem, calc(0.935rem + 0.795vw), 1.53rem);
+  font-size: clamp(1rem, calc(0.94rem + 0.286vw), 1.16rem);
   line-height: var(--line-height-20);
-  letter-spacing: var(--spacing-wider);
+  letter-spacing: var(--spacing-normal);
   @apply font-normal;
 }
 @utility title-lg {
@@ -409,7 +415,6 @@
   font-size: clamp(0.77rem, calc(0.732rem + 0.191vw), 0.88rem);
   line-height: var(--line-height-45);
   letter-spacing: var(--spacing-relaxed);
-  color: var(--color-on-surface-variant);
   @apply font-normal;
 }
 @utility label-md {
@@ -418,7 +423,6 @@
   font-size: clamp(0.61rem, calc(0.565rem + 0.239vw), 0.74rem);
   line-height: var(--line-height-30);
   letter-spacing: var(--spacing-wider);
-  color: var(--color-on-surface-variant);
   @apply font-normal;
 }
 @utility label-sm {
@@ -427,7 +431,6 @@
   /* font-size: clamp(0.52rem, calc(0.475rem + 0.207vw), 0.63rem); */
   line-height: var(--line-height-45);
   letter-spacing: var(--spacing-normal);
-  color: var(--color-on-surface-variant);
   @apply font-normal;
 }
 
@@ -594,6 +597,20 @@
   margin-top: --value(--p- *);
   margin-bottom: --value(--p- *);
 }
+
+@utility top-* {
+  top: --value(--p-*);
+}
+@utility bottom-* {
+  bottom: --value(--p-*);
+}
+@utility left-* {
+  left: --value(--p-*);
+}
+@utility right-* {
+  right: --value(--p-*);
+}
+
 /* +++ GENERAL UTILITIES +++ */
 @utility icon-* {
   height: --value(--icon- *);
@@ -755,6 +772,233 @@
     max-width: 80rem;
     width: 100%;
     margin: auto;
+  }
+}
+/* CSS for Club Details layout */
+@layer components {
+	.club-details {
+		max-width: 1600px;
+		width: 100%;
+		
+	}
+	.club-details-topSection {
+		@apply gap-md;
+	}
+	@media (min-width: 640px) {
+		.club-details-topSection {
+			@apply px-lg;
+		}
+	}
+	.club-details-bottomSection {
+		@apply px-lg;
+	}
+}
+
+@layer components {
+  .club-card {
+    width: 100%;
+    max-width: 1600px;
+    position: relative;
+    @apply rounded-md;
+    @apply flex flex-col;
+    @apply bg-surface-container-lowest;
+    @apply border border-outline-variant;
+  }
+
+  .club-card.grid {
+    @apply cursor-pointer;
+  }
+
+  .club-card.grid:hover {
+      @apply shadow-md shadow-primary/20;
+      @apply border-primary;
+      @apply transition-shadow duration-200;
+  }
+
+  .banner-container,
+  .banner-container.grid {
+      position: relative;
+      width: 100%;
+      height: 100px;
+  }
+
+  @media (min-width: 640px) {
+      .banner-container:not(.grid) {
+          height: 250px;
+      }
+  }
+
+  @media (min-width: 1024px) {
+      .banner-container:not(.grid) {
+          height: 375px;
+      }
+  }
+  .club-logo {
+    position: relative;
+    width: var(--px-64); 
+    aspect-ratio: 1;
+    overflow: hidden;
+    @apply rounded-full;
+    @apply border border-secondary;
+    @apply shadow-sm shadow-secondary;
+  }
+
+  .club-logo-bottom-left {
+      position: absolute;
+      bottom: calc(-1 * var(--px-64) / 2 );
+      @apply left-xl; 
+  }
+
+  @media (min-width: 640px) {
+      .club-logo {
+          width: var(--px-128);
+      }
+      .club-logo-bottom-left {
+          bottom: calc(-1 * var(--px-128) / 2);
+          @apply left-xl; /* 20px */
+      }
+  }
+
+  @media (min-width: 1024px) {
+      .club-logo {
+          width: var(--px-256);
+          @apply border-2;
+          @apply shadow-md;
+      }
+      .club-logo-bottom-left {
+          bottom: calc(-1 * var(--px-256) / 2);
+          @apply left-4xl; /* 64px */
+      }
+  }
+  /* GRID VARIANT - smaller, positioned inside card */
+  .club-logo-grid {
+      position: absolute;
+      width: var(--px-64);  /* Smaller for grid */
+      aspect-ratio: 1;
+      overflow: hidden;
+      @apply rounded-full;
+      @apply border border-secondary;
+      @apply shadow-sm shadow-secondary;
+      @apply mt-15 ml-4;  /* Position inside card (matching your Avatar) */
+  }
+  .card-badge,
+  .card-badge.grid {
+      position: absolute;
+      z-index: 10;
+      @apply w-fit h-auto px-sm py-xs;
+      @apply rounded-sm;
+      @apply label-md;
+      @apply outline-1 outline-transparent;
+  }
+
+  @media (min-width: 640px) {
+    .card-badge:not(.grid) {
+        @apply label-lg;
+        @apply border-none outline-2 outline-transparent;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .card-badge:not(.grid) {
+        @apply headline-md;
+        @apply outline-3;
+    }
+  }
+  .card-badge-top-left,
+  .card-badge-top-left.grid {
+    @apply top-md left-md;
+    @apply outline-white;
+  }
+
+  .card-badge-top-right,
+  .card-badge-top-right.grid {
+    @apply mt-md right-md;
+  }
+  
+
+  @media (min-width: 640px) {
+    .card-badge-top-left:not(.grid) {
+        @apply top-md left-xl;
+        @apply outline-white;
+        
+    }
+    .card-badge-top-right:not(.grid) {
+        @apply top-md right-xl;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .card-badge-top-left:not(.grid) {
+        @apply top-lg left-2xl;
+        @apply outline-white;
+    }
+    .card-badge-top-right:not(.grid) {
+        @apply top-lg right-2xl;
+    }
+  }
+  .card-content,
+  .card-content.grid {
+      padding-left: var(--px-96); 
+      position: relative;
+      @apply py-lg; /* 16px */
+      @apply flex flex-col;
+  }
+  @media (min-width: 640px) {
+    .card-content:not(.grid) {
+        padding-left: var(--px-192);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .card-content:not(.grid) {
+        padding-left: var(--px-400);
+    }
+  }
+  .club-name,
+  .club-name.grid {
+      @apply headline-sm emphasized;
+      @apply text-secondary;
+  }
+  .club-location,
+  .club-location.grid {
+      @apply subheading-md;
+      @apply text-on-surface-variant;
+  }
+  .club-members,
+  .club-members.grid {
+      @apply title-sm;
+      @apply text-secondary;
+  }
+  @media (min-width: 640px) {
+    .club-name:not(.grid) {
+        @apply headline-lg emphasized;
+    }
+    .club-location:not(.grid) {
+        @apply headline-sm;
+    }
+    .club-members:not(.grid) {
+        @apply title-md;
+    }
+  }
+  @media (min-width: 1024px) {
+    .club-name:not(.grid) {
+        @apply display-md emphasized;
+    }
+    .club-location:not(.grid) {
+        @apply headline-lg;
+    }
+    .club-members:not(.grid) {
+        @apply headline-sm;
+    }
+  }
+  .action-container {
+      @apply flex items-center justify-end;
+      @apply gap-sm pr-lg pb-md;
+  }
+  @media (min-width: 1024px) {
+    .action-container {
+        @apply gap-md;
+    }
   }
 }
 /* === LAYOUT CONTAINER CLASSES === */
@@ -1886,7 +2130,7 @@
     }
   }
 }
-/* === TABS === */
+/* === TABS (Dashboard mobile only) === */
 @layer components {
   /* whole container */
   .tabs-list {
@@ -2739,7 +2983,7 @@
   .badge {
     @apply inline-flex items-center justify-center gap-1 shrink-0;
     @apply rounded-full px-2 overflow-hidden whitespace-nowrap;
-    @apply label-sm;
+    
     width: 16px;
     height: 16px;
     border: 1px transparent;

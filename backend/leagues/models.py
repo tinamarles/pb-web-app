@@ -45,6 +45,36 @@ class League(models.Model):
         Club, 
         on_delete=models.CASCADE, 
         related_name='leagues')
+    # Differentiates events from leagues
+    is_event = models.BooleanField(
+        default=False,
+        help_text='True = Event (per-session), False = League (season enrollment)'
+    )
+    # Event or League Banner Image to display on cards/details
+    image_url = models.URLField(max_length=200, blank=True) 
+    # Event-specific settings
+    max_spots_per_session = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Max registrations per session (for events only)"
+    )
+    
+    allow_waitlist = models.BooleanField(
+        default=True,
+        help_text="Allow users to join waitlist when session full"
+    )
+
+    # from nextJS/10-Future-Ideas/KEY_MODULE_LEAGUE/Events/Concept-Events.md
+    registration_opens_hours_before = models.PositiveIntegerField(
+        default=168,  # 1 week
+        help_text="How many hours before session registration opens"
+    )
+    
+    registration_closes_hours_before = models.PositiveIntegerField(
+        default=2,  # 2 hours
+        help_text="How many hours before session registration closes"
+    )
+
     # League type (defines team structure, NOT match generation format!)
     league_type = models.IntegerField(
         choices=LeagueType,
@@ -786,6 +816,7 @@ def create_attendance_records(sender, instance, created, **kwargs):
             LeagueAttendance.objects.get_or_create(
                 league_participation=participation,
                 session_date=next_date,
+                league_session=instance,
                 defaults={'status': LeagueAttendanceStatus.ATTENDING}
             )
 class RoundRobinPattern(models.Model):

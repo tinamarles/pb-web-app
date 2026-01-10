@@ -6,8 +6,7 @@ import * as C from "@/lib/constants";
 export type PageProps<
   TParams = Record<string, string>,
   TSearchParams = Record<string, string | string[]>
->
- = {
+> = {
   params: Promise<TParams>;
   searchParams?: Promise<TSearchParams>;
 };
@@ -75,12 +74,24 @@ export interface ClubMembershipSkillLevel {
   description?: string;
 }
 
+/* Lightweight club type for listing clubs */
+export interface ClubListItem {
+  id: number;
+  name: string;
+  shortName?: string;
+  clubType: C.ClubTypeValue;
+  logoUrl?: string;
+  bannerUrl?: string; // ✅ Added
+  city?: string | null; // ✅ Added (from address)
+  memberCount: number; // ✅ Added (calculated)
+}
+
 export interface MemberClub {
   /* light-weight club that is used for a Club member. It
      does NOT include the array that contains all the members of 
      the club.
   */
-  id?: number;
+  id: number;
   name: string;
   clubType: C.ClubTypeValue;
   bannerUrl?: string;
@@ -92,6 +103,7 @@ export interface MemberClub {
   logoUrl?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
   address?: Address | null; // ✅ FIXED: Django ForeignKey with null=True, blank=True
   autoapproval: boolean; // default=False in Django
+  memberCount: number; // ✅ Added (calculated)
 }
 
 export interface Club extends MemberClub {
@@ -215,6 +227,115 @@ export interface ClubFormValues {
   name: string;
   description: string;
   // etc.
+}
+
+// ==================================================================================
+// CLUB DETAIL TYPES (for club tabs)
+// Maps to Django: clubs.serializers.ClubDetailHomeSerializer, ClubMemberSerializer
+// ==================================================================================
+
+/**
+ * ClubMember - Combined User + ClubMembership data for members tab
+ *
+ * Backend: ClubMemberSerializer
+ * Used in: GET /api/clubs/{id}/members/, GET /api/clubs/{id}/home/
+ */
+export interface ClubMember {
+  // User fields (from member)
+  id: number;
+  firstName: string;
+  lastName: string;
+  profilePictureUrl?: string;
+  email: string;
+  location?: string;
+  // ClubMembership fields
+  membershipId: number;
+  roles: Role[];
+  levels: ClubMembershipSkillLevel[];
+  type: ClubMembershipType;
+  status: C.MembershipStatusValue;
+  joinedAt?: string;
+  isPreferredClub: boolean;
+}
+
+/**
+ * ClubDetailHome - Extends MemberClub with home tab specific data
+ *
+ * Backend: ClubDetailHomeSerializer
+ * Used in: GET /api/clubs/{id}/home/
+ *
+ * NOTE: Serializer flattens the structure so all MemberClub fields + home tab fields
+ * are at the top level (no nested 'club' object)
+ */
+export interface ClubDetailHome extends MemberClub {
+  latestAnnouncement?: Notification | null;
+  allAnnouncements?: Notification[];
+  topMembers?: ClubMember[];
+  nextEvent?: League | null;
+  // photos?: Photo[];  // TODO: When photo model is implemented
+}
+
+/**
+ * ClubEventsResponse - Response from events tab endpoint
+ *
+ * Backend: GET /api/clubs/{id}/events/
+ * Returns: { events: League[], count: number }
+ */
+export interface ClubEventsResponse {
+  events: League[];
+  count: number;
+}
+
+/**
+ * ClubMembersResponse - Paginated response from members tab endpoint
+ *
+ * Backend: GET /api/clubs/{id}/members/
+ * Returns: Django REST Framework paginated response
+ */
+export interface ClubMembersResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: ClubMember[];
+}
+
+// ==================================================================================
+// LEAGUE/EVENT TYPES (placeholder - needs to be defined properly)
+// Maps to Django: leagues.models.League
+// ==================================================================================
+
+/**
+ * League - Event or League data
+ *
+ * TEMPORARY: This is a placeholder! Needs to be properly defined
+ * when implementing the leagues module
+ */
+export interface League {
+  id: number;
+  club: number;  // Club ID reference
+  name: string;
+  description?: string;
+  isEvent: boolean;                        
+  imageUrl?: string;                       
+  maxSpotsPerSession?: number;             
+  allowWaitlist: boolean;                  
+  registrationOpensHoursBefore?: number;   
+  registrationClosesHoursBefore?: number;  
+  leagueType: C.LeagueTypeValue;                      
+  minimumSkillLevel?: C.SkillLevelValue;              
+  captainInfo: {                           
+    id: number;
+    firstName: string;                     
+    lastName: string;                      
+    avatar?: string;
+  } | null;
+  startDate: string;                       
+  endDate?: string;                        
+  registrationOpen: boolean;               
+  maxParticipants?: number;                
+  allowReserves: boolean;                  
+  isActive: boolean;                       
+  participantsCount: number;               
 }
 
 // +++ Utility functions and context types

@@ -1,6 +1,7 @@
 "use client";
 import { EmptyState } from "@/components";
 import { useAuth } from "@/providers/AuthUserProvider";
+import { useDashboard } from "@/providers/DashboardProvider";
 import { useState } from "react";
 import { type MemberUser, type ClubMembership } from "@/lib/definitions";
 import { toast } from "sonner";
@@ -50,6 +51,7 @@ export function MembershipsPage() {
   
   const { notifications } = useAuth();
   const { user, isMemberUser, refetchUser } = useAuth();
+  const { selectedClubId, setSelectedClub } = useDashboard();
   const [isUpdatingPreferred, setIsUpdatingPreferred] = useState(false);
   const [selectedMembershipId, setSelectedMembershipId] = useState<
     number | null
@@ -177,7 +179,7 @@ export function MembershipsPage() {
                     <Badge
                       variant={RoleBadgeVariants[RoleType.ADMIN]}
                       label={RoleTypeLabels[RoleType.ADMIN]}
-                      className="w-auto"
+                      className="w-auto label-sm"
                     />
                   )}
                   <Icon name="chevronright" size="md" />
@@ -327,7 +329,7 @@ export function MembershipsPage() {
                   <Badge
                     variant={registrationStatusBadge}
                     label={registrationStatusLabel}
-                    className="w-fit"
+                    className="w-fit label-sm"
                   />
                 </div>
                 <span className="label-md">
@@ -357,7 +359,7 @@ export function MembershipsPage() {
                     key={role.id}
                     variant={RoleBadgeVariants[role.name]}
                     label={RoleTypeLabels[role.name]}
-                    className="w-fit"
+                    className="w-fit label-sm"
                   />
                 ))}
               </div>
@@ -371,7 +373,7 @@ export function MembershipsPage() {
                     key={level.id}
                     variant={SkillLevelBadgeVariant[level.level]}
                     label={SkillLevelLabels[level.level]}
-                    className="w-auto"
+                    className="w-auto label-sm"
                   />
                 ))}
               </div>
@@ -418,7 +420,7 @@ export function MembershipsPage() {
             variant="filled"
             icon="show"
             label="View Club Details"
-            href={`/club/${membership.club.id}`}
+            href={`/club/${membership.club.id}/home`}
             size="sm"
           />
           {canEdit && (
@@ -461,10 +463,21 @@ export function MembershipsPage() {
                 */}
         <div className="panel-list">
           {hasMemberships ? (
-            <MembershipsList
-              selectedMembershipId={selectedMembershipId}
-              onSelect={handleSelectMembership}
-            />
+            <>
+              <MembershipsList
+                selectedMembershipId={selectedMembershipId}
+                onSelect={handleSelectMembership}
+              />
+              <div className="flex justify-end pt-sm">
+                <Button
+                  size="sm"
+                  variant="outlined"
+                  icon="add"
+                  href="/club/list?intent=join"
+                  label="Join another Club"
+                />
+              </div>
+            </>
           ) : (
             <EmptyState
               icon="memberships"
@@ -476,15 +489,7 @@ export function MembershipsPage() {
               href="/club/list?intent=join"
             />
           )}
-          <div className="flex justify-end pt-sm">
-            <Button
-              size="sm"
-              variant="outlined"
-              icon="add"
-              href="/club/list?intent=join"
-              label="Join another Club"
-            />
-          </div>
+          
         </div>
         {/* 
                     RIGHT SIDE: Details Panel (DESKTOP/TABLET ONLY)

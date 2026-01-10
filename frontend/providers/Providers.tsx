@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { ThemeProvider } from "next-themes";
 import { AuthUserProvider, useAuth } from "./AuthUserProvider";
+import { DashboardProvider } from "./DashboardProvider";
 import { setHandlerDependencies } from "@/shared";
 
 // === MODIFICATION LOG ===
@@ -47,7 +48,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       storageKey="theme"
     >
       <AuthUserProvider>
-        <InnerProviders>{children}</InnerProviders>
+        <DashboardProvider>
+          <InnerProviders>{children}</InnerProviders>
+        </DashboardProvider>
       </AuthUserProvider>
     </ThemeProvider>
   );

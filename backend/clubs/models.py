@@ -22,14 +22,21 @@ class Role(models.Model):
     This model is a system model! The user is not able
     to modify these! These roles determine permissions
     for a variety of frontend functions (eg. admin functions)
-
-    Uses constant RoleType:
-   - **Member** - Regular club member (no special permissions)
+    ---
+    NOTE: This model will be re-designed to include the club as a FK! This allows for each club to
+    set different permissions for each role rather than a unified strict permission setting for each role.
+    The admin of each club can then assign different permissions based on a permission matrix.
+    While the individual roles remain fixed, the permission setting can be different from club to club.
+    ---
+    Uses constant RoleType (current):
     - **Admin** - Club administrator (all permissions enabled)
     - **Instructor** - Can create training sessions (can_create_training)
     - **Captain** - Can cancel league sessions for captained leagues (can_cancel_league_sessions)
     - **Organizer** - Can manage leagues and sessions (can_manage_leagues, can_manage_league_sessions)
     - **Member** - Regular Club member
+
+    NOTE: once the club field is implemented a **Member** of club A may be able to manage leagues,
+    whereas a **Member** of club B may not!
 
     **Permission Checking Pattern:**
     ```python
