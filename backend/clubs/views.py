@@ -143,7 +143,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         top_members = ClubMembership.objects.filter(
             club=club,
             status=MembershipStatus.ACTIVE
-        ).select_related('member').prefetch_related('roles', 'levels').order_by('-joined_at')[:10]
+        ).select_related('member').prefetch_related('roles', 'levels').order_by('-created_at')[:10]
         
         # ========================================
         # PASS AS DICTIONARY TO SERIALIZER

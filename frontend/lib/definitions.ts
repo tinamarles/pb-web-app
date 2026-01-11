@@ -211,6 +211,68 @@ export interface Notification {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ * Announcement - Club-wide announcements (1-to-many broadcasts)
+ *
+ * CRITICAL NOTES:
+ * - club is REQUIRED (all announcements belong to a club)
+ * - league/match are OPTIONAL (narrow audience within club)
+ * - Different from Notification which is 1-to-1 to specific user
+ *
+ * AUDIENCE LOGIC:
+ * - club only → All club members see it
+ * - club + league → Only league participants see it
+ * - club + match → Only match participants see it
+ */
+export interface Announcement {
+  id: number;
+  notificationType: C.NotificationTypeValue; // Type of announcement
+  club: number; // REQUIRED - club ID (always set)
+  clubName: string; // Club name for display
+  league: number | null; // OPTIONAL - league ID (filters audience)
+  leagueName: string | null; // League name for display
+  match: number | null; // OPTIONAL - match ID (filters audience)
+  matchName: string | null; // Match name/description for display
+  createdBy: number | null; // User ID who created it
+  createdByName: string | null; // Creator name for display
+  title: string;
+  content: string;
+  imageUrl: string | null; // Optional announcement image
+  actionUrl: string | null; // CTA button link
+  actionLabel: string | null; // CTA button text
+  isPinned: boolean; // Pinned announcements show first
+  expiryDate: string | null; // ISO 8601 date, null = never expires
+  createdAt: string; // ISO 8601 datetime
+  updatedAt: string; // ISO 8601 datetime
+}
+
+/**
+ * FeedItem - Unified feed item (Notification OR Announcement)
+ *
+ * USAGE:
+ * Used by /api/feed/ endpoint which merges notifications + announcements
+ * Check feedType to determine which type and render appropriate component
+ */
+export type FeedItem =
+  | (Notification & { feedType: "notification" })
+  | (Announcement & { feedType: "announcement" });
+
+/**
+ * NotificationFeedResponse - Response from /api/feed/ endpoint
+ *
+ * RETURNS:
+ * - feed: Merged array of notifications + announcements
+ * - badgeCount: Total unread count (notifications + announcements)
+ * - unreadNotifications: Count of unread notifications only
+ * - announcementCount: Count of announcements only
+ */
+export interface NotificationFeedResponse {
+  feed: FeedItem[];
+  badgeCount: number;
+  unreadNotifications: number;
+  announcementCount: number;
+}
+
 // +++ Form specific types
 
 export interface LoginFormValues {
@@ -312,30 +374,30 @@ export interface ClubMembersResponse {
  */
 export interface League {
   id: number;
-  club: number;  // Club ID reference
+  club: number; // Club ID reference
   name: string;
   description?: string;
-  isEvent: boolean;                        
-  imageUrl?: string;                       
-  maxSpotsPerSession?: number;             
-  allowWaitlist: boolean;                  
-  registrationOpensHoursBefore?: number;   
-  registrationClosesHoursBefore?: number;  
-  leagueType: C.LeagueTypeValue;                      
-  minimumSkillLevel?: C.SkillLevelValue;              
-  captainInfo: {                           
+  isEvent: boolean;
+  imageUrl?: string;
+  maxSpotsPerSession?: number;
+  allowWaitlist: boolean;
+  registrationOpensHoursBefore?: number;
+  registrationClosesHoursBefore?: number;
+  leagueType: C.LeagueTypeValue;
+  minimumSkillLevel?: C.SkillLevelValue;
+  captainInfo: {
     id: number;
-    firstName: string;                     
-    lastName: string;                      
+    firstName: string;
+    lastName: string;
     avatar?: string;
   } | null;
-  startDate: string;                       
-  endDate?: string;                        
-  registrationOpen: boolean;               
-  maxParticipants?: number;                
-  allowReserves: boolean;                  
-  isActive: boolean;                       
-  participantsCount: number;               
+  startDate: string;
+  endDate?: string;
+  registrationOpen: boolean;
+  maxParticipants?: number;
+  allowReserves: boolean;
+  isActive: boolean;
+  participantsCount: number;
 }
 
 // +++ Utility functions and context types
@@ -365,7 +427,7 @@ export interface AuthUserContextType {
   logout: () => Promise<void>;
   isMemberUser: boolean; // NEW
   refetchUser: () => Promise<void>; // NEW
-  notifications: Notification[]; // ← ADD
+  notifications: FeedItem[]; // ← ADD
   unreadCount: number; // ← ADD
   markNotificationAsRead: (notificationId: number) => Promise<void>; // ← ADD
   dismissNotification: (notificationId: number) => Promise<void>; // ← ADD

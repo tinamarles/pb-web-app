@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Notification
+from .models import Notification, Announcement
 
 class NotificationSerializer(serializers.ModelSerializer):
     """
@@ -68,3 +68,55 @@ class NotificationSerializer(serializers.ModelSerializer):
                 # Add additional match fields as needed
             }
         return None
+    
+class AnnouncementSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Announcement model.
+    Converts Django model → JSON for frontend.
+    """
+    club_name = serializers.CharField(source='club.name', read_only=True)
+
+    # Use SerializerMethodField instead of CharField for nullable FKs
+    league_name = serializers.SerializerMethodField()
+    match_name = serializers.SerializerMethodField()
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Announcement  # Announcement model
+        fields = [
+            'id',
+            'notification_type',
+            'club',
+            'club_name',
+            'league',
+            'league_name',
+            'match',
+            'match_name',   
+            'title',
+            'content',
+            'image_url',
+            'action_url',
+            'action_label',
+            'is_pinned',
+            'created_by',
+            'created_by_name',
+            'expiry_date',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'notification_type', 'created_at', 'updated_at', 'created_by'] 
+
+    def get_league_name(self, obj):
+        return obj.league.name if obj.league else None
+    
+    def get_match_name(self, obj):
+        return str(obj.match) if obj.match else None
+    
+    def get_created_by_name(self, obj):
+        return obj.created_by.get_full_name() if obj.created_by else None
+    
+    def create(self, validated_data):
+        # Set created_by from request.user
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+        

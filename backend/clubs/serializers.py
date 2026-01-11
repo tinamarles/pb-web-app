@@ -139,7 +139,7 @@ class ClubMemberSerializer(serializers.ModelSerializer):
             'levels',
             'type',
             'status',
-            'joined_at',
+            'created_at',
             'is_preferred_club',
             # 'tags',  # TODO: Add tags if needed
         ]

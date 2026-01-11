@@ -43,6 +43,7 @@ export interface NavigationConfig {
   dashboard: NavItem[];
   admin?: NavItem[];
   feed?: NavItem[];
+  club?: NavItem[];
 }
 
 // ============================================
@@ -283,6 +284,18 @@ export const MORE_MENU_FOOTER_LINKS: FooterLink[] = [
 ];
 
 // ============================================
+// CLUB DETAILS TABS NAVIGATION
+// ============================================
+// Definition for Tabs on Club Details page
+// No icon, disabled, onClick and badgeCount required
+
+export const CLUB_TAB_ITEMS: NavItem[] = [
+	{ label: "Home", icon:'', href: "/club/[clubId]/home" },
+	{ label: "Events", icon:'', href: "/club/[clubId]/events" },
+	{ label: "Members", icon:'', href: "/club/[clubId]/members" },
+	{ label: "Subscriptions", icon:'', href: "/club/[clubId]/subscriptions" },
+];
+// ============================================
 // FULL NAVIGATION CONFIG (Optional Export)
 // ============================================
 
@@ -295,6 +308,7 @@ export const navigation: NavigationConfig = {
   dashboard: DASHBOARD_NAV_ITEMS,
   admin: ADMIN_NAV_ITEMS,
   feed: FEED_NAV_ITEMS,
+  club: CLUB_TAB_ITEMS,
 };
 
 // ============================================

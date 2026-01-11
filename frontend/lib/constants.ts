@@ -645,6 +645,7 @@ export const NotificationType = {
   LEAGUE_INVITATION: 24,
   LEAGUE_SESSION_REMINDER: 25,
   LEAGUE_SESSION_CANCELLED: 26,
+  MATCH_ANNOUNCEMENT: 27,
 
   // Memberships/Club (30-39)
   MEMBERSHIP_EXPIRING: 30,
@@ -679,6 +680,8 @@ export const NotificationType = {
   SYSTEM_UPDATE: 81,
 } as const;
 
+
+
 export type NotificationTypeValue =
   (typeof NotificationType)[keyof typeof NotificationType];
 
@@ -695,6 +698,7 @@ export const NotificationTypeLabels: Record<NotificationTypeValue, string> = {
   [NotificationType.LEAGUE_INVITATION]: "League Invitation",
   [NotificationType.LEAGUE_SESSION_REMINDER]: "Session Reminder",
   [NotificationType.LEAGUE_SESSION_CANCELLED]: "Session Cancelled",
+  [NotificationType.MATCH_ANNOUNCEMENT]: "Match Announcement",
   [NotificationType.MEMBERSHIP_EXPIRING]: "Membership Expiring",
   [NotificationType.MEMBERSHIP_RENEWED]: "Membership Renewed",
   [NotificationType.RENEWAL_PERIOD_OPEN]: "Renewal Period Open",
@@ -730,6 +734,7 @@ export const NotificationTypeValues: Record<string, NotificationTypeValue> = {
   "League Invitation": NotificationType.LEAGUE_INVITATION,
   "Session Reminder": NotificationType.LEAGUE_SESSION_REMINDER,
   "Session Cancelled": NotificationType.LEAGUE_SESSION_CANCELLED,
+  "Match Announcement": NotificationType.MATCH_ANNOUNCEMENT,
   "Membership Expiring": NotificationType.MEMBERSHIP_EXPIRING,
   "Membership Renewed": NotificationType.MEMBERSHIP_RENEWED,
   "Renewal Period Open": NotificationType.RENEWAL_PERIOD_OPEN,
@@ -762,6 +767,7 @@ export const NotificationCategory = {
   EVENT: "Event",
   LEAGUE: "League",
   CLUB: "Club",
+  MATCH: "Match",
   MESSAGE: "Message",
   SOCIAL: "Social",
   MILESTONE: "Milestone",
@@ -791,6 +797,7 @@ export const NotificationTypeCategory: Record<
   [NotificationType.LEAGUE_INVITATION]: NotificationCategory.LEAGUE,
   [NotificationType.LEAGUE_SESSION_REMINDER]: NotificationCategory.LEAGUE,
   [NotificationType.LEAGUE_SESSION_CANCELLED]: NotificationCategory.LEAGUE,
+  [NotificationType.MATCH_ANNOUNCEMENT]: NotificationCategory.MATCH,
   [NotificationType.MEMBERSHIP_EXPIRING]: NotificationCategory.CLUB,
   [NotificationType.MEMBERSHIP_RENEWED]: NotificationCategory.CLUB,
   [NotificationType.RENEWAL_PERIOD_OPEN]: NotificationCategory.CLUB,
@@ -857,6 +864,7 @@ export const NotificationTypeBadgeVariant: Record<
   [NotificationType.LEAGUE_STANDINGS_UPDATED]: "info",
   [NotificationType.LEAGUE_ANNOUNCEMENT]: "info",
   [NotificationType.CLUB_ANNOUNCEMENT]: "info",
+  [NotificationType.MATCH_ANNOUNCEMENT]: "info",
   [NotificationType.SYSTEM_UPDATE]: "info",
   [NotificationType.DIRECT_MESSAGE]: "info",
   [NotificationType.MENTION]: "info",

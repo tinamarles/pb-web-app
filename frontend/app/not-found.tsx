@@ -28,7 +28,7 @@ export default function NotFound() {
 
         {/* Actions */}
         <div className="mt-lg flex flex-wrap items-center justify-center gap-md">
-          <Link href="/dashboard">
+          <Link href="/dashboard/overview">
             <Button variant="filled" size="lg">
               <Icon name="home" size="md" />
               Back to Dashboard

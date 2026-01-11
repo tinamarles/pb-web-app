@@ -14,13 +14,13 @@ import {
   AuthUserContextType,
   isUser,
   isMemberUser as isMemberUserGuard,
-  Notification,
+  FeedItem,
 } from "@/lib/definitions"; // Import your defined User type
 import { snakeToCamel } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
 
 interface ApiResponse {
-  notifications?: Notification[];
+  notifications?: FeedItem[];
   unreadCount?: number;
   [key: string]: unknown;
 }
@@ -38,7 +38,7 @@ interface AuthUserProviderProps {
 
 export function AuthUserProvider({ children }: AuthUserProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<FeedItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   
   const router = useRouter();
@@ -95,12 +95,20 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
   }, [user]);
 
   const markNotificationAsRead = useCallback(async (notificationId: number) => {
-    // Optimistic update
+    // Optimistic update - only update if it's a notification (has isRead field)
     setNotifications(prev => 
-      prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
+      prev.map(n => {
+        if (n.id === notificationId && n.feedType === 'notification') {
+          return { ...n, isRead: true };
+        }
+        return n;
+      })
     );
     
-    const wasUnread = notifications.find(n => n.id === notificationId)?.isRead === false;
+    // Check if was unread before updating count
+    const item = notifications.find(n => n.id === notificationId);
+    const wasUnread = item && item.feedType === 'notification' && item.isRead === false;
+    
     if (wasUnread) {
       setUnreadCount(prev => Math.max(0, prev - 1));
     }
@@ -115,10 +123,13 @@ export function AuthUserProvider({ children }: AuthUserProviderProps) {
   }, [notifications, fetchUser]);
 
   const dismissNotification = useCallback(async (notificationId: number) => {
-    // Optimistic update
+    // Optimistic update - remove from list
     setNotifications(prev => prev.filter(n => n.id !== notificationId));
     
-    const wasUnread = notifications.find(n => n.id === notificationId)?.isRead === false;
+    // Check if was unread before updating count
+    const item = notifications.find(n => n.id === notificationId);
+    const wasUnread = item && item.feedType === 'notification' && item.isRead === false;
+    
     if (wasUnread) {
       setUnreadCount(prev => Math.max(0, prev - 1));
     }

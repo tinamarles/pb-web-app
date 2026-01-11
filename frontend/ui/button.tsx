@@ -26,6 +26,7 @@ export type BaseButtonProps = {
   size?: ButtonSize;
   label?: string;
   icon?: string;
+  iconPosition?: "left" | "right";
   iconOnly?: boolean;
   className?: string;
   children?: React.ReactNode;
@@ -57,6 +58,7 @@ export function Button(props: ButtonProps) {
     size = "md",
     label,
     icon,
+    iconPosition = "left",
     iconOnly = false,
     children,
     ...restProps
@@ -128,6 +130,15 @@ export function Button(props: ButtonProps) {
     }
 
     // Combinations: Icon + Label, Label only, Icon only
+    if (iconPosition === "right" && resolvedIcon) {
+      return (
+        <>
+          {label}
+          {resolvedIcon && <Icon name={resolvedIcon} />}
+        </>
+      );
+    }
+
     return (
       <>
         {resolvedIcon && <Icon name={resolvedIcon} />}

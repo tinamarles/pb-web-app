@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { getClub } from '@/lib/actions';
 //import { ClubCard, ClubDetailsTabs } from '@/components/club';
 import { ClubCard } from "@/components/club/ClubCard";
+import { ClubDetailsTabs } from "@/components/club/ClubDetailsTabs";    
 //import { MarkdownContent } from '@/components';
 import { notFound } from "next/navigation";
 
@@ -44,8 +45,14 @@ export default async function ClubLayout({
             <div className='club-details'>
                 <div className='club-details-topSection'>
                     <ClubCard club={club} actions={true} variant='detail'/> 
-                    {/* <ClubDetailsTabs clubId={club.id} isJoinMode={isJoinMode} /> */}
-                    {/* <MarkdownContent content={club.longDescription || ''} /> */}    
+                    {/* <MarkdownContent content={club.longDescription || ''} /> */}
+                    <div className='flex flex-col mt-md gap-sm'>
+                      <h2 className='headline-md text-secondary'>About {club.name}</h2>
+                      <p className='body-sm sm:body-md text-on-surface-variant pb-md mb-md border-b border-outline-variant'>
+                        {club.description || 'No additional details provided for this club.'}
+                      </p>
+                    </div>
+                    <ClubDetailsTabs clubId={club.id}/>  
                 </div>
                 <div className='club-details-bottomSection'>
                     {children}

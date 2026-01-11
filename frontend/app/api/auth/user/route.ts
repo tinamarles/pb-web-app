@@ -37,24 +37,24 @@ export async function GET(_req: Request) {
   const userData: User = await djangoResponse.json();
 
   // 4. Fetch notifications
-  const notificationsResponse = await fetch(`${API_BASE_URL}/api/notifications/`, {
+  const feedResponse = await fetch(`${API_BASE_URL}/api/feed/`, {
     headers: { 
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json'
     }
   });
 
-  if (!notificationsResponse.ok) {
+  if (!feedResponse.ok) {
     throw new Error('Failed to fetch notifications');
   }
 
-  const notificationsData = await notificationsResponse.json();
+  const feedData = await feedResponse.json();
 
   // 5. Return combined response (user data + notifications)
   return NextResponse.json({
     ...userData,  // spread user data
-    notifications: notificationsData.notifications,
-    unreadCount: notificationsData.unread_count
+    notifications: feedData.feed,
+    unreadCount: feedData.badgeCount
   });
   } catch (error) {
     console.error("Error getting User data:", error);

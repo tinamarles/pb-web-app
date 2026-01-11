@@ -4,12 +4,15 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { snakeToCamel } from "./utils";
+import { snakeToCamel, camelToSnake } from "./utils";
 import { 
     MemberClub, 
     ClubDetailHome, 
     ClubEventsResponse,
-    ClubMembersResponse
+    ClubMembersResponse,
+    NotificationFeedResponse,
+    Notification,
+    Announcement
   } from "./definitions";
 import { 
   RoleTypeValue, 
@@ -335,3 +338,170 @@ export const getClubMembers = cache(async (
   const apiData = await get<unknown>(endpoint);
   return snakeToCamel(apiData) as ClubMembersResponse;
 });
+
+// ========================================
+// NOTIFICATIONS & ANNOUNCEMENTS
+// ========================================
+
+/**
+ * Get unified notification feed (notifications + announcements merged)
+ * 
+ * @returns NotificationFeedResponse with merged feed + badge counts
+ * @example const { feed, badgeCount } = await getNotificationFeed();
+ * 
+ * Backend: GET /api/feed/
+ * Returns: { feed: FeedItem[], badgeCount: number, unreadNotifications: number, announcementCount: number }
+ * 
+ * CRITICAL: Each item has feedType: 'notification' | 'announcement'
+ * CRITICAL: Both types have notificationType field for badge counting
+ */
+export const getNotificationFeed = cache(async () => {
+  const apiData = await get<unknown>('feed');
+  return snakeToCamel(apiData) as NotificationFeedResponse;
+});
+
+/**
+ * Get all notifications (1-to-1 messages only)
+ * 
+ * @returns Array of Notification objects
+ * @example const notifications = await getNotifications();
+ * 
+ * Backend: GET /api/notifications/
+ * Returns: Notification[] (only notifications, excludes announcements)
+ */
+export const getNotifications = cache(async () => {
+  const apiData = await get<unknown>('notifications');
+  return snakeToCamel(apiData) as Notification[];
+});
+
+/**
+ * Get all announcements (1-to-many broadcasts only)
+ * 
+ * @returns Array of Announcement objects
+ * @example const announcements = await getAnnouncements();
+ * 
+ * Backend: GET /api/announcements/
+ * Returns: Announcement[] (only announcements, excludes notifications)
+ * NOTE: Automatically filtered to user's clubs, excludes expired
+ */
+export const getAnnouncements = cache(async () => {
+  const apiData = await get<unknown>('announcements');
+  return snakeToCamel(apiData) as Announcement[];
+});
+
+/**
+ * Get specific announcement by ID
+ * 
+ * @param id - Announcement ID
+ * @returns Single Announcement object
+ * @example const announcement = await getAnnouncement(123);
+ * 
+ * Backend: GET /api/announcements/{id}/
+ */
+export const getAnnouncement = cache(async (id: number) => {
+  const apiData = await get<unknown>(`announcements/${id}`);
+  return snakeToCamel(apiData) as Announcement;
+});
+
+/**
+ * Mark notification as read
+ * 
+ * @param id - Notification ID
+ * @returns Updated Notification object
+ * @example await markNotificationAsRead(45);
+ * 
+ * Backend: PATCH /api/notifications/{id}/
+ * Body: { is_read: true }
+ */
+export async function markNotificationAsRead(id: number): Promise<Notification> {
+  const apiData = await patch<unknown>('notifications', id, { is_read: true });
+  return snakeToCamel(apiData) as Notification;
+}
+
+/**
+ * Create new announcement (admin/captain only)
+ * 
+ * @param data - Announcement creation data
+ * @returns Created Announcement object
+ * @example await createAnnouncement({ 
+ *   club: 123, 
+ *   title: "New rules", 
+ *   content: "..." 
+ * });
+ * 
+ * Backend: POST /api/announcements/
+ * CRITICAL: notification_type is AUTO-CALCULATED by backend (match → MATCH_ANNOUNCEMENT, league → LEAGUE_ANNOUNCEMENT, club → CLUB_ANNOUNCEMENT)
+ */
+export async function createAnnouncement(data: {
+  club: number;
+  league?: number | null;  // Optional - narrows audience to league members
+  match?: number | null;   // Optional - narrows audience to match participants
+  title: string;
+  content: string;
+  imageUrl?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  isPinned?: boolean;
+  expiryDate?: string | null;
+}): Promise<Announcement> {
+  // Convert camelCase to snake_case for Django
+  const snakeCaseData = {
+    club: data.club,
+    league: data.league,
+    match: data.match,
+    title: data.title,
+    content: data.content,
+    image_url: data.imageUrl,
+    action_url: data.actionUrl,
+    action_label: data.actionLabel,
+    is_pinned: data.isPinned,
+    expiry_date: data.expiryDate,
+    // ❌ DO NOT include notification_type - it's auto-calculated by backend!
+  };
+  
+  const apiData = await post<unknown>('announcements', snakeCaseData);
+  return snakeToCamel(apiData) as Announcement;
+}
+
+/**
+ * Update announcement (admin/captain only)
+ * 
+ * @param id - Announcement ID
+ * @param data - Partial update data
+ * @returns Updated Announcement object
+ * @example await updateAnnouncement(123, { title: "Updated title" });
+ * 
+ * Backend: PATCH /api/announcements/{id}/
+ * NOTE: notification_type cannot be manually updated - it's recalculated on save based on match/league/club
+ */
+export async function updateAnnouncement(
+  id: number,
+  data: Partial<{
+    title: string;
+    content: string;
+    imageUrl: string;
+    actionUrl: string;
+    actionLabel: string;
+    isPinned: boolean;
+    expiryDate: string | null;
+  }>
+): Promise<Announcement> {
+  // Convert camelCase to snake_case for Django
+  const snakeCaseData = camelToSnake(data) as object;
+  
+  const apiData = await patch<unknown>('announcements', id, snakeCaseData);
+  return snakeToCamel(apiData) as Announcement;
+}
+
+/**
+ * Delete announcement (admin/captain only)
+ * 
+ * @param id - Announcement ID
+ * @returns HTTP status code
+ * @example await deleteAnnouncement(123);
+ * 
+ * Backend: DELETE /api/announcements/{id}/
+ */
+export async function deleteAnnouncement(id: number): Promise<number> {
+  return del('announcements', id);
+}

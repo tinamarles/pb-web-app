@@ -793,7 +793,7 @@
 		@apply px-lg;
 	}
 }
-
+/* CSS for Club Card component */
 @layer components {
   .club-card {
     width: 100%;
@@ -816,6 +816,7 @@
   }
 
   .banner-container,
+  .image-container,
   .banner-container.grid {
       position: relative;
       width: 100%;
@@ -998,6 +999,42 @@
   @media (min-width: 1024px) {
     .action-container {
         @apply gap-md;
+    }
+  }
+}
+/* CSS for Club Details Tabs Component */
+@layer components {
+  .tab-container {
+    @apply flex items-center w-full mb-md;
+  }
+  .tab-container nav {
+    @apply flex justify-start;
+    @apply gap-lg;
+  }
+  .tab-item {
+    @apply flex flex-1 shrink-0 items-center;
+    @apply text-on-surface body-sm;
+    @apply py-sm gap-xs;
+    @apply whitespace-nowrap;
+
+    &:disabled {
+      @apply disabled-item;
+    }
+    &.active {
+      @apply border-b-2 border-primary;
+      @apply text-primary;
+      @apply cursor-default;
+    }
+    &:hover:not(.active),
+    &:focus {
+      @apply border-b-2 border-primary/50;
+      outline: none;
+    }
+  }
+  @media (min-width: 640px) {
+    .tab-item {
+        @apply title-lg emphasized;
+        @apply py-md gap-lg;
     }
   }
 }
@@ -2636,7 +2673,8 @@
       @apply disabled-item;
     }
     &:hover {
-      @apply emphasized;
+      @apply strong;
+      @apply bg-secondary/10;
     }
     &:focus-visible {
       --tw-ring-offset-color: var(--color-secondary);

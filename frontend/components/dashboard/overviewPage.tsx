@@ -7,20 +7,36 @@ import { useDashboard } from '@/providers/DashboardProvider';
 import { useAuth } from '@/providers/AuthUserProvider';
 import { NotificationType } from '@/lib/constants';
 import { PendingInvitations } from './PendingInvitations';
+import { Notification, Announcement } from '@/lib/definitions';
+import Image from 'next/image';
 
 export function OverviewPage() {
 
   const { notifications, markNotificationAsRead } = useAuth();
   const { currentMembership } = useDashboard();
 
-  // Filter event invitations
-  const eventInvitations = notifications.filter(
+  const notificationsList = notifications.filter(
+  (item): item is Notification & { feedType: 'notification' } => 
+    item.feedType === 'notification'
+  );
+
+  const announcementsList = notifications.filter(
+    (item): item is Announcement & { feedType: 'announcement' } => 
+      item.feedType === 'announcement'
+  );
+
+  // ✅ NOW filter without ANY type errors!
+  const eventInvitations = notificationsList.filter(
     n => n.notificationType === NotificationType.EVENT_INVITATION && !n.isRead
   );
   const hasInvitations = eventInvitations.length > 0;
 
-  console.log('Event Invitations:', eventInvitations);
-  console.log('Notifications from Auth:', notifications)
+  const clubAnnouncements = announcementsList.filter(
+    n => n.notificationType === NotificationType.CLUB_ANNOUNCEMENT
+    // No isRead needed - announcements don't have it!
+  );
+  const hasAnnouncements = clubAnnouncements.length > 0;
+  
 
   const openCreateEventModal = () => {
       console.log('Create Event clicked!')
@@ -29,6 +45,34 @@ export function OverviewPage() {
   const handleRegister = () => {
       console.log('Register Button clicked')
   };
+
+  const ClubAnnouncement = () => {
+    
+    return (
+      <div className='flex flex-col gap-sm bg-surface-container-lowest rounded-md p-sm'>
+        <p className='title-sm emphasized text-on-surface'>{clubAnnouncements[0]?.title}</p>
+        <div className='image-container'>
+          <Image
+            src={clubAnnouncements[0]?.imageUrl || '/images/club-default.jpg'}
+            alt='Club Announcement Banner'
+            fill
+            sizes="100vw "
+            className='object-cover'
+          />
+        </div>
+        <p className='body-sm text-on-surface-variant'>{clubAnnouncements[0]?.content}</p>
+        <p className='label-sm text-on-surface-variant'>Posted on: {new Date(clubAnnouncements[0]!.createdAt).toLocaleDateString()}</p>
+        <Button
+          variant='highlighted'
+          iconPosition='right'
+          size='sm'
+          label='Read More'
+          icon='chevronright'
+          className='w-fit pl-0'
+        />
+      </div>
+    );
+  }
 
   return (
     <div className=''>
@@ -51,12 +95,16 @@ export function OverviewPage() {
           {/* Club Announcement */}
           <div className = ''>
               <p className='title-md emphasized text-on-secondary mb-md'>Latest Club Announcement</p>
-              <EmptyState
-                  icon='Announcements'
-                  title='No Announcements at present'
-                  description='Check back later'
-                  className='text-on-surface bg-surface-container-lowest rounded-md'
-              />
+              {hasAnnouncements ? (
+                <ClubAnnouncement />
+              ) : (
+                <EmptyState
+                    icon='Announcements'
+                    title='No Announcements at present'
+                    description='Check back later'
+                    className='text-on-surface bg-surface-container-lowest rounded-md'
+                />
+              )}
           </div>
           {/* Membership Information */}
           {currentMembership && (

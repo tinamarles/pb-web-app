@@ -166,6 +166,7 @@ class NotificationType(models.IntegerChoices):
     LEAGUE_INVITATION = 24, "League Invitation"
     LEAGUE_SESSION_REMINDER = 25, "Session Reminder"
     LEAGUE_SESSION_CANCELLED = 26, "Session Cancelled"
+    MATCH_ANNOUNCEMENT = 27, "Match Announcement"
     
     # Memberships/Club (30-39)
     MEMBERSHIP_EXPIRING = 30, "Membership Expiring"
@@ -199,3 +200,4 @@ class NotificationType(models.IntegerChoices):
     SYSTEM_MAINTENANCE = 80, "System Maintenance"
     SYSTEM_UPDATE = 81, "System Update"
 # ... etc for all status/type fields
+
