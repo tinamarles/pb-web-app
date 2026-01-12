@@ -51,10 +51,11 @@ export async function GET(_req: Request) {
   const feedData = await feedResponse.json();
 
   // 5. Return combined response (user data + notifications)
+
   return NextResponse.json({
     ...userData,  // spread user data
     notifications: feedData.feed,
-    unreadCount: feedData.badgeCount
+    unreadCount: feedData.badge_count,
   });
   } catch (error) {
     console.error("Error getting User data:", error);

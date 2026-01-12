@@ -51,15 +51,17 @@ export function OverviewPage() {
     return (
       <div className='flex flex-col gap-sm bg-surface-container-lowest rounded-md p-sm'>
         <p className='title-sm emphasized text-on-surface'>{clubAnnouncements[0]?.title}</p>
-        <div className='image-container'>
-          <Image
-            src={clubAnnouncements[0]?.imageUrl || '/images/club-default.jpg'}
-            alt='Club Announcement Banner'
-            fill
-            sizes="100vw "
-            className='object-cover'
-          />
-        </div>
+        {clubAnnouncements[0].imageUrl && (
+          <div className='image-container'>
+            <Image
+              src={clubAnnouncements[0].imageUrl}
+              alt='Club Announcement Banner'
+              fill
+              sizes="100vw "
+              className='object-cover'
+            />
+          </div>
+        )}
         <p className='body-sm text-on-surface-variant'>{clubAnnouncements[0]?.content}</p>
         <p className='label-sm text-on-surface-variant'>Posted on: {new Date(clubAnnouncements[0]!.createdAt).toLocaleDateString()}</p>
         <Button

@@ -121,7 +121,7 @@ export const DASHBOARD_NAV_ITEMS: NavItem[] = [
   },
   {
     label: "Announcements",
-    href: "/dashboard/notifications",
+    href: "/dashboard/announcements",
     icon: "announcements",
     badgeCount: NotificationType.CLUB_ANNOUNCEMENT,
   },
@@ -168,23 +168,13 @@ export const DASHBOARD_ADMIN_ITEMS: NavItem[] = [
 
 // ✅ ADD: Admin navigation items
 export const ADMIN_NAV_ITEMS: NavItem[] = [
-  // Key feature for League Captains on League Day: allows check-in,
-  // round management ('complete', 'in-progress', mid-session player changes, etc)
-  // { label: "League Session", href: "/dashboard/league-day-[sessionId]", icon: "leagues" },
-  // only for bulk admin feature - such as accepting join request, import/export data etc.
-  // { label: "Manage Members", href: "/dashboard/admin-members", icon: "members" },
-  // { label: "Court Schedule", href: "/dashboard/admin-courts", icon: "court-schedule" },
-  // { label: "Training", href: "/dashboard/admin-training", icon: "coaches" },
+  
   { label: "Reports", href: "/admin/reports", icon: "chart" },
   { label: "Calendar", href: "/admin/schedule", icon: "calendar" },
   { label: "Events", href: "/admin/events", icon: "events" },
   { label: "Memberships", href: "/admin/memberships", icon: "memberships" },
   { label: "Members", href: "/admin/members", icon: "members" },
-  {
-    label: "Announcements",
-    href: "/admin/notifications",
-    icon: "announcements",
-  },
+  { label: "Announcements", href: "/admin/announcements", icon: "announcements" },
   { label: "Settings", href: "/admin/settings", icon: "settings" },
 ];
 
@@ -311,36 +301,3 @@ export const navigation: NavigationConfig = {
   club: CLUB_TAB_ITEMS,
 };
 
-// ============================================
-// USAGE EXAMPLES
-// ============================================
-
-/**
- * SIDEBAR USAGE:
- *
- * import { PROFILE_NAV_ITEMS, DASHBOARD_NAV_ITEMS } from '@/data/navigation';
- *
- * const items = isProfilePage ? PROFILE_NAV_ITEMS : DASHBOARD_NAV_ITEMS;
- * items.map(item => <MenuItem href={item.href} icon={item.icon} label={item.label} />)
- */
-
-/**
- * MORE PAGE USAGE:
- *
- * import { MORE_MENU_SECTIONS, MORE_MENU_FOOTER_LINKS } from '@/data/navigation';
- *
- * {MORE_MENU_SECTIONS.map((section) => (
- *   <div key={section.id}>
- *     <h2>{section.title}</h2>
- *     {section.items.map((item) => (
- *       <MenuItem
- *         key={item.href || item.label}
- *         href={item.href}
- *         icon={item.icon}
- *         label={item.label}
- *         disabled={item.disabled}
- *       />
- *     ))}
- *   </div>
- * ))}
- */

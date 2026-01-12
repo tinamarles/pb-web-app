@@ -195,7 +195,7 @@ class ClubMembershipType(models.Model):
     def current_member_count(self):
         """Count of active members with this type"""
         return self.memberships.filter(
-            status=2  # ACCEPTED status
+            status=MembershipStatus.ACTIVE  # ACTIVE status
         ).count()
     
     @property
@@ -206,7 +206,7 @@ class ClubMembershipType(models.Model):
         
         if self.max_capacity_percentage:
             total_members = self.club.club_memberships.filter(
-                status=2  # ACCEPTED status
+                status=MembershipStatus.ACTIVE  # ACTIVE status
             ).count()
             max_allowed = int((self.max_capacity_percentage / 100) * total_members)
             return self.current_member_count >= max_allowed

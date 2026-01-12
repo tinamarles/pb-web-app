@@ -1,3 +1,4 @@
+
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -27,7 +28,7 @@ def get_user_notifications(request):
     # Get all notifications for user (most recent first)
     notifications = Notification.objects.filter(
         recipient=user
-    ).order_by('-created_at')[:50]  # Limit to 50 most recent
+    ).select_related('sender', 'club', 'league', 'match').order_by('-created_at')[:50]  # Limit to 50 most recent
     
     # Serialize
     serializer = NotificationSerializer(notifications, many=True)
@@ -95,8 +96,8 @@ class AnnouncementViewSet(viewsets.ReadOnlyModelViewSet):
         
         return Announcement.objects.filter(
             club__in=user_clubs).filter(
-                Q(expiry_date_isnull=True) | Q(expiry_date__gte=today)
-                ).select_related('club', 'created_by').order_by(
+                Q(expiry_date__isnull=True) | Q(expiry_date__gte=today)
+                ).select_related('club', 'created_by', 'league', 'match').order_by(
                     '-created_at')
 
     def perform_create(self, serializer):
@@ -124,37 +125,32 @@ def notification_feed(request):
     user = request.user
     today = timezone.now().date()
     
-    # Get notifications
+    # Get notifications with related objects (prevents N+1 queries)
     notifications = Notification.objects.filter(
         recipient=user
-    ).select_related('recipient')
+    ).select_related('sender', 'club', 'league', 'match')
     
-    # Get announcements for user's clubs
+    # Get announcements for user's active club memberships with related objects
     user_clubs = user.club_memberships.filter(status=MembershipStatus.ACTIVE).values_list('club', flat=True)
 
     announcements = Announcement.objects.filter(
         club__in=user_clubs
     ).filter(
         Q(expiry_date__isnull=True) | Q(expiry_date__gte=today)
-    ).select_related('club', 'created_by')
+    ).select_related('club', 'created_by', 'league', 'match')
     
     # Serialize both
+    # Note: feed_type is automatically added by the serializers!
     notification_data = NotificationSerializer(notifications, many=True).data
     announcement_data = AnnouncementSerializer(announcements, many=True).data
 
-    # Add 'type field to distinguish them
-    for item in notification_data:
-        item['feed_type'] = 'notification'
-    for item in announcement_data:
-        item['feed_type'] = 'announcement'
-
     # Merge and sort by created_at descending (newest first)
-    feed = notification_data + announcement_data
+    feed = list(notification_data) + list(announcement_data)
     feed.sort(key=lambda x: x['created_at'], reverse=True)
 
     # Calculate badge count (unread notifications + all announcements)
-    unread_notification_count = Notification.objects.filter(is_read=False).count()
-    announcement_count = announcements.count() # TODO: add read tracking
+    unread_notification_count = notifications.filter(is_read=False).count()
+    announcement_count = announcements.count()  # TODO: add read tracking
     badge_count = unread_notification_count + announcement_count
     
     return Response({

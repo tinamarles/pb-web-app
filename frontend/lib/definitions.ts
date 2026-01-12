@@ -74,18 +74,6 @@ export interface ClubMembershipSkillLevel {
   description?: string;
 }
 
-/* Lightweight club type for listing clubs */
-export interface ClubListItem {
-  id: number;
-  name: string;
-  shortName?: string;
-  clubType: C.ClubTypeValue;
-  logoUrl?: string;
-  bannerUrl?: string; // ✅ Added
-  city?: string | null; // ✅ Added (from address)
-  memberCount: number; // ✅ Added (calculated)
-}
-
 export interface MemberClub {
   /* light-weight club that is used for a Club member. It
      does NOT include the array that contains all the members of 
@@ -174,76 +162,128 @@ export interface MemberUser extends PublicUser {
 export type User = PublicUser | MemberUser;
 
 // +++ Notifications +++
+
+/**
+ * PersonInfo - Generic person information used across the app
+ * 
+ * USAGE: Reusable type for representing any person in any context
+ * - Notification sender (creatorInfo)
+ * - Announcement creator (creatorInfo)
+ * - League captain (captainInfo)
+ * - Match organizer, referee, etc.
+ * 
+ * BENEFITS:
+ * - Single source of truth for person data structure
+ * - Change field names once, applies everywhere
+ * - Extend with additional fields when needed
+ * - Type-safe and consistent across entire app
+ * 
+ * EXTENDING:
+ * // If you need extra fields in specific contexts:
+ * export interface CoachInfo extends PersonInfo {
+ *   certificationLevel: string;
+ * }
+ * 
+ * // Or inline for one-off additions:
+ * creatorInfo: PersonInfo & { isStaff: boolean }
+ */
+export interface PersonInfo {
+  id: number;
+  fullName: string;           // Computed from firstName + lastName
+  firstName: string;
+  lastName: string;
+  profilePictureUrl?: string | null;
+}
+
+/**
+ * Notification - 1-to-1 notifications sent to specific users
+ * 
+ * Backend: NotificationSerializer
+ * Endpoint: GET /api/notifications/feed/
+ * 
+ * CRITICAL NOTES:
+ * - feedType is added by serializer (for unified feed)
+ * - content field contains the message
+ * - creatorInfo is the sender (can be null for system notifications)
+ * - club/league/match are optional context (nested objects or null)
+ */
 export interface Notification {
+  // === COMMON FIELDS (Future Abstract Class) ===
   id: number;
   notificationType: C.NotificationTypeValue;
   title: string;
-  message: string;
+  content: string;
+  club: {
+    id: number;
+    name: string;
+  } | null;
+  league: {
+    id: number;
+    name: string;
+  } | null;
+  match: {
+    id: number;
+    title: string;
+  } | null;
+  creatorInfo: PersonInfo | null;
+  actionUrl: string;
+  actionLabel: string;
+  createdAt: string; // ISO 8601 datetime
+  updatedAt: string; // ISO 8601 datetime
+  feedType: 'notification'; // Added by serializer
+  
+  // === NOTIFICATION-SPECIFIC FIELDS ===
   isRead: boolean;
-  createdAt: string;
-  readAt?: string | null; // ISO 8601 format, null if unread
-  actionUrl?: string;
-  actionLabel?: string | null; // Label for action button (e.g., "View Match")
-
-  // Related objects (ForeignKeys serialized as nested objects)
-  club?: {
-    id: number;
-    name: string;
-  } | null;
-
-  league?: {
-    id: number;
-    name: string;
-  } | null;
-
-  match?: {
-    id: number;
-    // Additional match fields as needed
-  } | null;
-
-  senderInfo?: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    avatar?: string;
-  };
-  // Additional flexible data (e.g., milestone details, match scores)
-  metadata?: Record<string, unknown>;
+  readAt: string | null; // ISO 8601 datetime, null if not read yet
+  metadata: Record<string, unknown> | null; // JSON field for additional data
 }
 
 /**
  * Announcement - Club-wide announcements (1-to-many broadcasts)
- *
+ * 
+ * Backend: AnnouncementSerializer
+ * Endpoint: GET /api/notifications/feed/
+ * 
  * CRITICAL NOTES:
- * - club is REQUIRED (all announcements belong to a club)
+ * - feedType is added by serializer (for unified feed)
+ * - club is REQUIRED (all announcements belong to a club - NOT NULL!)
  * - league/match are OPTIONAL (narrow audience within club)
  * - Different from Notification which is 1-to-1 to specific user
- *
+ * 
  * AUDIENCE LOGIC:
  * - club only → All club members see it
  * - club + league → Only league participants see it
  * - club + match → Only match participants see it
  */
 export interface Announcement {
+  // === COMMON FIELDS (Future Abstract Class) ===
   id: number;
-  notificationType: C.NotificationTypeValue; // Type of announcement
-  club: number; // REQUIRED - club ID (always set)
-  clubName: string; // Club name for display
-  league: number | null; // OPTIONAL - league ID (filters audience)
-  leagueName: string | null; // League name for display
-  match: number | null; // OPTIONAL - match ID (filters audience)
-  matchName: string | null; // Match name/description for display
-  createdBy: number | null; // User ID who created it
-  createdByName: string | null; // Creator name for display
+  notificationType: C.NotificationTypeValue;
   title: string;
   content: string;
-  imageUrl: string | null; // Optional announcement image
-  actionUrl: string | null; // CTA button link
-  actionLabel: string | null; // CTA button text
-  isPinned: boolean; // Pinned announcements show first
-  expiryDate: string | null; // ISO 8601 date, null = never expires
+  club: {
+    id: number;
+    name: string;
+  }; // ✅ REQUIRED - NOT NULL!
+  league: {
+    id: number;
+    name: string;
+  } | null;
+  match: {
+    id: number;
+    title: string;
+  } | null;
+  creatorInfo: PersonInfo | null;
+  actionUrl: string;
+  actionLabel: string;
   createdAt: string; // ISO 8601 datetime
   updatedAt: string; // ISO 8601 datetime
+  feedType: 'announcement'; // Added by serializer
+  
+  // === ANNOUNCEMENT-SPECIFIC FIELDS ===
+  imageUrl?: string | null;
+  isPinned: boolean;
+  expiryDate: string | null; // ISO 8601 date, null = never expires
 }
 
 /**
@@ -253,9 +293,7 @@ export interface Announcement {
  * Used by /api/feed/ endpoint which merges notifications + announcements
  * Check feedType to determine which type and render appropriate component
  */
-export type FeedItem =
-  | (Notification & { feedType: "notification" })
-  | (Announcement & { feedType: "announcement" });
+export type FeedItem = Notification | Announcement;
 
 /**
  * NotificationFeedResponse - Response from /api/feed/ endpoint
@@ -385,12 +423,7 @@ export interface League {
   registrationClosesHoursBefore?: number;
   leagueType: C.LeagueTypeValue;
   minimumSkillLevel?: C.SkillLevelValue;
-  captainInfo: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    avatar?: string;
-  } | null;
+  captainInfo: PersonInfo | null;
   startDate: string;
   endDate?: string;
   registrationOpen: boolean;

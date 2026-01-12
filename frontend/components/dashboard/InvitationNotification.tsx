@@ -50,12 +50,12 @@ export function InvitationNotification({
       <div className="flex items-center gap-sm">
         <Avatar
           size="sm"
-          src={notification.senderInfo?.avatar}
-          name={notification.senderInfo?.firstName}
+          src={notification.creatorInfo?.profilePictureUrl || undefined}
+          name={notification.creatorInfo?.firstName}
         />
         <span className="single-line-base">
-          {notification.senderInfo?.firstName}&nbsp;
-          {notification.senderInfo?.lastName}
+          {notification.creatorInfo?.firstName}&nbsp;
+          {notification.creatorInfo?.lastName}
         </span>
       </div>
 
@@ -63,7 +63,7 @@ export function InvitationNotification({
       <div className="">
         <p className="title-sm emphasized truncate">{notification.title}</p>
         <p className="label-lg text-on-surface-variant truncate">
-          {notification.message}
+          {notification.content}
         </p>
       </div>
 
