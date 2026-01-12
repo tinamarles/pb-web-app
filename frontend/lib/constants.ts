@@ -320,6 +320,7 @@ export const DayOfWeekValues: Record<string, DayOfWeekValue> = {
  * Maps to Django: public.constants.RecurrenceType
  */
 export const RecurrenceType = {
+  ONCE: 0,
   WEEKLY: 1,
   BI_WEEKLY: 2,
   MONTHLY: 3,
@@ -329,6 +330,7 @@ export type RecurrenceTypeValue =
   (typeof RecurrenceType)[keyof typeof RecurrenceType];
 
 export const RecurrenceTypeLabels: Record<RecurrenceTypeValue, string> = {
+  [RecurrenceType.ONCE]: "One-time",
   [RecurrenceType.WEEKLY]: "Weekly",
   [RecurrenceType.BI_WEEKLY]: "Every other week",
   [RecurrenceType.MONTHLY]: "Once a month",
@@ -336,7 +338,8 @@ export const RecurrenceTypeLabels: Record<RecurrenceTypeValue, string> = {
 
 // Reverse mapping: label → value (for form submissions)
 export const RecurrenceTypeValues: Record<string, RecurrenceTypeValue> = {
-  Weekly: RecurrenceType.WEEKLY,
+  "One-time": RecurrenceType.ONCE,
+  "Weekly": RecurrenceType.WEEKLY,
   "Every other week": RecurrenceType.BI_WEEKLY,
   "Once a month": RecurrenceType.MONTHLY,
 };

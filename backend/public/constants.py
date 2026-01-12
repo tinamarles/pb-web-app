@@ -71,6 +71,7 @@ class DayOfWeek(models.IntegerChoices):
     SUNDAY = 6, "Sunday"
 
 class RecurrenceType(models.IntegerChoices):
+    ONCE = 0, 'One-time'
     WEEKLY = 1, 'Weekly'
     BI_WEEKLY = 2, 'Every other week'
     MONTHLY = 3, 'Once a month'

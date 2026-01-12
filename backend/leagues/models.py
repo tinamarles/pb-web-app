@@ -6,8 +6,9 @@ from functools import cached_property
 from clubs.models import Club, ClubMembership, ClubMembershipSkillLevel
 from courts.models import CourtLocation
 from public.constants import LeagueType, GenerationFormat, LeagueParticipationStatus, DayOfWeek, RecurrenceType, LeagueAttendanceStatus, MatchStatus
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -27,7 +28,7 @@ def get_default_end_date():
 class League(models.Model):
 
     """
-    Pickleball league.
+    Pickleball league OR event.
     
     Examples:
     - "Rising Stars" - Standard league, 3.5+ skill, Mon/Wed 8-10am
@@ -36,6 +37,8 @@ class League(models.Model):
       (Fixed 4+ player teams, MLP match format)
     - "Doubles Buddies" - Team league, 3.0+ skill, Tue/Thu 6-8pm
       (Fixed 2-player teams for entire season)
+    - "Open Play Friday" - Recurring event, drop-in, Fri 9-11am
+      (Users register per-session, not for entire season)
     """
     
     # Basic info
@@ -45,34 +48,59 @@ class League(models.Model):
         Club, 
         on_delete=models.CASCADE, 
         related_name='leagues')
+    
     # Differentiates events from leagues
     is_event = models.BooleanField(
         default=False,
         help_text='True = Event (per-session), False = League (season enrollment)'
     )
+    
     # Event or League Banner Image to display on cards/details
     image_url = models.URLField(max_length=200, blank=True) 
-    # Event-specific settings
-    max_spots_per_session = models.PositiveIntegerField(
-        null=True,
+    
+    # Capacity control (dual-purpose field based on is_event flag)
+    max_participants = models.IntegerField(
         blank=True,
-        help_text="Max registrations per session (for events only)"
+        null=True,
+        help_text=(
+            'Maximum number of participants (unlimited if blank). '
+            'For LEAGUES: Season enrollment cap (additional joiners become reserves). '
+            'For EVENTS: Per-session cap (additional joiners join waitlist).'
+        )
     )
     
-    allow_waitlist = models.BooleanField(
+    # Overflow handling (dual-purpose field based on is_event flag)
+    allow_reserves = models.BooleanField(
         default=True,
-        help_text="Allow users to join waitlist when session full"
+        help_text=(
+            'Allow overflow participants when full. '
+            'For LEAGUES: Season-long RESERVE list. '
+            'For EVENTS: Per-session WAITLIST.'
+        )
     )
-
-    # from nextJS/10-Future-Ideas/KEY_MODULE_LEAGUE/Events/Concept-Events.md
+    
+    # [EVENTS ONLY] Per-session registration windows
     registration_opens_hours_before = models.PositiveIntegerField(
         default=168,  # 1 week
-        help_text="How many hours before session registration opens"
+        help_text="[EVENTS] Hours before session start that registration opens"
     )
     
     registration_closes_hours_before = models.PositiveIntegerField(
         default=2,  # 2 hours
-        help_text="How many hours before session registration closes"
+        help_text="[EVENTS] Hours before session start that registration closes"
+    )
+    
+    # [LEAGUES ONLY] Registration window dates
+    registration_start_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text='[LEAGUES] When registration opens (NULL = open immediately)'
+    )
+    
+    registration_end_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text='[LEAGUES] When registration closes (NULL = stays open)'
     )
 
     # League type (defines team structure, NOT match generation format!)
@@ -81,6 +109,7 @@ class League(models.Model):
         default=LeagueType.STANDARD,
         help_text='Standard=rotating partners, Team=fixed pairs, MLP=fixed 4+ teams'
     )
+    
     # Default match format (for Standard leagues only - convenience feature!)
     # This is used to pre-select the format when captain generates matches
     # Captain can override this choice for any specific session occurrence
@@ -91,6 +120,7 @@ class League(models.Model):
         null=True,
         help_text='Default format for match generation. Only applies to Standard leagues. Captain can override per session.'
     )
+    
     # Skill requirement (UPDATED from original 'level' field!)
     minimum_skill_level = models.ForeignKey(
         ClubMembershipSkillLevel,
@@ -100,6 +130,7 @@ class League(models.Model):
         related_name='leagues_with_min_skill',
         help_text='Minimum skill level required (e.g., 3.5+ means 3.5, 4.0, 4.5, 5.0 allowed)'
     )
+    
     # Captain (creator/manager)
     captain = models.ForeignKey(
         User,
@@ -115,21 +146,10 @@ class League(models.Model):
         through='LeagueParticipation',
         related_name='leagues_as_participant'
     )
+    
     # Season dates
     start_date = models.DateField(default=get_default_start_date)
     end_date = models.DateField(default=get_default_end_date)
-
-    # Registration
-    registration_open = models.BooleanField(default=True)
-    max_participants = models.IntegerField(
-        blank=True,
-        null=True,
-        help_text='Maximum number of ACTIVE participants (leave blank for unlimited). ❗️ Additional joiners become RESERVE.'
-    )
-    allow_reserves = models.BooleanField(
-        default=True,
-        help_text='❗️ If True, users can join as reserves when league is full'
-    )
     
     # Status
     is_active = models.BooleanField(default=True)
@@ -144,93 +164,238 @@ class League(models.Model):
     def __str__(self):
         return f"{self.name} ({self.club.name})"
     
-    def can_user_join(self, user, club_membership):
+    def clean(self):
         """
-        Check if user meets skill requirements to join.
-        ❗️ Updated to handle reserve system when league is full.
+        Model-level validation.
+        
+        CRITICAL: Ensures every League/Event has at least 1 session!
+        This validation runs when:
+        - Admin form is submitted
+        - serializer.is_valid() is called in API
+        - instance.full_clean() is called in code
+        
+        NOTE: This does NOT run automatically on save()!
+        You must call full_clean() before save() in your code!
+        """
+        super().clean()
+        
+        # ⚠️ ONLY validate for existing instances (not during creation)
+        # Reason: Sessions are created AFTER league is saved (via inline forms)
+        # So we can't check on initial creation!
+        if self.pk:
+            # Check if at least one session exists
+            session_count = self.sessions.count()
+            if session_count == 0:
+                raise ValidationError(
+                    "At least one session is required! "
+                    "Every league/event must have a schedule."
+                )
+    
+    @property
+    def registration_open(self):
+        """
+        Check if registration is currently open.
+        
+        For LEAGUES: Check date-based windows
+        For EVENTS: Handled per-session in SessionOccurrence
+        """
+        # For events, registration is session-specific
+        # Use SessionOccurrence.registration_open instead!
+        if self.is_event:
+            # Return True as default - actual check is per-session
+            return True
+        
+        # For leagues, check date-based windows
+        now = timezone.now().date()
+        
+        # Check start date
+        if self.registration_start_date and now < self.registration_start_date:
+            return False
+        
+        # Check end date
+        if self.registration_end_date and now > self.registration_end_date:
+            return False
+        
+        return True  # Default: open
+    
+    def can_user_join(self, user, club_membership, session_date=None):
+        """
+        Check if user can join league/event.
         
         Args:
             user: User attempting to join
             club_membership: User's ClubMembership at this club
+            session_date: (REQUIRED for events!) Specific session date
         
         Returns:
             tuple: (can_join: bool, join_as: str, reason: str)
-            where join_as is 'active' or 'reserve'
+            where join_as is:
+              - For leagues: LeagueParticipationStatus.ACTIVE or RESERVE
+              - For events: LeagueAttendanceStatus.ATTENDING or WAITLIST
         """
-        # Check if league is open for registration
-        if not self.registration_open:
-            return (False, None, "Registration is closed")
         
-        # Check if already joined
-        existing = LeagueParticipation.objects.filter(
-            league=self,
-            member=user,
-            status__in=[
-                LeagueParticipationStatus.ACTIVE,
-                LeagueParticipationStatus.RESERVE
-            ]
-        ).exists()
-        if existing:
-            return (False, None, "You are already in this league")
+        # ========================================
+        # EVENTS: Require session_date parameter
+        # ========================================
+        if self.is_event and not session_date:
+            raise ValueError("session_date is required for events!")
         
-        # Check skill level requirement
-        if not self.minimum_skill_level:
-            skill_met = True
+        # ========================================
+        # CHECK: Registration open?
+        # ========================================
+        if self.is_event:
+            # Get the specific session occurrence
+            try:
+                occurrence = SessionOccurrence.objects.get(
+                    league_session__league=self,
+                    session_date=session_date
+                )
+            except SessionOccurrence.DoesNotExist:
+                return (False, None, "Session not found")
+            
+            if not occurrence.registration_open:
+                return (False, None, "Registration is not open for this session")
         else:
-            # Get user's skill levels
+            # League: check league-level registration
+            if not self.registration_open:  # Uses @property
+                return (False, None, "Registration is closed")
+        
+        # ========================================
+        # CHECK: Already joined?
+        # ========================================
+        if self.is_event:
+            # Events: Check if already registered for THIS specific session
+            already_registered = LeagueAttendance.objects.filter(
+                league_participation__league=self,
+                league_participation__member=user,
+                session_date=session_date,
+                status__in=[
+                    LeagueAttendanceStatus.ATTENDING,
+                    LeagueAttendanceStatus.WAITLIST
+                ]
+            ).exists()
+            
+            if already_registered:
+                return (False, None, "You are already registered for this session")
+        else:
+            # Leagues: Check if already enrolled in the season
+            existing = LeagueParticipation.objects.filter(
+                league=self,
+                member=user,
+                status__in=[
+                    LeagueParticipationStatus.ACTIVE,
+                    LeagueParticipationStatus.RESERVE
+                ]
+            ).exists()
+            
+            if existing:
+                return (False, None, "You are already in this league")
+        
+        # ========================================
+        # CHECK: Skill requirement
+        # ========================================
+        if self.minimum_skill_level:
             user_skill_levels = club_membership.levels.all()
-            # NOTE: currently for the club St.Jerome there are only 3 levels:
-            # 'open' - meaning the player can be of any level, they have not been formally assessed
-            # '3.5+' - the player has been assessed and achieved a rating of 3.5+ but is not a 4.0+ yet
-            # '4.0+' - the player has been assessed and achieved a level of 4.0 or higher
             
             # Check if any of user's skills meet requirement
             # Since ClubMembershipSkillLevel uses integer IDs (higher ID = higher skill),
             # we just compare IDs directly!
-            skill_met = False
-            for level in user_skill_levels:
-                if level.id >= self.minimum_skill_level.id:
-                    skill_met = True
-                    break
-        
-        if not skill_met:
-            return (
-                False,
-                None,
-                f"Requires skill level {self.minimum_skill_level.level} or higher"
+            skill_met = any(
+                level.id >= self.minimum_skill_level.id
+                for level in user_skill_levels
             )
+            
+            if not skill_met:
+                return (
+                    False,
+                    None,
+                    f"Requires skill level {self.minimum_skill_level.level} or higher"
+                )
         
-        # ❗️ Check max participants (active only, not reserves)
+        # ========================================
+        # CHECK: Capacity (same field, different meaning!)
+        # ========================================
         if self.max_participants:
-            current_count = self.participants.filter(
+            if self.is_event:
+                # Events: Check per-session capacity
+                current_count = occurrence.current_participants_count
+                
+                if current_count >= self.max_participants:
+                    # Session full - can join waitlist?
+                    if self.allow_reserves:  # ← "reserves" = "waitlist" for events!
+                        return (
+                            True,
+                            LeagueAttendanceStatus.WAITLIST,
+                            f"Session full ({current_count}/{self.max_participants}). You will join the WAITLIST."
+                        )
+                    else:
+                        return (False, None, "Session is full and not accepting waitlist")
+            else:
+                # Leagues: Check total enrollment capacity
+                current_count = self.participants.filter(
+                    leagueparticipation__status=LeagueParticipationStatus.ACTIVE
+                ).count()
+                
+                if current_count >= self.max_participants:
+                    # League full - can join as reserve?
+                    if self.allow_reserves:  # ← "reserves" = season reserves for leagues!
+                        return (
+                            True,
+                            LeagueParticipationStatus.RESERVE,
+                            f"League is full ({current_count}/{self.max_participants}). You will join as RESERVE."
+                        )
+                    else:
+                        return (False, None, "League is full and not accepting reserves")
+        
+        # Can join!
+        if self.is_event:
+            return (True, LeagueAttendanceStatus.ATTENDING, "Welcome to this session!")
+        else:
+            return (True, LeagueParticipationStatus.ACTIVE, "Welcome to the league!")
+    
+    def get_current_participants_count(self, session_date=None):
+        """
+        Get participant count.
+        
+        Args:
+            session_date: (For events) Specific session to count
+        
+        Returns:
+            int: Number of active/attending participants
+        """
+        if self.is_event:
+            if not session_date:
+                raise ValueError("session_date required for events!")
+            
+            # Count attendees for THIS session
+            return LeagueAttendance.objects.filter(
+                league_participation__league=self,
+                session_date=session_date,
+                status=LeagueAttendanceStatus.ATTENDING
+            ).count()
+        else:
+            # Count enrolled members
+            return self.participants.filter(
                 leagueparticipation__status=LeagueParticipationStatus.ACTIVE
             ).count()
-            
-            if current_count >= self.max_participants:
-                # League is full - can join as reserve?
-                if self.allow_reserves:
-                    return (
-                        True,
-                        LeagueParticipationStatus.RESERVE,
-                        f"League is full ({current_count}/{self.max_participants}). You will join as RESERVE."
-                    )
-                else:
-                    return (False, None, "League is full and not accepting reserves")
+
+    def is_full(self, session_date=None):
+        """
+        Check if league/session is at max capacity.
         
-        # Can join as active player
-        return (True, LeagueParticipationStatus.ACTIVE, "Welcome to the league!")
-    
-    def get_current_participants_count(self):
-        """Get count of active participants."""
-        return self.participants.filter(
-            leagueparticipation__status=LeagueParticipationStatus.ACTIVE
-        ).count()
-    
-    def is_full(self):
-        """Check if league is at max capacity."""
+        Args:
+            session_date: (For events) Specific session to check
+        """
         if not self.max_participants:
             return False
-        return self.get_current_participants_count() >= self.max_participants
+        
+        if self.is_event:
+            if not session_date:
+                raise ValueError("session_date required for events!")
+            
+            return self.get_current_participants_count(session_date) >= self.max_participants
+        else:
+            return self.get_current_participants_count() >= self.max_participants
     
     def get_skill_requirement_display_text(self):
         """Get user-friendly skill requirement text."""
@@ -404,6 +569,116 @@ class LeagueSession(models.Model):
             f"{self.start_time}-{self.end_time} at {self.court_location.name}"
         )
     
+    def save(self, *args, **kwargs):
+        """
+        Override save to auto-generate SessionOccurrence records.
+        
+        When LeagueSession is created or updated, we pre-calculate
+        all session dates and create SessionOccurrence records.
+        """
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        # Generate occurrences after saving
+        if is_new or kwargs.get('regenerate_occurrences', False):
+            self.generate_occurrences()
+    
+    def generate_occurrences(self):
+        """
+        Generate SessionOccurrence records for this session.
+        
+        Called automatically when LeagueSession is saved.
+        Deletes old occurrences and creates new ones.
+        
+        Handles:
+        - One-time events (RecurrenceType.ONCE)
+        - Recurring events/leagues (WEEKLY, BI_WEEKLY, MONTHLY)
+        """
+        
+        # Delete existing occurrences
+        SessionOccurrence.objects.filter(league_session=self).delete()
+        
+        # Get date range
+        start = self.active_from or self.league.start_date
+        end = self.active_until or self.league.end_date
+        
+        # ========================================
+        # ONE-TIME EVENT
+        # ========================================
+        if self.recurrence_type == RecurrenceType.ONCE:
+            # Create single occurrence on league.start_date
+            session_date = self.league.start_date
+            
+            # Combine date + time
+            start_dt = timezone.make_aware(
+                datetime.combine(session_date, self.start_time)
+            )
+            end_dt = timezone.make_aware(
+                datetime.combine(session_date, self.end_time)
+            )
+            
+            # Create the ONE occurrence
+            occurrence = SessionOccurrence(
+                league_session=self,
+                session_date=session_date,
+                start_datetime=start_dt,
+                end_datetime=end_dt
+            )
+            
+            # Calculate registration windows for events
+            if self.league.is_event:
+                occurrence.registration_opens_at = start_dt - timedelta(
+                    hours=self.league.registration_opens_hours_before
+                )
+                occurrence.registration_closes_at = start_dt - timedelta(
+                    hours=self.league.registration_closes_hours_before
+                )
+            
+            occurrence.save()
+            return  # Done! Only one occurrence
+        
+        # ========================================
+        # RECURRING EVENT/LEAGUE
+        # ========================================
+        current_date = start
+        occurrences = []
+        
+        while current_date <= end:
+            # Check if this date matches our day_of_week
+            if current_date.weekday() == self.day_of_week:
+                # Combine date + time
+                start_dt = timezone.make_aware(
+                    datetime.combine(current_date, self.start_time)
+                )
+                end_dt = timezone.make_aware(
+                    datetime.combine(current_date, self.end_time)
+                )
+                
+                # Create occurrence
+                occurrence = SessionOccurrence(
+                    league_session=self,
+                    session_date=current_date,
+                    start_datetime=start_dt,
+                    end_datetime=end_dt
+                )
+                
+                # Calculate registration windows for events
+                if self.league.is_event:
+                    occurrence.registration_opens_at = start_dt - timedelta(
+                        hours=self.league.registration_opens_hours_before
+                    )
+                    occurrence.registration_closes_at = start_dt - timedelta(
+                        hours=self.league.registration_closes_hours_before
+                    )
+                
+                occurrences.append(occurrence)
+            
+            # Move to next day
+            current_date += timedelta(days=1)
+        
+        # Bulk create all occurrences
+        SessionOccurrence.objects.bulk_create(occurrences)
+     
     def get_next_occurrence(self, from_date=None):
         """Get next occurrence of this session."""
         
@@ -437,6 +712,272 @@ class LeagueSession(models.Model):
             'recurrence': self.get_recurrence_type_display()
         }
     
+class SessionOccurrence(models.Model):
+    """
+    Pre-calculated occurrence of a recurring session.
+    
+    WHY THIS EXISTS:
+    - Auto-generated when LeagueSession is created/updated
+    - Stores ALL session dates for the league/event
+    - Pre-calculates registration windows (no runtime calculation!)
+    - Enables per-session participant tracking
+    - Makes queries MUCH faster
+    
+    EXAMPLES:
+    - League "Rising Stars" runs Mon/Wed 8-10am for 12 weeks
+      → Creates 24 SessionOccurrence records (12 Mon + 12 Wed)
+    
+    - Event "Open Play Friday" runs every Friday 9-11am for 4 months
+      → Creates ~17 SessionOccurrence records (one per Friday)
+    """
+    
+    league_session = models.ForeignKey(
+        LeagueSession,
+        on_delete=models.CASCADE,
+        related_name='occurrences'
+    )
+    
+    # Pre-calculated date/time
+    session_date = models.DateField(
+        help_text='Specific date of this session'
+    )
+    start_datetime = models.DateTimeField(
+        help_text='Exact start (date + time combined)'
+    )
+    end_datetime = models.DateTimeField(
+        help_text='Exact end (date + time combined)'
+    )
+    
+    # [EVENTS] Pre-calculated registration windows
+    registration_opens_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When registration opens for this session (events only)'
+    )
+    registration_closes_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When registration closes for this session (events only)'
+    )
+    
+    # Status
+    is_cancelled = models.BooleanField(
+        default=False,
+        help_text='Captain cancelled this specific occurrence'
+    )
+    cancellation_reason = models.CharField(
+        max_length=500,
+        blank=True
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('league_session', 'session_date')
+        ordering = ['session_date', 'league_session']
+        indexes = [
+            models.Index(fields=['session_date', 'league_session']),
+        ]
+    
+    def __str__(self):
+        return f"{self.league_session.league.name} - {self.session_date}"
+    
+    @property
+    def registration_open(self):
+        """Check if registration is currently open for this session."""
+        # For leagues: use league-level setting
+        if not self.league_session.league.is_event:
+            return self.league_session.league.registration_open
+        
+        # For events: check session-specific windows
+        if not self.registration_opens_at or not self.registration_closes_at:
+            return True  # Default: open
+        
+        now = timezone.now()
+        return self.registration_opens_at <= now <= self.registration_closes_at
+    
+    @property
+    def current_participants_count(self):
+        """Get participant count for THIS specific session."""
+        return LeagueAttendance.objects.filter(
+            league_session=self.league_session,
+            session_date=self.session_date,
+            status=LeagueAttendanceStatus.ATTENDING
+        ).count()
+    
+    @property
+    def is_full(self):
+        """Check if THIS session is at max capacity."""
+        league = self.league_session.league
+        
+        if not league.max_participants:
+            return False  # Unlimited
+        
+        # Events: per-session limit
+        if league.is_event:
+            return self.current_participants_count >= league.max_participants
+        
+        # Leagues: total enrollment limit
+        return league.get_current_participants_count() >= league.max_participants
+    
+    @property
+    def available_spots(self):
+        """Get remaining spots for this session."""
+        league = self.league_session.league
+        
+        if not league.max_participants:
+            return None  # Unlimited
+        
+        # Events: per-session availability
+        if league.is_event:
+            return max(0, league.max_participants - self.current_participants_count)
+        
+        # Leagues: season availability
+        return max(0, league.max_participants - league.get_current_participants_count())
+    
+    def should_run(self):
+        """
+        Check if this specific session occurrence should run.
+        
+        Checks cancellation hierarchy:
+        1. League.is_active (entire league)
+        2. LeagueSession.is_active (recurring session template)
+        3. SessionOccurrence.is_cancelled (this specific occurrence) ← GRANULAR!
+        4. SessionCancellation (date-range cancellations)
+        
+        Returns:
+            tuple: (should_run: bool, reason: str)
+        
+        Examples:
+            # Check if Friday 9am Jan 23 should run
+            occurrence = SessionOccurrence.objects.get(
+                league_session=friday_morning_session,
+                session_date=date(2026, 1, 23)
+            )
+            should_run, reason = occurrence.should_run()
+            
+            if should_run:
+                generate_matches_for_occurrence(occurrence)
+            else:
+                print(f"Session cancelled: {reason}")
+        """
+        
+        # 1. Check league status
+        if not self.league_session.league.is_active:
+            return False, "League cancelled"
+        
+        # 2. Check session template status
+        if not self.league_session.is_active:
+            return False, "Session permanently suspended"
+        
+        # 3. Check if THIS SPECIFIC OCCURRENCE is cancelled
+        # 🎯 MOST GRANULAR - Can cancel Friday 9am Jan 23, but not Friday 2pm Jan 23!
+        if self.is_cancelled:
+            reason = self.cancellation_reason or "Session cancelled"
+            return False, reason
+        
+        # 4. Check for date-range cancellations (SessionCancellation)
+        # Affects all occurrences of this session within the date range
+        has_range_cancellation = self.league_session.cancellations.filter(
+            cancelled_from__lte=self.session_date,
+            cancelled_until__gte=self.session_date
+        ).exists()
+        
+        if has_range_cancellation:
+            cancellation = self.league_session.cancellations.filter(
+                cancelled_from__lte=self.session_date,
+                cancelled_until__gte=self.session_date
+            ).first()
+            return False, f"Temporarily cancelled: {cancellation.reason}"
+        
+        return True, "Session active"
+    
+    
+    def cancel_session(self, reason: str = "", notify_attendees: bool = True):
+        """
+        Cancel this specific session occurrence and optionally notify attendees.
+        
+        🚨 AUTO-NOTIFICATION LOGIC:
+        - When cancelled, sends system notifications to ALL attending users
+        - Notifications are brief: "Session cancelled: [date] [time]"
+        - Captain should ALSO create a League Announcement with detailed explanation
+        
+        Args:
+            reason: Why session is cancelled (captain's explanation)
+            notify_attendees: If True, auto-send notifications to attending users
+        
+        Business Logic:
+            1. Mark occurrence as cancelled
+            2. Save cancellation reason
+            3. If notify_attendees=True:
+            - Get all LeagueAttendance with status=ATTENDING
+            - Send system notification to each user
+            - Notification type: LEAGUE_SESSION_CANCELLED (type 26)
+        
+        Examples:
+            # Cancel Friday 9am session on Jan 23
+            occurrence = SessionOccurrence.objects.get(
+                league_session=friday_morning_session,
+                session_date=date(2026, 1, 23)
+            )
+            occurrence.cancel_session(
+                reason="Court maintenance - facility closed",
+                notify_attendees=True  # Auto-send notifications
+            )
+            
+            # Result:
+            # 1. Occurrence marked cancelled ✅
+            # 2. System notifications sent to all attending users ✅
+            # 3. Captain creates announcement with detailed info (manual step)
+        """
+        from notifications.models import Notification
+        from public.constants import NotificationType
+        
+        # Mark as cancelled
+        self.is_cancelled = True
+        self.cancellation_reason = reason
+        self.save(update_fields=['is_cancelled', 'cancellation_reason', 'updated_at'])
+        
+        # Send notifications if requested
+        if notify_attendees:
+            # Get all users with ATTENDING status for THIS session
+            attending = LeagueAttendance.objects.filter(
+                league_session=self.league_session,
+                session_date=self.session_date,
+                status=LeagueAttendanceStatus.ATTENDING
+            ).select_related('league_participation__member')
+            
+            # Prepare notification data
+            league_name = self.league_session.league.name
+            session_day = self.session_date.strftime("%A, %B %d")  # "Friday, January 23"
+            session_time = f"{self.league_session.start_time.strftime('%I:%M %p')}"  # "9:00 AM"
+            
+            # Create notifications for each attendee
+            notifications_to_create = []
+            for att in attending:
+                notifications_to_create.append(
+                    Notification(
+                        recipient=att.league_participation.member,
+                        notification_type=NotificationType.LEAGUE_SESSION_CANCELLED,
+                        title=f"{league_name} - Session Cancelled",
+                        message=f"Session on {session_day} at {session_time} has been cancelled.",
+                        league=self.league_session.league,
+                        action_url=f"/leagues/{self.league_session.league.id}",
+                        action_label="View League",
+                        metadata={
+                            'session_date': str(self.session_date),
+                            'session_time': session_time,
+                            'cancellation_reason': reason or "No reason provided"
+                        }
+                    )
+                )
+            
+            # Bulk create all notifications at once
+            if notifications_to_create:
+                Notification.objects.bulk_create(notifications_to_create)
+
 class SessionCancellation(models.Model):
     """
     Temporary cancellation of a recurring session.
@@ -523,19 +1064,13 @@ class LeagueAttendance(models.Model):
         related_name='attendance_records'
     )
     
-    # ⭐ NEW: Which recurring session (2025-12-04)
-    # CRITICAL: Needed for leagues with multiple sessions on same day!
-    # Example: Monday 9am session AND Monday 6pm session on 2024-12-09
-    league_session = models.ForeignKey(
-        LeagueSession,
+    # ⭐ Points to SessionOccurrence (which contains league_session + session_date!)
+    # This eliminates redundant data - one source of truth!
+    session_occurrence = models.ForeignKey(
+        SessionOccurrence,
         on_delete=models.CASCADE,
-        related_name='session_attendances',
-        help_text='Which recurring session schedule this attendance is for'
-    )
-
-    # Which session date
-    session_date = models.DateField(
-        help_text='Specific date of this session'
+        related_name='attendances',
+        help_text='Which specific session occurrence this attendance is for'
     )
     
     # Status
@@ -610,13 +1145,13 @@ class LeagueAttendance(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ('league_participation', 'league_session', 'session_date')
-        ordering = ['session_date', 'league_participation']
+        unique_together = ('league_participation', 'session_occurrence')
+        ordering = ['session_occurrence', 'league_participation']
     
     def __str__(self):
         return (
             f"{self.league_participation.member.get_full_name()} - "
-            f"{self.session_date} ({self.get_status_display()})"
+            f"{self.session_occurrence.session_date} ({self.get_status_display()})"
         )
     
     def cancel(self, reason=None):
@@ -627,10 +1162,9 @@ class LeagueAttendance(models.Model):
         - Status change to 'cancelled'
         - Match regeneration ONLY if matches were round-robin generated
         """
-        from datetime import datetime
         
         self.status = LeagueAttendanceStatus.CANCELLED
-        self.cancelled_at = datetime.now()
+        self.cancelled_at = timezone.now()
         if reason:
             self.cancellation_reason = reason
         self.save()
@@ -650,11 +1184,11 @@ class LeagueAttendance(models.Model):
         from matches.models import Match
         from .services.round_robin import RoundRobinGenerator
         
-        # Get existing matches for THIS specific session
+        # Get existing matches for THIS specific session occurrence
         existing_matches = Match.objects.filter(
             league=self.league_participation.league,
-            league_session=self.league_session,  # ← CRITICAL: specific session, not all sessions!
-            match_date=self.session_date,
+            league_session=self.session_occurrence.league_session,
+            match_date=self.session_occurrence.session_date,
             match_status=MatchStatus.PENDING  # Only regenerate unplayed matches
         )
         
@@ -672,9 +1206,8 @@ class LeagueAttendance(models.Model):
         # Get currently attending players
         attending = LeagueAttendance.objects.filter(
             league_participation__league=self.league_participation.league,
-            league_session=self.league_session,
-            session_date=self.session_date,
-            status=LeagueAttendanceStatus.ATTENDING  # ← Use constant, not string!
+            session_occurrence=self.session_occurrence,
+            status=LeagueAttendanceStatus.ATTENDING
         )
         
         # Delete old round-robin matches
@@ -682,8 +1215,8 @@ class LeagueAttendance(models.Model):
         
         # Generate fresh matches with updated player list
         generator = RoundRobinGenerator(
-            self.league_session,
-            self.session_date,
+            self.session_occurrence.league_session,
+            self.session_occurrence.session_date,
             [att.league_participation.member for att in attending]
         )
         generator.generate_matches()
@@ -738,87 +1271,43 @@ class LeagueAttendance(models.Model):
         # Get existing matches for this session
         existing_matches = Match.objects.filter(
             league=self.league_participation.league,
-            league_session=self.league_session,
-            match_date=self.session_date,
+            league_session=self.session_occurrence.league_session,
+            match_date=self.session_occurrence.session_date,
             round_number__gte=from_round,  # ← Only future rounds!
-            match_status=MatchStatus.PENDING  # ← Only unplayed matches!
+            match_status=MatchStatus.PENDING
         )
         
-        # Safety check: only regenerate round-robin matches
+        # Check if round-robin format
         if not existing_matches.exists():
             return
         
         first_match = existing_matches.first()
         if first_match.generation_format != GenerationFormat.ROUND_ROBIN:
-            return  # Don't touch King-of-Court, Manual, or MLP matches!
+            return  # Don't touch other formats!
         
-        # Get currently ACTIVE players for this round
-        # Logic: attending AND checked_in AND (not left OR left after this round)
-        active_players = []
-        all_attendance = LeagueAttendance.objects.filter(
+        # Get active players (currently at session)
+        active_players = LeagueAttendance.objects.filter(
             league_participation__league=self.league_participation.league,
-            league_session=self.league_session,
-            session_date=self.session_date,
-            status=LeagueAttendanceStatus.ATTENDING,
-            checked_in=True  # ← Only checked-in players!
+            session_occurrence=self.session_occurrence,
+            checked_in=True,  # Only checked-in players
+            left_after_round__isnull=True  # Haven't left yet
         )
-        
-        for att in all_attendance:
-            # Check if player is still active for this round
-            if att.left_after_round and att.left_after_round < from_round:
-                continue  # Player left before this round
-            
-            if att.arrived_before_round and att.arrived_before_round > from_round:
-                continue  # SAFETY CHECK: Should never happen in normal operation!
-                         # This would mean: "We're regenerating Round X, but player arrives AFTER Round X"
-                         # Example: Regenerating R4, but player arrived_before_round=6
-                         # In practice, we ONLY regenerate from arrived_before_round onwards,
-                         # so this condition protects against bugs in calling code.
-            
-            active_players.append(att.league_participation.member)
         
         # Delete old future rounds
         existing_matches.delete()
         
-        # Generate fresh matches for future rounds with updated player list
+        # Regenerate with updated player list
         generator = RoundRobinGenerator(
-            self.league_session,
-            self.session_date,
-            active_players,
-            starting_round=from_round  # ← Start from specific round number!
+            self.session_occurrence.league_session,
+            self.session_occurrence.session_date,
+            [att.league_participation.member for att in active_players],
+            start_round=from_round  # Start from this round
         )
         generator.generate_matches()
 
-# Signal to auto-create attendance records
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
-@receiver(post_save, sender=LeagueSession)
-def create_attendance_records(sender, instance, created, **kwargs):
-    """
-    When a session is created, auto-create attendance records
-    for all league participants with status='attending'.
-    """
-    if created:
-        # Get next occurrence
-        next_date = instance.get_next_occurrence()
-        if not next_date:
-            return
-        
-        # Get all active participants
-        participants = LeagueParticipation.objects.filter(
-            league=instance.league,
-            status=LeagueParticipationStatus.ACTIVE
-        )
-        
-        # Create attendance records
-        for participation in participants:
-            LeagueAttendance.objects.get_or_create(
-                league_participation=participation,
-                session_date=next_date,
-                league_session=instance,
-                defaults={'status': LeagueAttendanceStatus.ATTENDING}
-            )
+# ========================================
+# ROUND ROBIN PATTERN MODEL
+# ========================================
 class RoundRobinPattern(models.Model):
     """
     Predefined round-robin rotation patterns.
@@ -829,11 +1318,35 @@ class RoundRobinPattern(models.Model):
     - 3 courts, 14 players
     
     Based on real paper sheets!
+    
+    Pattern stored as JSON with this structure:
+    {
+        "rounds": [
+            {
+                "round_number": 1,
+                "courts": [
+                    {
+                        "court_number": 1,
+                        "team1": [1, 2],  # Player positions
+                        "team2": [3, 4]
+                    },
+                    {
+                        "court_number": 2,
+                        "team1": [5, 6],
+                        "team2": [7, 8]
+                    },
+                    ...
+                ],
+                "bench": [21, 22]  # Player positions sitting out
+            },
+            ...
+        ]
+    }
     """
     
     # Pattern identification
-   
     num_players = models.IntegerField(
+        unique=True,
         help_text='Number of players for this pattern'
     )
     
@@ -850,9 +1363,12 @@ class RoundRobinPattern(models.Model):
     
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         ordering = ['num_players']
+        verbose_name = 'Round-Robin Pattern'
+        verbose_name_plural = 'Round-Robin Patterns'
     
     def __str__(self):
         courts_needed = self.num_players // 4
@@ -867,3 +1383,77 @@ class RoundRobinPattern(models.Model):
     def bench_count(self):
         """Calculate number of players on bench each round."""
         return self.num_players % 4
+    
+    @property
+    def num_rounds(self):
+        """Get total number of rounds in this pattern."""
+        return len(self.pattern_data.get('rounds', []))
+
+
+# ========================================
+# SIGNALS
+# ========================================
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=LeagueParticipation)
+def create_attendance_records_on_enrollment(sender, instance, created, **kwargs):
+    """
+    When user enrolls in a LEAGUE, auto-create attendance records for ALL future sessions.
+    
+    WHY THIS EXISTS:
+    - Leagues: Members enrolled for entire season → pre-create attendance for all sessions
+    - Events: Users register per-session → NO signal needed (explicit registration action)!
+    
+    BUSINESS LOGIC:
+    - Only runs for LEAGUES (is_event=False)
+    - Only runs when LeagueParticipation is CREATED (not updated)
+    - Creates LeagueAttendance with status=ATTENDING for all FUTURE SessionOccurrences
+    - Users can then cancel if they can't make a specific session
+    
+    LOGICAL FLOW:
+    1. Organizer creates LeagueSession → SessionOccurrences created
+    2. User enrolls → LeagueParticipation created
+    3. 🎯 THIS SIGNAL FIRES → attendance records created for all future sessions
+    4. User sees all sessions they're enrolled in
+    5. User can cancel individual sessions
+    
+    NOTE: For EVENTS, attendance is created when user registers for a specific session!
+          No signal needed - it's an explicit action!
+    """
+    # Only for newly created participations
+    if not created:
+        return
+    
+    # Only for LEAGUES (not events!)
+    league = instance.league
+    if league.is_event:
+        return  # Events handle attendance differently!
+    
+    # Get all FUTURE SessionOccurrences for this league
+    # (Don't create attendance for past sessions!)
+    from django.utils import timezone
+    today = timezone.now().date()
+    
+    future_occurrences = SessionOccurrence.objects.filter(
+        league_session__league=league,
+        session_date__gte=today  # Only future sessions
+    )
+    
+    # Create attendance records for all future sessions
+    attendance_records = []
+    for occurrence in future_occurrences:
+        attendance_records.append(
+            LeagueAttendance(
+                league_participation=instance,
+                session_occurrence=occurrence,
+                status=LeagueAttendanceStatus.ATTENDING  # Default: attending
+            )
+        )
+    
+    # Bulk create all attendance records
+    if attendance_records:
+        LeagueAttendance.objects.bulk_create(
+            attendance_records,
+            ignore_conflicts=True  # In case records already exist
+        )
