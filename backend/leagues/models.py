@@ -802,8 +802,7 @@ class SessionOccurrence(models.Model):
     def current_participants_count(self):
         """Get participant count for THIS specific session."""
         return LeagueAttendance.objects.filter(
-            league_session=self.league_session,
-            session_date=self.session_date,
+            session_occurrence=self,  # ✅ CORRECT!
             status=LeagueAttendanceStatus.ATTENDING
         ).count()
     
@@ -944,8 +943,7 @@ class SessionOccurrence(models.Model):
         if notify_attendees:
             # Get all users with ATTENDING status for THIS session
             attending = LeagueAttendance.objects.filter(
-                league_session=self.league_session,
-                session_date=self.session_date,
+                session_occurrence=self,  # ✅ CORRECT!
                 status=LeagueAttendanceStatus.ATTENDING
             ).select_related('league_participation__member')
             

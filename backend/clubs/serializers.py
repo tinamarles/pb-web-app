@@ -5,8 +5,9 @@ from .models import Club, ClubMembership, Role, ClubMembershipType, ClubMembersh
 from public.serializers import AddressSerializer
 from public.constants import MembershipStatus   
 from users.serializers import CustomUserSerializer
-from notifications.serializers import NotificationSerializer
+from notifications.serializers import AnnouncementSerializer
 from leagues.serializers import LeagueSerializer
+from leagues.models import League
 from django_typomatic import ts_interface
 
 # Get the active user model
@@ -32,7 +33,8 @@ class ClubMembershipTypeSerializer(serializers.ModelSerializer):
             'requires_approval',
             'annual_fee',
             'current_member_count',
-            'is_at_capacity']
+            'is_at_capacity',
+            'is_registration_open']  # ✅ ADDED: Send the computed property!]
 
 class ClubMembershipSkillLevelSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,7 +48,12 @@ class NestedClubSerializer(serializers.ModelSerializer):
     '''
     A lightweight serializer for Club details without having all the 
     member-id's 
-    Used for: ClubMembership.club, Club list views
+
+    USED FOR:
+    - GET /api/clubs/{id}/ (layout.tsx - basic club data)
+    - Nested inside ClubMembership
+    
+    TypeScript: MemberClub
     '''
     address = AddressSerializer(read_only=True)
     member_count = serializers.SerializerMethodField()  # ✅ NEW!
@@ -71,12 +78,18 @@ class NestedClubSerializer(serializers.ModelSerializer):
     def get_member_count(self, obj):
         """Count active club members"""
         return obj.members.filter(
-        club_memberships__status=MembershipStatus.ACTIVE
-    ).distinct().count()
+            club_memberships__status=MembershipStatus.ACTIVE  # ✅ INTEGER constant!
+        ).distinct().count()
 
 class ClubSerializer(serializers.ModelSerializer):
     '''
-    Serializer for the Club model.
+    Full serializer for the Club model (admin/create/update only).
+    
+    USED FOR:
+    - POST /api/clubs/ (create)
+    - PATCH /api/clubs/{id}/ (update)
+    
+    TypeScript: Club
     '''
     address = AddressSerializer(read_only=True)
 
@@ -148,78 +161,256 @@ class ClubMemberSerializer(serializers.ModelSerializer):
 # HOME TAB SERIALIZER
 # ========================================
 
-class ClubDetailHomeSerializer(serializers.Serializer):
+
+class TopMemberSerializer(serializers.Serializer):
     """
-    Serializer for Home Tab data.
-    ✅ Receives a DICTIONARY from the view!
-    The dictionary has keys: 
-        'club', 
-        'latest_announcement', 
-        'top_members', etc.
+    Serializer for top members list.
     
-    USED FOR:
-    - GET /api/clubs/{id}/home/
+    Data comes from ClubMembership objects.
+    We extract the User (member) and add joined_date from membership.
     
-    TypeScript: ClubDetailHome
-    
-    Returns basic club data + home tab specific data:
-    - Latest announcement
-    - All announcements
-    - Top members
-    - Next event
-    - Photos (optional)
+    STRATEGY:
+    - Use to_representation to serialize the User with CustomUserSerializer
+    - Add full_name (computed field) to the output
+    - Add joined_date from ClubMembership
+    - Frontend gets all User fields + computed fields!
     """
-    # These fields tell DRF what to expect in the dictionary
-    # Club data (reuse NestedClubSerializer)
-    club = NestedClubSerializer(read_only=True)
-    
-    # Home tab specific data
-    latest_announcement = NotificationSerializer(read_only=True, allow_null=True)
-    all_announcements = NotificationSerializer(many=True, read_only=True, allow_null=True)
-    top_members = ClubMemberSerializer(many=True, read_only=True, allow_null=True)
-    next_event = LeagueSerializer(read_only=True, allow_null=True)
-    # photos = PhotoSerializer(many=True, read_only=True, allow_null=True)  # TODO
+    joined_date = serializers.DateTimeField(source='created_at')
     
     def to_representation(self, instance):
         """
-        Flatten the structure so TypeScript gets:
-        { id, name, ..., latestAnnouncement, topMembers, ... }
+        Serialize the member (User) using CustomUserSerializer.
+        Add computed fields that aren't in CustomUserSerializer.
         
-        Instead of:
-        { club: {...}, latest_announcement: {...}, ... }
-        
-        ✅ instance is the DICTIONARY passed from the view!
-        
-        instance = {
-            'club': <Club object>,
-            'latest_announcement': <Notification object> or None,
-            'all_announcements': <QuerySet>,
-            'top_members': <QuerySet>,
-            'next_event': <League object> or None,
-        }
+        instance = ClubMembership object
+        instance.member = User object
         """
-
-        # ========================================
-        # SERIALIZE THE CLUB DATA
-        # ========================================
-        club_data = NestedClubSerializer(instance['club']).data
+        # Serialize the User with CustomUserSerializer
+        user_data = CustomUserSerializer(instance.member).data
         
-        # ========================================
-        # SERIALIZE THE HOME TAB DATA
-        # ========================================
-        home_data = {
-            # ✅ instance.get('latest_announcement') gets the Notification from the dict!
-            'latest_announcement': NotificationSerializer(instance.get('latest_announcement')).data if instance.get('latest_announcement') else None,
-            'all_announcements': NotificationSerializer(instance.get('all_announcements', []), many=True).data,
-            'top_members': ClubMemberSerializer(instance.get('top_members', []), many=True).data,
-            'next_event': LeagueSerializer(instance.get('next_event')).data if instance.get('next_event') else None,
-        }
-        # ========================================
-        # MERGE CLUB + HOME DATA (FLATTEN!)
-        # ========================================
-        # Merge club data + home data (club fields first, then home tab fields)
-        return {**club_data, **home_data}
+        # Add computed field: full_name
+        user_data['full_name'] = instance.member.get_full_name()
+        
+        # Add joined_date from ClubMembership
+        user_data['joined_date'] = instance.created_at.isoformat() if instance.created_at else None
+        
+        return user_data
 
+class EventLightSerializer(serializers.ModelSerializer):
+    """
+    Lightweight event serializer for Home Tab.
+    
+    Includes next session info and participants count.
+    
+    CRITICAL: 
+    - View already filters is_event=True, so this ONLY receives events!
+    - Use next_occurrence from context for participants count (avoid re-query!)
+    - Count LeagueAttendance for next session
+    
+    Returns snake_case (frontend converts to camelCase in actions.ts)
+    """
+    
+    club = serializers.SerializerMethodField()
+    
+    # Next session info (from next_occurrence object passed in context!)
+    next_session_date = serializers.SerializerMethodField()
+    next_session_start_time = serializers.SerializerMethodField()
+    next_session_end_time = serializers.SerializerMethodField()
+    next_session_location = serializers.SerializerMethodField()
+    
+    # Participants info
+    participants_count = serializers.SerializerMethodField()
+    
+    # Captain info
+    captain_info = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = League
+        fields = [
+            'id',
+            'club',
+            'name',
+            'description',
+            'image_url',
+            'registration_opens_hours_before',
+            'registration_closes_hours_before',
+            'league_type',
+            'minimum_skill_level',
+            'next_session_date',
+            'next_session_start_time',
+            'next_session_end_time',
+            'next_session_location',
+            'participants_count',
+            'captain_info',
+        ]
+    
+    def get_club(self, obj):
+        """Return minimal club data (id, name)"""
+        return {
+            'id': obj.club.id,
+            'name': obj.club.name,
+        }
+    
+    
+    # ========================================
+    # NEXT SESSION INFO
+    # ========================================
+    def get_next_session_date(self, obj):
+        """
+        Get next session date from SessionOccurrence passed in context.
+        View already fetched this - reuse it!
+        """
+        next_occurrence = self.context.get('next_occurrence')
+        if next_occurrence:
+            return next_occurrence.session_date.isoformat()
+        return None
+    
+    def get_next_session_start_time(self, obj):
+        """Get next session start time (format: HH:MM)"""
+        next_occurrence = self.context.get('next_occurrence')
+        if next_occurrence:
+            return next_occurrence.start_datetime.strftime('%H:%M')
+        return None
+    
+    def get_next_session_end_time(self, obj):
+        """Get next session end time (format: HH:MM)"""
+        next_occurrence = self.context.get('next_occurrence')
+        if next_occurrence:
+            return next_occurrence.end_datetime.strftime('%H:%M')
+        return None
+    
+    def get_next_session_location(self, obj):
+        """Get next session location name"""
+        next_occurrence = self.context.get('next_occurrence')
+        if next_occurrence and next_occurrence.league_session.court_location:
+            return next_occurrence.league_session.court_location.name
+        return None
+    
+    # ========================================
+    # PARTICIPANTS COUNT
+    # ========================================
+    def get_participants_count(self, obj):
+        """
+        Count participants for next session.
+        
+        Uses SessionOccurrence.current_participants_count property!
+        This avoids re-querying - the property handles it efficiently.
+        """
+        next_occurrence = self.context.get('next_occurrence')
+        
+        if not next_occurrence:
+            return 0
+        
+        # Use the SessionOccurrence's @property!
+        return next_occurrence.current_participants_count
+    
+    # ========================================
+    # CAPTAIN INFO
+    # ========================================
+    def get_captain_info(self, obj):
+        """
+        Return captain info.
+        Use captain if exists, else fall back to created_by.
+        
+        Returns snake_case dict (matching existing pattern).
+        """
+        captain = obj.captain if obj.captain else obj.created_by
+        
+        if not captain:
+            return None
+        
+        # Match existing creator_info pattern from AnnouncementSerializer
+        return {
+            'id': captain.id,
+            'first_name': captain.first_name,
+            'last_name': captain.last_name,
+            'full_name': captain.get_full_name(),
+            'profile_picture_url': captain.profile_picture_url,  # Directly on User!
+        }
+
+class ClubHomeSerializer(serializers.Serializer):
+    """
+    Main serializer for Club Home Tab endpoint.
+    
+    Aggregates data from multiple sources:
+    - club: Basic club info
+    - latest_announcement: Most recent announcement
+    - top_members: Top 10 members (by join date)
+    - next_event: Event with earliest upcoming session
+    
+    View passes a dict with:
+    {
+        'club': Club instance,
+        'latest_announcement': Announcement instance or None,
+        'top_members': QuerySet of ClubMembership,
+        'next_event': League instance or None,
+        'next_occurrence': SessionOccurrence instance or None,
+    }
+    
+    Returns snake_case (frontend converts to camelCase in actions.ts)
+    """
+    club = serializers.SerializerMethodField()
+    latest_announcement = serializers.SerializerMethodField()
+    top_members = serializers.SerializerMethodField()
+    next_event = serializers.SerializerMethodField()
+    
+    def get_club(self, instance):
+        """Return minimal club data (id, name)"""
+        club = instance.get('club')
+        return {
+            'id': club.id,
+            'name': club.name,
+        }
+    
+    def get_latest_announcement(self, instance):
+        """
+        Serialize latest announcement.
+        Returns None if no announcements exist.
+        
+        CRITICAL: REUSE existing AnnouncementSerializer!
+        Don't create duplicate serializers!
+        """
+        latest_announcement = instance.get('latest_announcement')
+        
+        if not latest_announcement:
+            return None
+        
+        # REUSE existing serializer from notifications app!
+        return AnnouncementSerializer(latest_announcement).data
+    
+    def get_top_members(self, instance):
+        """
+        Serialize top members list.
+        Returns empty array if no members.
+        """
+        top_members = instance.get('top_members')
+        
+        if not top_members:
+            return []
+        
+        return TopMemberSerializer(top_members, many=True).data
+    
+    def get_next_event(self, instance):
+        """
+        Serialize next event with its next session info.
+        Returns None if no upcoming events.
+        
+        CRITICAL: Pass next_occurrence in context to EventLightSerializer!
+        This avoids re-querying for participants count.
+        """
+        next_event = instance.get('next_event')
+        next_occurrence = instance.get('next_occurrence')
+        
+        if not next_event:
+            return None
+        
+        # Pass next_occurrence in context so EventLightSerializer can use it!
+        serializer = EventLightSerializer(
+            next_event,
+            context={'next_occurrence': next_occurrence}
+        )
+        
+        return serializer.data
 
 # Serializer for member users, including related information
 # This is the serializer used for Member Users 

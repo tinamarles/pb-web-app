@@ -165,31 +165,31 @@ export type User = PublicUser | MemberUser;
 
 /**
  * PersonInfo - Generic person information used across the app
- * 
+ *
  * USAGE: Reusable type for representing any person in any context
  * - Notification sender (creatorInfo)
  * - Announcement creator (creatorInfo)
  * - League captain (captainInfo)
  * - Match organizer, referee, etc.
- * 
+ *
  * BENEFITS:
  * - Single source of truth for person data structure
  * - Change field names once, applies everywhere
  * - Extend with additional fields when needed
  * - Type-safe and consistent across entire app
- * 
+ *
  * EXTENDING:
  * // If you need extra fields in specific contexts:
  * export interface CoachInfo extends PersonInfo {
  *   certificationLevel: string;
  * }
- * 
+ *
  * // Or inline for one-off additions:
  * creatorInfo: PersonInfo & { isStaff: boolean }
  */
 export interface PersonInfo {
   id: number;
-  fullName: string;           // Computed from firstName + lastName
+  fullName: string; // Computed from firstName + lastName
   firstName: string;
   lastName: string;
   profilePictureUrl?: string | null;
@@ -197,10 +197,10 @@ export interface PersonInfo {
 
 /**
  * Notification - 1-to-1 notifications sent to specific users
- * 
+ *
  * Backend: NotificationSerializer
  * Endpoint: GET /api/notifications/feed/
- * 
+ *
  * CRITICAL NOTES:
  * - feedType is added by serializer (for unified feed)
  * - content field contains the message
@@ -230,8 +230,8 @@ export interface Notification {
   actionLabel: string;
   createdAt: string; // ISO 8601 datetime
   updatedAt: string; // ISO 8601 datetime
-  feedType: 'notification'; // Added by serializer
-  
+  feedType: "notification"; // Added by serializer
+
   // === NOTIFICATION-SPECIFIC FIELDS ===
   isRead: boolean;
   readAt: string | null; // ISO 8601 datetime, null if not read yet
@@ -240,16 +240,16 @@ export interface Notification {
 
 /**
  * Announcement - Club-wide announcements (1-to-many broadcasts)
- * 
+ *
  * Backend: AnnouncementSerializer
  * Endpoint: GET /api/notifications/feed/
- * 
+ *
  * CRITICAL NOTES:
  * - feedType is added by serializer (for unified feed)
  * - club is REQUIRED (all announcements belong to a club - NOT NULL!)
  * - league/match are OPTIONAL (narrow audience within club)
  * - Different from Notification which is 1-to-1 to specific user
- * 
+ *
  * AUDIENCE LOGIC:
  * - club only → All club members see it
  * - club + league → Only league participants see it
@@ -278,8 +278,8 @@ export interface Announcement {
   actionLabel: string;
   createdAt: string; // ISO 8601 datetime
   updatedAt: string; // ISO 8601 datetime
-  feedType: 'announcement'; // Added by serializer
-  
+  feedType: "announcement"; // Added by serializer
+
   // === ANNOUNCEMENT-SPECIFIC FIELDS ===
   imageUrl?: string | null;
   isPinned: boolean;
@@ -331,7 +331,7 @@ export interface ClubFormValues {
 
 // ==================================================================================
 // CLUB DETAIL TYPES (for club tabs)
-// Maps to Django: clubs.serializers.ClubDetailHomeSerializer, ClubMemberSerializer
+// Maps to Django: clubs.serializers.ClubHomeSerializer, ClubMemberSerializer
 // ==================================================================================
 
 /**
@@ -361,7 +361,7 @@ export interface ClubMember {
 /**
  * ClubDetailHome - Extends MemberClub with home tab specific data
  *
- * Backend: ClubDetailHomeSerializer
+ * Backend: ClubHomeSerializer
  * Used in: GET /api/clubs/{id}/home/
  *
  * NOTE: Serializer flattens the structure so all MemberClub fields + home tab fields

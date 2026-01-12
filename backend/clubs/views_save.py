@@ -1,40 +1,27 @@
-# clubs/views.py
-
-# ========================================
-# IMPORTS
-# ========================================
-
-# Django imports
-from django.db.models import Q, Count, Exists, OuterRef
-from django.utils import timezone
-
-# Django REST Framework imports
+# pickleball/views.py
 from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-
-# Local app imports
+from django.db.models import Q, Count
+from django.utils import timezone
 from .models import Club, ClubMembership, Role
 from .serializers import (
-    NestedClubSerializer,
+    NestedClubSerializer, 
     ClubSerializer,
-    ClubHomeSerializer, # ‼️ change to ClubHomeSerializer
-    ClubMemberSerializer,
-    ClubMembershipSerializer,
-    ClubMembershipTypeSerializer,
-    UserClubMembershipUpdateSerializer,
+    ClubHomeSerializer,
+    ClubMemberSerializer, 
+    ClubMembershipSerializer, 
+    UserClubMembershipUpdateSerializer, 
     AdminClubMembershipUpdateSerializer,
 )
-from .permissions import ClubMembershipPermissions, IsClubAdmin
-
-# Other app imports
-from leagues.models import League, SessionOccurrence
+from leagues.models import League
 from leagues.serializers import LeagueSerializer
-from notifications.models import Announcement
+from notifications.models import Notification
 from notifications.serializers import NotificationSerializer
-from public.constants import NotificationType, MembershipStatus, RoleType
+from .permissions import IsClubAdmin, ClubMembershipPermissions # Import the custom permission
+from public.constants import RoleType, MembershipStatus
 
 class ClubMembersPagination(PageNumberPagination):
     """Pagination for club members list"""
@@ -61,7 +48,7 @@ class ClubViewSet(viewsets.ModelViewSet):
     """
     queryset = Club.objects.all()
     # serializer_class = ClubSerializer
-    permission_classes = [IsAuthenticated] # Use the custom permission
+    permission_classes = [IsClubAdmin] # Use the custom permission
 
     def get_serializer_class(self):
         """
@@ -75,7 +62,8 @@ class ClubViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return NestedClubSerializer
         return ClubSerializer
-      
+    
+    
     def perform_create(self, serializer):
         """
         Overrides the create method to automatically set the creator
@@ -118,85 +106,60 @@ class ClubViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def home(self, request, pk=None):
         """
-        GET /api/clubs/{id}/home/
-        
-        Returns data for Club Details Home Tab:
-        - club: Basic club info (id, name)
-        - latest_announcement: Most recent announcement (just one!)
-        - top_members: Top 10 members (by join date for now)
-        - next_event: Event with earliest upcoming session
-        
-        Permissions:
-        - Any authenticated user can view
-        - (Later: Restrict to club members only)
-        
-        UPDATED 2026-01-13:
-        - Now uses SessionOccurrence for next event query
-        - Much simpler query (no subqueries!)
-        - Filters out cancelled sessions and inactive events
+        ✅ THE VIEW FETCHES ALL THE DATA!
+        Then passes it as a DICTIONARY to the serializer
         """
+        from notifications.models import Notification
+        from leagues.models import League
+        from public.constants import NotificationType, MembershipStatus
+        from django.utils import timezone
         
         club = self.get_object()
-        today = timezone.now().date()
         
         # ========================================
-        # 1. LATEST ANNOUNCEMENT (just one!)
+        # FETCH ALL HOME TAB DATA
         # ========================================
-        latest_announcement = Announcement.objects.filter(
-            club=club
-        ).select_related('created_by').order_by('-created_at').first()
         
-        # ========================================
-        # 2. TOP MEMBERS
-        # ========================================
-        # Order by created_at for now (placeholder for future stats)
-        # Future: Order by attendance_count, points, win_rate, etc.
+        # Get latest announcement
+        latest_announcement = Notification.objects.filter(
+            club=club,
+            notification_type=NotificationType.CLUB_ANNOUNCEMENT
+        ).order_by('-created_at').first()
+        
+        # Get all announcements
+        all_announcements = Notification.objects.filter(
+            club=club,
+            notification_type=NotificationType.CLUB_ANNOUNCEMENT
+        ).order_by('-created_at')
+        
+        # Get next event
+        next_event = League.objects.filter(
+            club=club,
+            is_event=True,
+            start_date__gte=timezone.now()
+        ).order_by('start_date').first()
+        
+        # Get top members
         top_members = ClubMembership.objects.filter(
             club=club,
             status=MembershipStatus.ACTIVE
-        ).select_related('member').order_by('-created_at')[:10]
+        ).select_related('member').prefetch_related('roles', 'levels').order_by('-created_at')[:10]
         
         # ========================================
-        # 3. NEXT EVENT (with its next session!)
+        # PASS AS DICTIONARY TO SERIALIZER
         # ========================================
         
-        # ✨ NEW: Use SessionOccurrence for MUCH simpler query!
-        # No subqueries needed - SessionOccurrence has pre-calculated dates!
-        
-        # Step 1: Find earliest upcoming SessionOccurrence
-        # 🚨 CRITICAL: Filter out cancelled sessions and inactive events!
-        next_occurrence = SessionOccurrence.objects.filter(
-            league_session__league__club=club,
-            league_session__league__is_event=True,
-            league_session__league__is_active=True,  # Exclude inactive events
-            league_session__is_active=True,          # Exclude inactive sessions
-            is_cancelled=False,                      # Exclude cancelled occurrences
-            session_date__gte=today
-        ).select_related(
-            'league_session__league__captain',
-            'league_session__league__club',
-            'league_session__court_location'
-        ).order_by('session_date', 'start_datetime').first()
-        
-        # Step 2: Get the event (league) from the occurrence
-        next_event = None
-        if next_occurrence:
-            next_event = next_occurrence.league_session.league
-        
-        # ========================================
-        # 4. SERIALIZE
-        # ========================================
-        # Pass both next_event AND next_occurrence to serializer
-        # Serializer will use next_occurrence for participants count
+        # ✅ Create a dictionary with club + all the data
         data = {
-            'club': club,
-            'latest_announcement': latest_announcement,
-            'top_members': top_members,
-            'next_event': next_event,
-            'next_occurrence': next_occurrence,  # ← Pass SessionOccurrence!
+            'club': club,  # ← Club model instance
+            'latest_announcement': latest_announcement,  # ← Notification instance or None
+            'all_announcements': all_announcements,  # ← QuerySet
+            'top_members': top_members,  # ← QuerySet
+            'next_event': next_event,  # ← League instance or None
         }
-
-        serializer = ClubHomeSerializer(data) # ‼️ change to ClubHomeSerializer
+        
+        # ✅ Pass the DICTIONARY to serializer (not just the club!)
+        serializer = ClubHomeSerializer(data)
         return Response(serializer.data)
     
     # ========================================
@@ -215,15 +178,8 @@ class ClubViewSet(viewsets.ModelViewSet):
         - status: 'upcoming' | 'past' | 'all' (default: 'upcoming')
         
         TypeScript Type: ClubEventsResponse
-
-
-        UPDATED 2026-01-13:
-        - Now uses SessionOccurrence to determine upcoming/past status
-        - Works correctly for recurring events with past start_date
-        - Filters out cancelled sessions
         """
         club = self.get_object()
-        today = timezone.now().date()
         
         # Filter by type
         event_type = request.query_params.get('type', 'all')
@@ -234,36 +190,13 @@ class ClubViewSet(viewsets.ModelViewSet):
         elif event_type == 'event':
             queryset = queryset.filter(is_event=True)
         
-        # ========================================
-        # Filter by status using SessionOccurrence
-        # ========================================
-        # ✅ NEW: Use SessionOccurrence instead of start_date!
-        # This works for recurring events with past start_date
+        # Filter by status
         status_filter = request.query_params.get('status', 'upcoming')
-        
         if status_filter == 'upcoming':
-            # Show leagues/events that have future SessionOccurrences
-            # (Excludes cancelled sessions)
-            has_upcoming_sessions = SessionOccurrence.objects.filter(
-                league_session__league=OuterRef('pk'),
-                session_date__gte=today,
-                is_cancelled=False
-            )
-            queryset = queryset.annotate(
-                has_upcoming=Exists(has_upcoming_sessions)
-            ).filter(has_upcoming=True)
-            
+            queryset = queryset.filter(start_date__gte=timezone.now())
         elif status_filter == 'past':
-            # Show leagues/events where ALL sessions are in the past
-            has_future_sessions = SessionOccurrence.objects.filter(
-                league_session__league=OuterRef('pk'),
-                session_date__gte=today
-            )
-            queryset = queryset.annotate(
-                has_future=Exists(has_future_sessions)
-            ).filter(has_future=False)
+            queryset = queryset.filter(end_date__lt=timezone.now())
         
-        # Order by most recent start_date
         queryset = queryset.order_by('-start_date')
         
         # Serialize
@@ -359,20 +292,14 @@ class ClubViewSet(viewsets.ModelViewSet):
             'subscriptions': serializer.data,
             'count': membership_types.count()
         })
-   
+
+    
 class ClubMembershipViewSet(viewsets.ModelViewSet):
     """
     A ViewSet for managing ClubMembership resources.
     - Only Club Members can see a list of that club's members.
     - Admins can edit/delete any member record in their club.
     - Regular members can only edit their own record.
-    
-    ENDPOINTS:
-    - GET    /api/memberships/           → list (filtered by user's clubs)
-    - POST   /api/memberships/           → create
-    - GET    /api/memberships/{id}/      → retrieve
-    - PATCH  /api/memberships/{id}/      → update
-    - DELETE /api/memberships/{id}/      → destroy
     """
     queryset = ClubMembership.objects.all()
     serializer_class = ClubMembershipSerializer
@@ -416,9 +343,7 @@ class ClubMembershipViewSet(viewsets.ModelViewSet):
 
         # For admin users deleting another user's record, perform the deletion
         instance.delete()
-# ========================================
-# FUNCTION-BASED VIEWS (membership updates - EXISTING!)
-# ========================================
+
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def set_preferred_club_membership(request, membership_id):

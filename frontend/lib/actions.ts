@@ -5,20 +5,20 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { snakeToCamel, camelToSnake } from "./utils";
-import { 
-    MemberClub, 
-    ClubDetailHome, 
-    ClubEventsResponse,
-    ClubMembersResponse,
-    NotificationFeedResponse,
-    Notification,
-    Announcement
-  } from "./definitions";
-import { 
-  RoleTypeValue, 
-  SkillLevelValue, 
-  MembershipStatusValue 
-} from '@/lib/constants';
+import {
+  MemberClub,
+  ClubDetailHome,
+  ClubEventsResponse,
+  ClubMembersResponse,
+  NotificationFeedResponse,
+  Notification,
+  Announcement,
+} from "./definitions";
+import {
+  RoleTypeValue,
+  SkillLevelValue,
+  MembershipStatusValue,
+} from "@/lib/constants";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL;
 
@@ -221,25 +221,25 @@ export async function checkBackendHealth(): Promise<boolean> {
 
 /**
  * Get list of all clubs (lightweight data)
- * 
+ *
  * @returns Array of MemberClub objects
  * @example const clubs = await getClubs();
- * 
+ *
  * Backend: GET /api/clubs/
  * Serializer: NestedClubSerializer (returns MemberClub[])
  */
 export const getClubs = cache(async () => {
-  const apiData = await get<unknown>('clubs');
+  const apiData = await get<unknown>("clubs");
   return snakeToCamel(apiData) as MemberClub[];
 });
 
 /**
  * Get single club data (lightweight)
- * 
+ *
  * @param clubId - Club ID
  * @returns Single MemberClub object
  * @example const club = await getClub('345');
- * 
+ *
  * Backend: GET /api/clubs/{id}/
  * Serializer: NestedClubSerializer (returns MemberClub)
  */
@@ -250,13 +250,13 @@ export const getClub = cache(async (clubId: string) => {
 
 /**
  * Get club HOME TAB data
- * 
+ *
  * @param clubId - Club ID
  * @returns ClubDetailHome object (extends MemberClub with home tab data)
  * @example const clubHome = await getClubHome('345');
- * 
+ *
  * Backend: GET /api/clubs/{id}/home/
- * Serializer: ClubDetailHomeSerializer
+ * Serializer: ClubHomeSerializer
  * Returns: MemberClub fields + { latestAnnouncement, allAnnouncements, topMembers, nextEvent }
  */
 export const getClubHome = cache(async (clubId: string) => {
@@ -266,78 +266,86 @@ export const getClubHome = cache(async (clubId: string) => {
 
 /**
  * Get club EVENTS TAB data
- * 
+ *
  * @param clubId - Club ID
  * @param filters - Optional filters (type: 'league'|'event'|'all', status: 'upcoming'|'past'|'all')
  * @returns ClubEventsResponse { events: League[], count: number }
  * @example const { events, count } = await getClubEvents('345', { type: 'league', status: 'upcoming' });
- * 
+ *
  * Backend: GET /api/clubs/{id}/events/?type=league&status=upcoming
  * Serializer: LeagueSerializer
  */
-export const getClubEvents = cache(async (
-  clubId: string,
-  filters?: {
-    type?: 'league' | 'event' | 'all';
-    status?: 'upcoming' | 'past' | 'all';
+export const getClubEvents = cache(
+  async (
+    clubId: string,
+    filters?: {
+      type?: "league" | "event" | "all";
+      status?: "upcoming" | "past" | "all";
+    }
+  ) => {
+    // Build query string
+    const params = new URLSearchParams();
+    if (filters?.type) params.set("type", filters.type);
+    if (filters?.status) params.set("status", filters.status);
+
+    const queryString = params.toString();
+    const endpoint = `clubs/${clubId}/events${
+      queryString ? `?${queryString}` : ""
+    }`;
+
+    const apiData = await get<unknown>(endpoint);
+    return snakeToCamel(apiData) as ClubEventsResponse;
   }
-) => {
-  // Build query string
-  const params = new URLSearchParams();
-  if (filters?.type) params.set('type', filters.type);
-  if (filters?.status) params.set('status', filters.status);
-  
-  const queryString = params.toString();
-  const endpoint = `clubs/${clubId}/events${queryString ? `?${queryString}` : ''}`;
-  
-  const apiData = await get<unknown>(endpoint);
-  return snakeToCamel(apiData) as ClubEventsResponse;
-});
+);
 
 /**
  * Get club MEMBERS TAB data (paginated, filterable)
- * 
+ *
  * @param clubId - Club ID
  * @param filters - Optional filters (role, level, status, page, pageSize)
  * @returns ClubMembersResponse { count, next, previous, results: ClubMember[] }
  * @example const { results, count } = await getClubMembers('345', { role: RoleType.COACH, page: '2' });
- * 
+ *
  * Backend: GET /api/clubs/{id}/members/?role=2&page=2
  * Serializer: ClubMemberSerializer (paginated)
- * 
+ *
  * IMPORTANT: role, level, and status use INTEGER constants!
  * - role: RoleTypeValue (from constants.ts)
  * - level: SkillLevelValue (from constants.ts)
  * - status: MembershipStatusValue (from constants.ts)
  */
-export const getClubMembers = cache(async (
-  clubId: string,
-  filters?: {
-    role?: RoleTypeValue;  // ✅ Integer constant (1 | 2 | 3 | 4 | 5)
-    level?: SkillLevelValue;  // ✅ Integer constant (1 | 2 | 3 | 4 | 5 | 6 | 7)
-    status?: MembershipStatusValue;  // ✅ Integer constant (1 | 2 | 3 | 4)
-    page?: string;  // Pagination - can be any number string
-    pageSize?: string;  // Pagination - can be any number string
+export const getClubMembers = cache(
+  async (
+    clubId: string,
+    filters?: {
+      role?: RoleTypeValue; // ✅ Integer constant (1 | 2 | 3 | 4 | 5)
+      level?: SkillLevelValue; // ✅ Integer constant (1 | 2 | 3 | 4 | 5 | 6 | 7)
+      status?: MembershipStatusValue; // ✅ Integer constant (1 | 2 | 3 | 4)
+      page?: string; // Pagination - can be any number string
+      pageSize?: string; // Pagination - can be any number string
+    }
+  ) => {
+    // Build query string
+    const params = new URLSearchParams();
+
+    // ✅ Convert integer constants to strings for URL query params
+    if (filters?.role) params.set("role", filters.role.toString());
+    if (filters?.level) params.set("level", filters.level.toString());
+    if (filters?.status) params.set("status", filters.status.toString());
+
+    // Pagination params are already strings
+    if (filters?.page) params.set("page", filters.page);
+    if (filters?.pageSize) params.set("page_size", filters.pageSize);
+
+    const queryString = params.toString();
+    const endpoint = `clubs/${clubId}/members${
+      queryString ? `?${queryString}` : ""
+    }`;
+
+    const apiData = await get<unknown>(endpoint);
+    return snakeToCamel(apiData) as ClubMembersResponse;
   }
-) => {
-  // Build query string
-  const params = new URLSearchParams();
-  
-  // ✅ Convert integer constants to strings for URL query params
-  if (filters?.role) params.set('role', filters.role.toString());
-  if (filters?.level) params.set('level', filters.level.toString());
-  if (filters?.status) params.set('status', filters.status.toString());
-  
-  // Pagination params are already strings
-  if (filters?.page) params.set('page', filters.page);
-  if (filters?.pageSize) params.set('page_size', filters.pageSize);
-  
-  const queryString = params.toString();
-  const endpoint = `clubs/${clubId}/members${queryString ? `?${queryString}` : ''}`;
-  
-  const apiData = await get<unknown>(endpoint);
-  return snakeToCamel(apiData) as ClubMembersResponse;
-});
+);
 
 // ========================================
 // NOTIFICATIONS & ANNOUNCEMENTS
@@ -345,57 +353,57 @@ export const getClubMembers = cache(async (
 
 /**
  * Get unified notification feed (notifications + announcements merged)
- * 
+ *
  * @returns NotificationFeedResponse with merged feed + badge counts
  * @example const { feed, badgeCount } = await getNotificationFeed();
- * 
+ *
  * Backend: GET /api/feed/
  * Returns: { feed: FeedItem[], badgeCount: number, unreadNotifications: number, announcementCount: number }
- * 
+ *
  * CRITICAL: Each item has feedType: 'notification' | 'announcement'
  * CRITICAL: Both types have notificationType field for badge counting
  */
 export const getNotificationFeed = cache(async () => {
-  const apiData = await get<unknown>('feed');
+  const apiData = await get<unknown>("feed");
   return snakeToCamel(apiData) as NotificationFeedResponse;
 });
 
 /**
  * Get all notifications (1-to-1 messages only)
- * 
+ *
  * @returns Array of Notification objects
  * @example const notifications = await getNotifications();
- * 
+ *
  * Backend: GET /api/notifications/
  * Returns: Notification[] (only notifications, excludes announcements)
  */
 export const getNotifications = cache(async () => {
-  const apiData = await get<unknown>('notifications');
+  const apiData = await get<unknown>("notifications");
   return snakeToCamel(apiData) as Notification[];
 });
 
 /**
  * Get all announcements (1-to-many broadcasts only)
- * 
+ *
  * @returns Array of Announcement objects
  * @example const announcements = await getAnnouncements();
- * 
+ *
  * Backend: GET /api/announcements/
  * Returns: Announcement[] (only announcements, excludes notifications)
  * NOTE: Automatically filtered to user's clubs, excludes expired
  */
 export const getAnnouncements = cache(async () => {
-  const apiData = await get<unknown>('announcements');
+  const apiData = await get<unknown>("announcements");
   return snakeToCamel(apiData) as Announcement[];
 });
 
 /**
  * Get specific announcement by ID
- * 
+ *
  * @param id - Announcement ID
  * @returns Single Announcement object
  * @example const announcement = await getAnnouncement(123);
- * 
+ *
  * Backend: GET /api/announcements/{id}/
  */
 export const getAnnouncement = cache(async (id: number) => {
@@ -405,37 +413,39 @@ export const getAnnouncement = cache(async (id: number) => {
 
 /**
  * Mark notification as read
- * 
+ *
  * @param id - Notification ID
  * @returns Updated Notification object
  * @example await markNotificationAsRead(45);
- * 
+ *
  * Backend: PATCH /api/notifications/{id}/
  * Body: { is_read: true }
  */
-export async function markNotificationAsRead(id: number): Promise<Notification> {
-  const apiData = await patch<unknown>('notifications', id, { is_read: true });
+export async function markNotificationAsRead(
+  id: number
+): Promise<Notification> {
+  const apiData = await patch<unknown>("notifications", id, { is_read: true });
   return snakeToCamel(apiData) as Notification;
 }
 
 /**
  * Create new announcement (admin/captain only)
- * 
+ *
  * @param data - Announcement creation data
  * @returns Created Announcement object
- * @example await createAnnouncement({ 
- *   club: 123, 
- *   title: "New rules", 
- *   content: "..." 
+ * @example await createAnnouncement({
+ *   club: 123,
+ *   title: "New rules",
+ *   content: "..."
  * });
- * 
+ *
  * Backend: POST /api/announcements/
  * CRITICAL: notification_type is AUTO-CALCULATED by backend (match → MATCH_ANNOUNCEMENT, league → LEAGUE_ANNOUNCEMENT, club → CLUB_ANNOUNCEMENT)
  */
 export async function createAnnouncement(data: {
   club: number;
-  league?: number | null;  // Optional - narrows audience to league members
-  match?: number | null;   // Optional - narrows audience to match participants
+  league?: number | null; // Optional - narrows audience to league members
+  match?: number | null; // Optional - narrows audience to match participants
   title: string;
   content: string;
   imageUrl?: string;
@@ -458,19 +468,19 @@ export async function createAnnouncement(data: {
     expiry_date: data.expiryDate,
     // ❌ DO NOT include notification_type - it's auto-calculated by backend!
   };
-  
-  const apiData = await post<unknown>('announcements', snakeCaseData);
+
+  const apiData = await post<unknown>("announcements", snakeCaseData);
   return snakeToCamel(apiData) as Announcement;
 }
 
 /**
  * Update announcement (admin/captain only)
- * 
+ *
  * @param id - Announcement ID
  * @param data - Partial update data
  * @returns Updated Announcement object
  * @example await updateAnnouncement(123, { title: "Updated title" });
- * 
+ *
  * Backend: PATCH /api/announcements/{id}/
  * NOTE: notification_type cannot be manually updated - it's recalculated on save based on match/league/club
  */
@@ -488,20 +498,20 @@ export async function updateAnnouncement(
 ): Promise<Announcement> {
   // Convert camelCase to snake_case for Django
   const snakeCaseData = camelToSnake(data) as object;
-  
-  const apiData = await patch<unknown>('announcements', id, snakeCaseData);
+
+  const apiData = await patch<unknown>("announcements", id, snakeCaseData);
   return snakeToCamel(apiData) as Announcement;
 }
 
 /**
  * Delete announcement (admin/captain only)
- * 
+ *
  * @param id - Announcement ID
  * @returns HTTP status code
  * @example await deleteAnnouncement(123);
- * 
+ *
  * Backend: DELETE /api/announcements/{id}/
  */
 export async function deleteAnnouncement(id: number): Promise<number> {
-  return del('announcements', id);
+  return del("announcements", id);
 }
