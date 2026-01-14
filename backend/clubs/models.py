@@ -347,7 +347,7 @@ class ClubMembership(models.Model):
         related_name='club_memberships_at_level',
         blank=True)
     
-    membership_number = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    membership_number = models.CharField(max_length=50, unique=True, blank=True)
     status= models.IntegerField(
         choices=MembershipStatus, 
         default=MembershipStatus.ACTIVE, 

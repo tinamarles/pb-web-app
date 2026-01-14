@@ -23,77 +23,91 @@ export interface JWTResponse {
 
 // +++ Core types using PascalCase for the interface names, singular nouns for data
 
+/** Address
+ * apiResponseType: DjangoAddress
+ * backend: public.AddressSerializer
+ */
 export interface Address {
-  /* public.serializer sends fields = '__all__'
-
-    id = primaryKey
-    address_line1 = models.CharField(max_length=255)
-    address_line2 = models.CharField(max_length=255, blank=True, null=True)
-    city = models.CharField(max_length=100)
-    state_province = models.CharField(max_length=100)
-    postal_code = models.CharField(max_length=20)
-    country = models.CharField(max_length=100)
-  */
   id?: number;
   addressLine1: string;
-  addressLine2?: string | null;
+  addressLine2: string;
   city: string;
   stateProvince: string;
   postalCode: string;
   country: string;
 }
 
+/** Role
+ * apiResponseType: DjangoRole
+ * backend: clubs.RoleSerializer
+ */
 export interface Role {
-  id?: number;
-  name: C.RoleTypeValue; // needs to change to name: RoleTypeValue (from constants.ts)
-  description?: string | null;
+  id: number;
+  name: C.RoleTypeValue;
+  description: string;
 }
 
+/** ClubMembershipType
+ * apiResponseType: DjangoClubMembershipType
+ * backend: clubs.ClubMembershipTypeSerializer
+ */
 export interface ClubMembershipType {
-  id?: number;
+  id: number;
   name: string; // e.g., "Resident", "Non-Resident", "Junior"
-  description?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  requiresApproval?: boolean;
-  registrationOpenDate?: string | null;
-  registrationCloseDate?: string | null;
-  currentMemberCount?: number; // ✅ From @property
-  isAtCapacity?: boolean; // ✅ From @property
-  annualFee?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  description: string; // always return in response; if blank=True -> ""
+  registrationOpenDate: string | null;
+  registrationCloseDate: string | null;
+  requiresApproval: boolean;
+  annualFee: number;
+  currentMemberCount: number; // ✅ From @property
+  isAtCapacity: boolean; // ✅ From @property
+  isRegistrationOpen: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
+/** ClubMembershipSkillLevel
+ * apiResponseType: DjangoClubMembershipSkillLevel
+ * backend: clubs.ClubMembershipSkillLevelSerializer
+ */
 export interface ClubMembershipSkillLevel {
   /* club.serializer sends fields = ['id', 'level', 'description']
     id = primaryKey
     level = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
   */
-  id?: number;
+  id: number;
   level: C.SkillLevelValue;
-  description?: string;
+  description: string;
 }
 
+/** MemberClub
+ * apiResponseType: DjangoClubNested
+ * backend: clubs.NestedClubSerializer
+ */
 export interface MemberClub {
   /* light-weight club that is used for a Club member. It
      does NOT include the array that contains all the members of 
      the club.
   */
   id: number;
-  name: string;
   clubType: C.ClubTypeValue;
-  bannerUrl?: string;
-  shortName?: string;
-  description?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  phoneNumber?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  email?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  websiteUrl?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  logoUrl?: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  address?: Address | null; // ✅ FIXED: Django ForeignKey with null=True, blank=True
+  name: string;
+  shortName: string;
+  description: string;
+  address: Address | null;
+  phoneNumber: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  email: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  websiteUrl: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  logoUrl: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  bannerUrl: string;
   autoapproval: boolean; // default=False in Django
   memberCount: number; // ✅ Added (calculated)
 }
-
+/** Club
+ * apiResponseType: DjangoClub
+ * backend: clubs.ClubSerializer
+ */
 export interface Club extends MemberClub {
   /* The complete Club object which extends MemberClub by having
      extra fields:
@@ -101,13 +115,16 @@ export interface Club extends MemberClub {
      - created_at
      - updated-at
   */
-  members?: number[]; // contains the user Id's of all club members
-  createdAt?: string;
-  updatedAt?: string;
+  members: number[]; // contains the user Id's of all club members
+  createdAt: string;
+  updatedAt: string;
 }
-
+/** ClubMembership
+ * apiResponseType: DjangoClubMembership
+ * backend: clubs.ClubMembershipSerializer
+ */
 export interface ClubMembership {
-  id?: number;
+  id: number;
   club: MemberClub; // required in Django
   roles: Role[];
   type: ClubMembershipType;
@@ -128,91 +145,65 @@ export interface ClubMembership {
 }
 // +++ User-specific types: types for different user roles
 
-// PublicUser has no club membership and matches CustomUser
-// serializer
-
-/* UPDATED VERSION due to changes of character fields */
-export interface PublicUser {
-  id?: number;
+/** UserInfo
+ * apiResponseType: DjangoUserInfo
+ * backend: users.UserInfoSerializer
+ */
+export interface UserInfo {
+  id: number;
+  firstName: string;
+  lastName: string;
+  fullName: string; // Computed from firstName + lastName
   username: string;
-  firstName?: string; // Django AbstractUser has blank=True
-  lastName?: string; // Django AbstractUser has blank=True
-  email?: string; // Required but optional in response
-  profilePictureUrl?: string; // ✅ blank=True only - NO null!
-  skillLevel?: number | null; // ✅ null=True - NULL OK
-  isCoach?: boolean;
-  homePhone?: string; // ✅ blank=True only - NO null!
-  mobilePhone?: string; // ✅ blank=True only - NO null!
-  workPhone?: string; // ✅ blank=True only - NO null!
-  location?: string; // ✅ blank=True only - NO null!
-  dob?: string | null; // ✅ null=True - NULL OK
-  gender: C.GenderValue; // Has default, not null
-  bio?: string; // ✅ blank=True only - NO null!
-  createdAt?: string;
-  updatedAt?: string;
-  // themePreference?: Theme;
-  // unreadNotifications?: number;
+  profilePictureUrl?: string | null;
 }
-
+/** PublicUser
+ * apiResponseType: DjangoUserBase
+ * backend: clubs.CustomUserSerializer
+ */
+export interface PublicUser extends UserInfo {
+  
+  // Additional fields: 
+  // apiResponseType: DjangoUserBase
+  // backend: users.CustomUserSerializer
+  email: string; // Required but optional in response
+  skillLevel: number | null; // ✅ null=True - NULL OK
+  isCoach: boolean;
+  homePhone: string; // ✅ blank=True only - NO null!
+  mobilePhone: string; // ✅ blank=True only - NO null!
+  workPhone: string; // ✅ blank=True only - NO null!
+  location: string; // ✅ blank=True only - NO null!
+  dob: string | null; // ✅ null=True - NULL OK
+  gender: C.GenderValue; // Has default, not null
+  bio: string; // ✅ blank=True only - NO null!
+  createdAt: string;
+  updatedAt: string;
+  // themePreference?: Theme;
+}
+/** MemberUser
+ * apiResponseType: DjangoMemberUser
+ * backend: clubs.MemberUserSerializer
+ */
 export interface MemberUser extends PublicUser {
   clubMemberships: ClubMembership[];
 }
-
+/** User
+ * apiResponseType: DjangoUser
+ * backend: users.UserDetailsView
+ *          uses either CustomUserSerializer -> PublicUser
+ *                      MemberUserSerializer -> MemberUser
+ */
 // The union type representing the possible API responses
 export type User = PublicUser | MemberUser;
 
 // +++ Notifications +++
 
-/**
- * PersonInfo - Generic person information used across the app
- *
- * USAGE: Reusable type for representing any person in any context
- * - Notification sender (creatorInfo)
- * - Announcement creator (creatorInfo)
- * - League captain (captainInfo)
- * - Match organizer, referee, etc.
- *
- * BENEFITS:
- * - Single source of truth for person data structure
- * - Change field names once, applies everywhere
- * - Extend with additional fields when needed
- * - Type-safe and consistent across entire app
- *
- * EXTENDING:
- * // If you need extra fields in specific contexts:
- * export interface CoachInfo extends PersonInfo {
- *   certificationLevel: string;
- * }
- *
- * // Or inline for one-off additions:
- * creatorInfo: PersonInfo & { isStaff: boolean }
- */
-export interface PersonInfo {
+export interface BaseFeedItem {
   id: number;
-  fullName: string; // Computed from firstName + lastName
-  firstName: string;
-  lastName: string;
-  profilePictureUrl?: string | null;
-}
-
-/**
- * Notification - 1-to-1 notifications sent to specific users
- *
- * Backend: NotificationSerializer
- * Endpoint: GET /api/notifications/feed/
- *
- * CRITICAL NOTES:
- * - feedType is added by serializer (for unified feed)
- * - content field contains the message
- * - creatorInfo is the sender (can be null for system notifications)
- * - club/league/match are optional context (nested objects or null)
- */
-export interface Notification {
-  // === COMMON FIELDS (Future Abstract Class) ===
-  id: number;
-  notificationType: C.NotificationTypeValue;
+  notification_type: C.NotificationTypeValue;
   title: string;
   content: string;
+  creatorInfo: UserInfo | null;
   club: {
     id: number;
     name: string;
@@ -223,26 +214,41 @@ export interface Notification {
   } | null;
   match: {
     id: number;
-    title: string;
   } | null;
-  creatorInfo: PersonInfo | null;
   actionUrl: string;
   actionLabel: string;
   createdAt: string; // ISO 8601 datetime
   updatedAt: string; // ISO 8601 datetime
-  feedType: "notification"; // Added by serializer
+  feedType: "notification" | "announcement"; // Added by serializer
+}
+
+/**
+ * Notification - 1-to-1 notifications sent to specific users
+ *
+ * Backend: NotificationSerializer
+ * Backend Type: DjangoNotification
+ * Endpoint: GET /api/notifications/feed/ ??? -> /api/profile/feed (not yet implemented)
+ *
+ * CRITICAL NOTES:
+ * - feedType is added by serializer (for unified feed)
+ * - content field contains the message
+ * - creatorInfo is the sender (can be null for system notifications)
+ * - club/league/match are optional context (nested objects or null)
+ */
+export interface Notification extends BaseFeedItem {
 
   // === NOTIFICATION-SPECIFIC FIELDS ===
   isRead: boolean;
   readAt: string | null; // ISO 8601 datetime, null if not read yet
-  metadata: Record<string, unknown> | null; // JSON field for additional data
+  metadata: Record<string, unknown>; // JSON field for additional data
 }
 
 /**
  * Announcement - Club-wide announcements (1-to-many broadcasts)
  *
  * Backend: AnnouncementSerializer
- * Endpoint: GET /api/notifications/feed/
+ * Backend Type: DjangoAnnouncement
+ * Endpoint: GET /api/notifications/feed/ ??? -> /api/clubs/{id}/announcements
  *
  * CRITICAL NOTES:
  * - feedType is added by serializer (for unified feed)
@@ -255,33 +261,10 @@ export interface Notification {
  * - club + league → Only league participants see it
  * - club + match → Only match participants see it
  */
-export interface Announcement {
-  // === COMMON FIELDS (Future Abstract Class) ===
-  id: number;
-  notificationType: C.NotificationTypeValue;
-  title: string;
-  content: string;
-  club: {
-    id: number;
-    name: string;
-  }; // ✅ REQUIRED - NOT NULL!
-  league: {
-    id: number;
-    name: string;
-  } | null;
-  match: {
-    id: number;
-    title: string;
-  } | null;
-  creatorInfo: PersonInfo | null;
-  actionUrl: string;
-  actionLabel: string;
-  createdAt: string; // ISO 8601 datetime
-  updatedAt: string; // ISO 8601 datetime
-  feedType: "announcement"; // Added by serializer
+export interface Announcement extends BaseFeedItem {
 
   // === ANNOUNCEMENT-SPECIFIC FIELDS ===
-  imageUrl?: string | null;
+  imageUrl: string;
   isPinned: boolean;
   expiryDate: string | null; // ISO 8601 date, null = never expires
 }
@@ -289,6 +272,8 @@ export interface Announcement {
 /**
  * FeedItem - Unified feed item (Notification OR Announcement)
  *
+ * Backend Type: DjangoFeedItem
+ * 
  * USAGE:
  * Used by /api/feed/ endpoint which merges notifications + announcements
  * Check feedType to determine which type and render appropriate component
@@ -298,6 +283,8 @@ export type FeedItem = Notification | Announcement;
 /**
  * NotificationFeedResponse - Response from /api/feed/ endpoint
  *
+ * Backend Type: DjangoFeed
+ * 
  * RETURNS:
  * - feed: Merged array of notifications + announcements
  * - badgeCount: Total unread count (notifications + announcements)
@@ -328,111 +315,6 @@ export interface ClubFormValues {
   description: string;
   // etc.
 }
-
-// ==================================================================================
-// CLUB DETAIL TYPES (for club tabs)
-// Maps to Django: clubs.serializers.ClubHomeSerializer, ClubMemberSerializer
-// ==================================================================================
-
-/**
- * ClubMember - Combined User + ClubMembership data for members tab
- *
- * Backend: ClubMemberSerializer
- * Used in: GET /api/clubs/{id}/members/, GET /api/clubs/{id}/home/
- */
-export interface ClubMember {
-  // User fields (from member)
-  id: number;
-  firstName: string;
-  lastName: string;
-  profilePictureUrl?: string;
-  email: string;
-  location?: string;
-  // ClubMembership fields
-  membershipId: number;
-  roles: Role[];
-  levels: ClubMembershipSkillLevel[];
-  type: ClubMembershipType;
-  status: C.MembershipStatusValue;
-  joinedAt?: string;
-  isPreferredClub: boolean;
-}
-
-/**
- * ClubDetailHome - Extends MemberClub with home tab specific data
- *
- * Backend: ClubHomeSerializer
- * Used in: GET /api/clubs/{id}/home/
- *
- * NOTE: Serializer flattens the structure so all MemberClub fields + home tab fields
- * are at the top level (no nested 'club' object)
- */
-export interface ClubDetailHome extends MemberClub {
-  latestAnnouncement?: Notification | null;
-  allAnnouncements?: Notification[];
-  topMembers?: ClubMember[];
-  nextEvent?: League | null;
-  // photos?: Photo[];  // TODO: When photo model is implemented
-}
-
-/**
- * ClubEventsResponse - Response from events tab endpoint
- *
- * Backend: GET /api/clubs/{id}/events/
- * Returns: { events: League[], count: number }
- */
-export interface ClubEventsResponse {
-  events: League[];
-  count: number;
-}
-
-/**
- * ClubMembersResponse - Paginated response from members tab endpoint
- *
- * Backend: GET /api/clubs/{id}/members/
- * Returns: Django REST Framework paginated response
- */
-export interface ClubMembersResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: ClubMember[];
-}
-
-// ==================================================================================
-// LEAGUE/EVENT TYPES (placeholder - needs to be defined properly)
-// Maps to Django: leagues.models.League
-// ==================================================================================
-
-/**
- * League - Event or League data
- *
- * TEMPORARY: This is a placeholder! Needs to be properly defined
- * when implementing the leagues module
- */
-export interface League {
-  id: number;
-  club: number; // Club ID reference
-  name: string;
-  description?: string;
-  isEvent: boolean;
-  imageUrl?: string;
-  maxSpotsPerSession?: number;
-  allowWaitlist: boolean;
-  registrationOpensHoursBefore?: number;
-  registrationClosesHoursBefore?: number;
-  leagueType: C.LeagueTypeValue;
-  minimumSkillLevel?: C.SkillLevelValue;
-  captainInfo: PersonInfo | null;
-  startDate: string;
-  endDate?: string;
-  registrationOpen: boolean;
-  maxParticipants?: number;
-  allowReserves: boolean;
-  isActive: boolean;
-  participantsCount: number;
-}
-
 // +++ Utility functions and context types
 
 // Custom type guard to determine if the user is a member

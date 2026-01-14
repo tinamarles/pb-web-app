@@ -3,7 +3,7 @@ import { EmptyState } from "@/components";
 import { useAuth } from "@/providers/AuthUserProvider";
 import { useDashboard } from "@/providers/DashboardProvider";
 import { useState } from "react";
-import { type MemberUser, type ClubMembership } from "@/lib/definitions";
+import { type MemberUser, type ClubMembership, Announcement, Notification } from "@/lib/definitions";
 import { toast } from "sonner";
 import {
   Avatar,
@@ -80,6 +80,11 @@ export function MembershipsPage() {
       : memberships[0];
   }
 
+  const notificationsList = notifications.filter(
+    (item): item is Notification & { feedType: 'notification' } => 
+      item.feedType === 'notification'
+    );
+  
   // ========================================
   // EVENT HANDLERS
   // ========================================
@@ -136,7 +141,7 @@ export function MembershipsPage() {
         {memberships.map((membership) => {
           const badgeVariant = getMembershipBadgeVariant(
             membership.club.id,
-            notifications
+            notificationsList
           );
           const isSelected = selectedMembershipId === membership.id;
           return (
@@ -209,8 +214,9 @@ export function MembershipsPage() {
     // Get critical notifications for this clubMembership (error/warning only)
     const clubNotifications = getMembershipNotificationInfo(
       membership.club.id,
-      notifications
+      notificationsList
     );
+    console.log('Memberships Page - clubNotifications:', clubNotifications);
 
     // Check if registration renewal period is open
     const isRegistrationOpen = isWithinDateRange(
@@ -271,6 +277,7 @@ export function MembershipsPage() {
           {/* Details */}
           <div className="flex flex-col gap-sm p-sm bg-surface-container-low rounded-md">
             {/* Critical Notifications (Error/Warning only) */}
+            
             {clubNotifications &&
               clubNotifications.map((notification, index) => (
                 <div key={index} className="flex items-center gap-sm p-0">
@@ -280,7 +287,7 @@ export function MembershipsPage() {
                     className={`text-${notification.variant}`}
                   />
                   <p className={`label-sm flex-1 text-${notification.variant}`}>
-                    {notification.message}
+                    {notification.content}
                   </p>
                 </div>
               ))}

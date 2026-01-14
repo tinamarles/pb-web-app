@@ -119,16 +119,19 @@ class CustomUserRegistrationSerializer(serializers.ModelSerializer):
 # Club memberships
 class CustomUserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(read_only=True)
+    full_name = serializers.ReadOnlyField(source='get_full_name')
+    
     class Meta:
         # Use the variable User which holds the active user model
         model = User
         fields = ['id', 
-                  'username', 
                   'first_name', 
                   'last_name', 
+                  'full_name',
+                  'username',
+                  'profile_picture_url',
                   'email', 
                   'skill_level',
-                  'profile_picture_url',
                   'is_coach',
                   'home_phone',
                   'mobile_phone',
@@ -137,7 +140,26 @@ class CustomUserSerializer(serializers.ModelSerializer):
                   'dob',
                   'gender',
                   'bio',
+                  'created_at',
+                  'updated_at'
                   ]
         read_only_fields = ['email']
 
-        
+# Lightweight User Info Serializer: 
+# will be used where ever basic user information is required
+# - BaseFeedItemSerializer
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for person info (used in creator_info, etc.)"""
+    full_name = serializers.ReadOnlyField(source='get_full_name')
+    
+    class Meta:
+        model = User
+        fields = ['id', 
+                  'first_name', 
+                  'last_name', 
+                  'full_name', 
+                  'username',
+                  'profile_picture_url']
+
+

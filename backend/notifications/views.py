@@ -85,14 +85,14 @@ class AnnouncementViewSet(viewsets.ReadOnlyModelViewSet):
     destroy: Delete announcement (admin/captain only)
     """
     serializer_class = AnnouncementSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated] 
 
     def get_queryset(self):
         user = self.request.user
         today = timezone.now().date()
 
         # Get clubs user is member of
-        user_clubs = user.memberships.values_list('club', flat=True)
+        user_clubs = user.club_memberships.values_list('club', flat=True)
         
         return Announcement.objects.filter(
             club__in=user_clubs).filter(

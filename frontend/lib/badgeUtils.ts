@@ -185,7 +185,7 @@ export function getMembershipBadgeVariant(
 export function getMembershipNotificationInfo(
   clubId: number | undefined,
   notifications: Notification[]
-): { variant: BadgeVariant, message: string }[] | null {
+): { variant: BadgeVariant, content: string }[] | null {
   // No club ID → no badge
   if (!clubId) return null;
   
@@ -213,7 +213,7 @@ export function getMembershipNotificationInfo(
   const variant = getWorstBadgeVariant(uniqueTypes);
   
   // Get the message of the first critical notification
-  const message = criticalNotifications[0].message;
+  const content = criticalNotifications[0].content;
   
-  return criticalNotifications.map(n => ({ variant, message: n.message }));
+  return criticalNotifications.map(n => ({ variant, content: n.content }));
 }

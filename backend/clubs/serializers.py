@@ -4,9 +4,8 @@ from django.contrib.auth import get_user_model
 from .models import Club, ClubMembership, Role, ClubMembershipType, ClubMembershipSkillLevel
 from public.serializers import AddressSerializer
 from public.constants import MembershipStatus   
-from users.serializers import CustomUserSerializer
+from users.serializers import CustomUserSerializer, UserInfoSerializer
 from notifications.serializers import AnnouncementSerializer
-from leagues.serializers import LeagueSerializer
 from leagues.models import League
 from django_typomatic import ts_interface
 
@@ -34,7 +33,9 @@ class ClubMembershipTypeSerializer(serializers.ModelSerializer):
             'annual_fee',
             'current_member_count',
             'is_at_capacity',
-            'is_registration_open']  # ✅ ADDED: Send the computed property!]
+            'is_registration_open', # ✅ ADDED: Send the computed property!]
+            'created_at',
+            'updated_at']  
 
 class ClubMembershipSkillLevelSerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,16 +63,16 @@ class NestedClubSerializer(serializers.ModelSerializer):
         model = Club
         fields = [
             'id',
-            'name',
-            'banner_url',
             'club_type',
+            'name',
             'short_name',
             'description',
+            'address',
             'phone_number',
             'email',
             'website_url',
             'logo_url',
-            'address',
+            'banner_url',
             'autoapproval',
             'member_count',  # ✅ NEW!
         ]
@@ -81,9 +82,10 @@ class NestedClubSerializer(serializers.ModelSerializer):
             club_memberships__status=MembershipStatus.ACTIVE  # ✅ INTEGER constant!
         ).distinct().count()
 
-class ClubSerializer(serializers.ModelSerializer):
+class ClubSerializer(NestedClubSerializer):
     '''
     Full serializer for the Club model (admin/create/update only).
+    Inherits all the fields and methods from NestedClubSerializer
     
     USED FOR:
     - POST /api/clubs/ (create)
@@ -91,17 +93,13 @@ class ClubSerializer(serializers.ModelSerializer):
     
     TypeScript: Club
     '''
-    address = AddressSerializer(read_only=True)
-
-    class Meta:
-        model = Club
-        # Use '__all__' to include every field in the model.
-        # Alternatively, you can list the fields you want to expose.
-        # For example: fields = ('id', 'name', 'description', 'address', 'phone_number', 'email', 'website_url', 'logo_url')
-        fields = '__all__'
-
-        # Make 'members' and 'club_location' read-only on creation
-        read_only_fields = ('members', 'address', 'created_at', 'updated_at')
+    class Meta(NestedClubSerializer.Meta):
+        fields = NestedClubSerializer.Meta.fields + [
+            'members',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ('members', 'created_at', 'updated_at')
 
     def create(self, validated_data):
         # We handle the creation of the Address and ClubMembership
@@ -113,54 +111,56 @@ class ClubSerializer(serializers.ModelSerializer):
 # CLUB MEMBER SERIALIZER (for members tab)
 # ========================================
 
-class ClubMemberSerializer(serializers.ModelSerializer):
+class ClubMemberSerializer(serializers.Serializer):
     """
     Serializer for ClubMember data (combines User + ClubMembership).
     
     USED FOR:
     - GET /api/clubs/{id}/members/ (members tab)
     - GET /api/clubs/{id}/home/ (top members in home tab)
+    Extends TopMemberSerializer (User + full_name + joined_date).
+    Adds additional ClubMembership fields.
     
-    TypeScript: ClubMember
+    REUSES:
+    - CustomUserSerializer (all user fields)
+    - full_name computation
+    - joined_date (from TopMemberSerializer)
+    
+    ADDS:
+    - membership_id
+    - roles
+    - levels
+    - type
+    - status
+    - is_preferred_club
+    
+    TypeScript: DjangoClubMember
     """
-    # User fields (from member)
-    id = serializers.IntegerField(source='member.id', read_only=True)
-    first_name = serializers.CharField(source='member.first_name', read_only=True)
-    last_name = serializers.CharField(source='member.last_name', read_only=True)
-    profile_picture_url = serializers.CharField(source='member.profile_picture_url', read_only=True)
-    email = serializers.EmailField(source='member.email', read_only=True)
-    location = serializers.CharField(source='member.location', read_only=True)
+    def to_representation(self, instance):
+        """
+        Start with TopMemberSerializer, add more ClubMembership fields.
+        
+        instance = ClubMembership object
+        """
+        # Get all fields from TopMemberSerializer
+        # (User fields + full_name + joined_date)
+        data = TopMemberSerializer(instance).data
+        
+        # Add additional ClubMembership fields
+        data['membership_id'] = instance.id
+        data['roles'] = RoleSerializer(instance.roles.all(), many=True).data
+        data['levels'] = ClubMembershipSkillLevelSerializer(instance.levels.all(), many=True).data
+        data['type'] = instance.type_id
+        data['status'] = instance.status
+        data['is_preferred_club'] = instance.is_preferred_club
+        
+        # Note: created_at is already in data as 'joined_date' from TopMemberSerializer
+        
+        return data
     
-    # ClubMembership fields
-    membership_id = serializers.IntegerField(source='id', read_only=True)
-    roles = RoleSerializer(many=True, read_only=True)
-    levels = ClubMembershipSkillLevelSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = ClubMembership
-        fields = [
-            # User fields
-            'id',
-            'first_name',
-            'last_name',
-            'profile_picture_url',
-            'email',
-            'location',
-            # ClubMembership fields
-            'membership_id',
-            'roles',
-            'levels',
-            'type',
-            'status',
-            'created_at',
-            'is_preferred_club',
-            # 'tags',  # TODO: Add tags if needed
-        ]
-
 # ========================================
 # HOME TAB SERIALIZER
 # ========================================
-
 
 class TopMemberSerializer(serializers.Serializer):
     """
@@ -174,8 +174,9 @@ class TopMemberSerializer(serializers.Serializer):
     - Add full_name (computed field) to the output
     - Add joined_date from ClubMembership
     - Frontend gets all User fields + computed fields!
+
+    NOTE: this serializer is reused for the ClubMemberSerializer
     """
-    joined_date = serializers.DateTimeField(source='created_at')
     
     def to_representation(self, instance):
         """
@@ -188,9 +189,6 @@ class TopMemberSerializer(serializers.Serializer):
         # Serialize the User with CustomUserSerializer
         user_data = CustomUserSerializer(instance.member).data
         
-        # Add computed field: full_name
-        user_data['full_name'] = instance.member.get_full_name()
-        
         # Add joined_date from ClubMembership
         user_data['joined_date'] = instance.created_at.isoformat() if instance.created_at else None
         
@@ -201,6 +199,7 @@ class EventLightSerializer(serializers.ModelSerializer):
     Lightweight event serializer for Home Tab.
     
     Includes next session info and participants count.
+    NOTE: this serializer is reused in leagues.LeagueSerializer
     
     CRITICAL: 
     - View already filters is_event=True, so this ONLY receives events!
@@ -319,14 +318,7 @@ class EventLightSerializer(serializers.ModelSerializer):
         if not captain:
             return None
         
-        # Match existing creator_info pattern from AnnouncementSerializer
-        return {
-            'id': captain.id,
-            'first_name': captain.first_name,
-            'last_name': captain.last_name,
-            'full_name': captain.get_full_name(),
-            'profile_picture_url': captain.profile_picture_url,  # Directly on User!
-        }
+        return UserInfoSerializer(captain).data
 
 class ClubHomeSerializer(serializers.Serializer):
     """

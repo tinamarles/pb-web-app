@@ -45,7 +45,7 @@ class Notification(models.Model):
         help_text='Short title (e.g., "Event Invitation")'
     )
 
-    message = models.TextField(
+    content = models.TextField(
         help_text='Full notification message'
     )
     
@@ -70,7 +70,6 @@ class Notification(models.Model):
     action_label = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
         help_text='Label for action button (e.g., "View Match", "Renew Membership")'
     )
     

@@ -114,8 +114,6 @@ class UserRegistrationView(APIView):
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
-
-
 class UserDetailsView(RetrieveAPIView):
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated]

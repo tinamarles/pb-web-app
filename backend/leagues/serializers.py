@@ -1,52 +1,45 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django_typomatic import ts_interface
-from .models import League
-from public.constants import LeagueParticipationStatus  
+from clubs.serializers import EventLightSerializer
 
 # Get the active user model
 User = get_user_model()
 
-@ts_interface()
-class LeagueSerializer(serializers.ModelSerializer):
-    captain_info = serializers.SerializerMethodField()
-    participants_count = serializers.SerializerMethodField()  # ✅ NEW!
+class LeagueSerializer(EventLightSerializer):
+    """
+    Comprehensive serializer for Leagues and Events.
     
-    class Meta:
-        model = League
-        fields = ['id', 
-                  'club',
-                  'name', 
-                  'description',
-                  'is_event',
-                  'image_url',
-                  'max_spots_per_session',
-                  'allow_waitlist',
-                  'registration_opens_hours_before',
-                  'registration_closes_hours_before',
-                  'league_type',
-                  'minimum_skill_level',
-                  'captain_info',       # ✅ Matches method name!
-                  'start_date',
-                  'end_date',
-                  'registration_open',
-                  'max_participants',
-                  'allow_reserves',
-                  'is_active',
-                  'participants_count'  # ✅ NEW!
-                  ] 
-    def get_captain_info(self, obj):
-        """Get captain details (if captain exists)"""
-        if obj.captain:
-            return {
-                'id': obj.captain.id,
-                'first_name': obj.captain.first_name,
-                'last_name': obj.captain.last_name,
-                'avatar': obj.captain.profile_picture_url 
-            }
-        return None
-    def get_participants_count(self, obj):
-        """Count active participants in the league/event"""
-        return obj.participants.filter(
-            league_participations__status=LeagueParticipationStatus.ACTIVE  # ✅ Fixed indent!
-        ).distinct().count()
+    Used for:
+    - Events Tab (GET /api/clubs/{id}/events/)
+    - League Detail (GET /api/leagues/{id}/)
+    
+    CRITICAL:
+    - Works for BOTH leagues (is_event=False) AND events (is_event=True)
+    - Returns snake_case (frontend converts to camelCase)
+    - Uses ModelSerializer for DRY approach
+    - Uses SessionOccurrence for next session queries
+    
+    Fields:
+    - Basic: id, name, description, league_type, etc.
+    - Computed: club info, captain info, participants count
+    - Next session: For events, shows next upcoming session details
+    """
+    
+    class Meta(EventLightSerializer.Meta): 
+            """ now just add the extra fields """ 
+            fields = EventLightSerializer.Meta.fields + [ 
+                'is_event',
+                # Capacity and overflow (dual-purpose fields!)
+                'max_participants',
+                'allow_reserves',
+                # Registration (computed @property for leagues, per-session for events)
+                'registration_open',
+                'start_date',
+                'end_date',
+                # Status
+                'is_active',
+                # Timestamps
+                'created_at',
+                'updated_at',
+            ]
+    
