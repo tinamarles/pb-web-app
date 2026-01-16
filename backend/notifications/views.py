@@ -154,7 +154,7 @@ def notification_feed(request):
     badge_count = unread_notification_count + announcement_count
     
     return Response({
-        'feed': feed,
+        'items': feed,
         'badge_count': badge_count,
         'unread_notifications': unread_notification_count,
         'announcement_count': announcement_count,

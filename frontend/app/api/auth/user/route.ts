@@ -54,7 +54,7 @@ export async function GET(_req: Request) {
 
   return NextResponse.json({
     ...userData,  // spread user data
-    notifications: feedData.feed,
+    notifications: feedData.items,
     unreadCount: feedData.badge_count,
   });
   } catch (error) {

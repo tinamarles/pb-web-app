@@ -1,7 +1,7 @@
 import { PageProps } from "@/lib/definitions";
 import { Metadata } from "next";
 import { getClubHome } from '@/lib/actions';
-import { ClubDetailHome } from "@/lib/definitions";
+import { ClubHome } from "@/lib/definitions";
 
 export const metadata: Metadata = {
   title: "Club Details | Club | PickleHub",
@@ -16,9 +16,9 @@ export default async function ClubHomePage({
   searchParams
 }: PageProps<Params, SearchParams>) {
   const { clubId } = await params;
-  const club: ClubDetailHome = await getClubHome(clubId);
+  const club: ClubHome = await getClubHome(clubId);
 
   console.log("Club Home Page - clubHome data: ", club);  
 
-  return <h1>Club Home Page for Club: {club.shortName}</h1>;
+  return <h1>Club Home Page for Club: {club.club.name}</h1>;
 }

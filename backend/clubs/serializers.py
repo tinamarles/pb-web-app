@@ -216,6 +216,7 @@ class EventLightSerializer(serializers.ModelSerializer):
     next_session_start_time = serializers.SerializerMethodField()
     next_session_end_time = serializers.SerializerMethodField()
     next_session_location = serializers.SerializerMethodField()
+    next_session_registration_open = serializers.SerializerMethodField()
     
     # Participants info
     participants_count = serializers.SerializerMethodField()
@@ -239,6 +240,7 @@ class EventLightSerializer(serializers.ModelSerializer):
             'next_session_start_time',
             'next_session_end_time',
             'next_session_location',
+            'next_session_registration_open',
             'participants_count',
             'captain_info',
         ]
@@ -283,6 +285,13 @@ class EventLightSerializer(serializers.ModelSerializer):
         next_occurrence = self.context.get('next_occurrence')
         if next_occurrence and next_occurrence.league_session.court_location:
             return next_occurrence.league_session.court_location.name
+        return None
+    
+    def get_next_session_registration_open(self, obj):
+        """Get next session registration_open flag"""
+        next_occurrence = self.context.get('next_occurrence')
+        if next_occurrence:
+            return next_occurrence.registration_open
         return None
     
     # ========================================

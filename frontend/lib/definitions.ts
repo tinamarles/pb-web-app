@@ -22,6 +22,17 @@ export interface JWTResponse {
 }
 
 // +++ Core types using PascalCase for the interface names, singular nouns for data
+export interface ModelInfo {
+  id: number;
+  name: string;
+}
+
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
 
 /** Address
  * apiResponseType: DjangoAddress
@@ -129,11 +140,11 @@ export interface ClubMembership {
   roles: Role[];
   type: ClubMembershipType;
   levels: ClubMembershipSkillLevel[];
-  membershipNumber?: string | null;
+  membershipNumber: string | null;
   isPreferredClub: boolean;
   status: C.MembershipStatusValue;
-  registrationStartDate?: string | null;
-  registrationEndDate?: string | null;
+  registrationStartDate: string | null;
+  registrationEndDate: string | null;
   // ✅ Aggregated permission flags from Django @property methods
   canManageClub: boolean;
   canManageMembers: boolean;
@@ -155,15 +166,14 @@ export interface UserInfo {
   lastName: string;
   fullName: string; // Computed from firstName + lastName
   username: string;
-  profilePictureUrl?: string | null;
+  profilePictureUrl: string;
 }
 /** PublicUser
  * apiResponseType: DjangoUserBase
  * backend: clubs.CustomUserSerializer
  */
 export interface PublicUser extends UserInfo {
-  
-  // Additional fields: 
+  // Additional fields:
   // apiResponseType: DjangoUserBase
   // backend: users.CustomUserSerializer
   email: string; // Required but optional in response
@@ -196,25 +206,21 @@ export interface MemberUser extends PublicUser {
 // The union type representing the possible API responses
 export type User = PublicUser | MemberUser;
 
-// +++ Notifications +++
+/**
+ * =============================
+ * Notifications
+ * =============================
+ */
 
 export interface BaseFeedItem {
   id: number;
-  notification_type: C.NotificationTypeValue;
+  notificationType: C.NotificationTypeValue;
   title: string;
   content: string;
   creatorInfo: UserInfo | null;
-  club: {
-    id: number;
-    name: string;
-  } | null;
-  league: {
-    id: number;
-    name: string;
-  } | null;
-  match: {
-    id: number;
-  } | null;
+  club: ModelInfo | null;
+  league: ModelInfo | null;
+  match: Omit<ModelInfo, "name"> | null;
   actionUrl: string;
   actionLabel: string;
   createdAt: string; // ISO 8601 datetime
@@ -236,7 +242,6 @@ export interface BaseFeedItem {
  * - club/league/match are optional context (nested objects or null)
  */
 export interface Notification extends BaseFeedItem {
-
   // === NOTIFICATION-SPECIFIC FIELDS ===
   isRead: boolean;
   readAt: string | null; // ISO 8601 datetime, null if not read yet
@@ -262,7 +267,6 @@ export interface Notification extends BaseFeedItem {
  * - club + match → Only match participants see it
  */
 export interface Announcement extends BaseFeedItem {
-
   // === ANNOUNCEMENT-SPECIFIC FIELDS ===
   imageUrl: string;
   isPinned: boolean;
@@ -273,7 +277,7 @@ export interface Announcement extends BaseFeedItem {
  * FeedItem - Unified feed item (Notification OR Announcement)
  *
  * Backend Type: DjangoFeedItem
- * 
+ *
  * USAGE:
  * Used by /api/feed/ endpoint which merges notifications + announcements
  * Check feedType to determine which type and render appropriate component
@@ -284,22 +288,124 @@ export type FeedItem = Notification | Announcement;
  * NotificationFeedResponse - Response from /api/feed/ endpoint
  *
  * Backend Type: DjangoFeed
- * 
+ *
  * RETURNS:
  * - feed: Merged array of notifications + announcements
  * - badgeCount: Total unread count (notifications + announcements)
  * - unreadNotifications: Count of unread notifications only
  * - announcementCount: Count of announcements only
  */
-export interface NotificationFeedResponse {
-  feed: FeedItem[];
+export interface Feed {
+  items: FeedItem[];
   badgeCount: number;
   unreadNotifications: number;
   announcementCount: number;
 }
 
-// +++ Form specific types
+/**
+ * Frontend input type for creating announcements
+ * Used in forms, validation, etc.
+ */
+export interface AnnouncementCreate {
+  club: number;
+  league?: number | null;
+  match?: number | null;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  isPinned?: boolean;
+  expiryDate?: string | null;
+}
 
+/**
+ * Frontend input type for updating announcements
+ * All fields optional (partial update)
+ */
+export interface AnnouncementUpdate {
+  title?: string;
+  content?: string;
+  imageUrl?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  isPinned?: boolean;
+  expiryDate?: string | null;
+}
+/**
+ * =============================
+ * Club Detail
+ * =============================
+ */
+
+/* +++++ HOME TAB +++++ */
+
+// maps to: DjangoTopMember
+// used in Home Tab
+export interface TopMember extends PublicUser {
+  joinedDate: string;
+}
+
+export interface EventLight {
+  id: number;
+  club: ModelInfo;
+  name: string;
+  description: string;
+  imageUrl: string;
+  nextSessionDate: string | null;
+  nextSessionStartTime: string | null;
+  nextSessionEndTime: string | null;
+  nextSessionLocation: string | null;
+  nextSessionRegistrationOpen: boolean | null;
+  participantsCount: number;
+  captainInfo: UserInfo;
+}
+
+export interface ClubHome {
+  club: ModelInfo;
+  latestAnnouncement: Announcement | null;
+  topMembers: TopMember[];
+  nextEvent: EventLight | null;
+}
+
+/* +++++ MEMBERS TAB +++++ */
+// maps to: DjangoClubMember
+// used in Members Tab
+export type ClubMember = TopMember & {
+  membershipId: number;
+  roles: Role[];
+  levels: ClubMembershipSkillLevel[];
+  type: number;
+  status: C.MembershipStatusValue;
+  createdAt: string;
+  isPreferredClub: boolean;
+};
+
+/* +++++ EVENTS TAB +++++ */
+// maps to: DjangoLeague
+// used in Events Tab
+export interface League extends EventLight {
+  isEvent: boolean;
+  maxParticipants: number | null;
+  allowReserves: boolean;
+  registrationOpen: boolean;
+  registrationStartDate: string | null;
+  registrationEndDate: string | null;
+  leagueType: C.LeagueTypeValue;
+  minimumSkillLevel: C.SkillLevelValue | null;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // NEW: User participation fields (optional - only when requested)
+  userIsCaptain?: boolean;
+  userIsParticipant?: boolean;
+  userAttendanceStatus?: C.LeagueAttendanceStatusValue | null;
+  nextSessionOccurrenceId?: number;
+
+}
+// +++ Form specific types
 export interface LoginFormValues {
   identifier: string;
   password: string;

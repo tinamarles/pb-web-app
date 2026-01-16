@@ -81,7 +81,7 @@ export function InvitationNotification({
           size='sm'
           onClick={handleDismiss}
           label="Dismiss"
-          className="border-error text-error"
+          className="border-error text-error hover:bg-error/20"
         />
       </div>
     </div>

@@ -38,13 +38,13 @@ export interface DjangoPaginatedResponse<T> {
 }
 
 // ========================================
-// BASE MODEL USER TYPES 
+// BASE MODEL USER TYPES
 // ========================================
 
 /**
  * User info - contains the basic User Info that is
  *             used to display in cards, notifications etc.
- * Maps to: 
+ * Maps to:
  * - Backend:  users.UserInfoSerializer
  * - Frontend: type PersonInfo
  */
@@ -58,7 +58,7 @@ export interface DjangoUserInfo {
 }
 /**
  * Base User Fields (CustomUser model)
- * Maps to: 
+ * Maps to:
  * - Backend: users.CustomUserSerializer
  * - Frontend: type PublicUser
  */
@@ -81,8 +81,8 @@ export type DjangoUserBase = DjangoUserInfo & {
 };
 
 /**
- * Member User: 
- * - backend: MemberUserSerializer 
+ * Member User:
+ * - backend: MemberUserSerializer
  * - frontend: type MemberUser
  */
 export interface DjangoMemberUser extends DjangoUserBase {
@@ -100,7 +100,7 @@ export interface DjangoMemberUser extends DjangoUserBase {
 export type DjangoUser = DjangoUserBase | DjangoMemberUser;
 
 // ========================================
-// APP PUBLIC TYPES 
+// APP PUBLIC TYPES
 // ========================================
 /**
  * Base Address Fields (Address model)
@@ -116,7 +116,7 @@ export interface DjangoAddress {
   country: string;
 }
 // ========================================
-// APP CLUBS TYPES 
+// APP CLUBS TYPES
 // ========================================
 /**
 /**
@@ -134,7 +134,7 @@ export interface DjangoRole {
 
 /**
  * Club Membership Types
- * Maps to: 
+ * Maps to:
  * - backend: clubs - ClubMembershipTypeSerializer
  * - frontend: type ClubMembershipType
  */
@@ -154,7 +154,7 @@ export interface DjangoClubMembershipType {
 }
 /**
  * Club Membership Skill Level
- * Maps to: 
+ * Maps to:
  * - backend: clubs - ClubMembershipSkillLevelSerializer
  * - frontend: type ClubMembershipSkillLevel
  */
@@ -186,7 +186,7 @@ export interface DjangoClubNested {
 }
 /**
  * Full Club (includes array of member_id)
- * Maps to: 
+ * Maps to:
  * - backend: clubs - ClubSerializer
  * - frontend: type Club
  */
@@ -197,7 +197,7 @@ export interface DjangoClub extends DjangoClubNested {
 }
 
 /**
- * Club Membership: 
+ * Club Membership:
  * - part of MemberUserSerializer that extends the CustomUserSerializer with the club_memberships
  * - backend: clubs - ClubMembershipSerializer
  * - frontend: type ClubMembership
@@ -211,8 +211,8 @@ export interface DjangoClubMembership {
   membership_number: string;
   is_preferred_club: boolean;
   status: C.MembershipStatusValue;
-  registration_start_date: string;
-  registration_end_date: string;
+  registration_start_date: string | null;
+  registration_end_date: string | null;
   can_manage_club: boolean;
   can_manage_members: boolean;
   can_create_training: boolean;
@@ -220,6 +220,22 @@ export interface DjangoClubMembership {
   can_manage_league_sessions: boolean;
   can_cancel_league_sessions: boolean;
   can_manage_courts: boolean;
+}
+/**
+ * ==============================
+ * Club Details
+ * ==============================
+ */
+/**
+ * Home Tab
+ * backend: clubs - ClubHomeSerializer
+ * frontend: ClubDetailHome
+ */
+export interface DjangoClubHome {
+  club: DjangoModelInfo;
+  latest_announcement: DjangoAnnouncement | null;
+  top_members: DjangoTopMember[];
+  next_event: DjangoEventLight | null;
 }
 
 /**
@@ -231,7 +247,7 @@ export interface DjangoClubMembership {
  */
 export type DjangoTopMember = DjangoUserBase & {
   joined_date: string; // joined_date maps to created_at from ClubMembership
-}
+};
 
 /**
  * Club Member - used to display Club Member List
@@ -254,7 +270,46 @@ export type DjangoClubMember = DjangoTopMember & {
 };
 
 // ========================================
-// APP NOTIFICATIONS TYPES 
+// APP LEAGUES TYPES
+// ========================================
+
+export interface DjangoEventLight {
+  id: number;
+  club: DjangoModelInfo;
+  name: string;
+  description: string;
+  image_url: string;
+  next_session_date: string | null;
+  next_session_start_time: string | null;
+  next_session_end_time: string | null;
+  next_session_location: string | null;
+  next_session_registration_open: boolean | null;
+  participants_count: number;
+  captain_info: DjangoUserInfo;
+}
+
+export interface DjangoLeague extends DjangoEventLight {
+  is_event: boolean;
+  max_participants: number | null;
+  allow_reserves: boolean;
+  registration_open: boolean;
+  registration_start_date: string | null;
+  registration_end_date: string | null;
+  league_type: C.LeagueTypeValue;
+  minimum_skill_level: C.SkillLevelValue | null;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  // NEW: User participation fields (optional - only when requested)
+  user_is_captain?: boolean;
+  user_is_participant?: boolean;
+  user_attendance_status?: C.LeagueAttendanceStatusValue | null;
+  next_session_occurrence_id?: number;
+}
+// ========================================
+// APP NOTIFICATIONS TYPES
 // ========================================
 
 /**
@@ -268,7 +323,7 @@ export interface DjangoModelInfo {
 }
 /**
  * Base FeedItem (contains all the common Fields of Notification and Announcement)
- * Maps to: 
+ * Maps to:
  * - backend: clubs - BaseFeedItemSerializer
  * - frontend: type BaseFeedItem
  */
@@ -280,7 +335,7 @@ export interface DjangoBaseFeedItem {
   creator_info: DjangoUserInfo | null;
   club: DjangoModelInfo | null; // required for Announcement but not for Notifications
   league: DjangoModelInfo | null;
-  match: Omit<DjangoModelInfo, 'name'> | null;
+  match: Omit<DjangoModelInfo, "name"> | null;
   action_url: string;
   action_label: string;
   created_at: string;
@@ -318,17 +373,58 @@ export type DjangoFeedItem = DjangoNotification | DjangoAnnouncement;
 /**
  * API Endpoint: api/feed
  * view: notification_feed
- * Response: 
- * - 'feed': DjangoFeedItem (DjangoNotification | DjangoAnnouncement) [] ... array
+ * Response:
+ * - 'items': DjangoFeedItem (DjangoNotification | DjangoAnnouncement) [] ... array
  * - 'badge_count': number
  * - 'unread_notifications': number
  * - 'announcement_count': number
- * 
- * frontend: type NotificationFeedResponse 
+ *
+ * frontend: type NotificationFeedResponse
  */
 export interface DjangoFeed {
-  feed: DjangoFeedItem[];
+  items: DjangoFeedItem[];
   badge_count: number;
   unread_notifications: number;
   announcement_count: number;
+}
+
+/**
+ * Django input type for creating announcements
+ * Used when POSTing to /api/announcements/
+ */
+export interface DjangoAnnouncementCreate {
+  club: number; // Required: Club ID
+  league?: number | null; // Optional: Narrows to league members
+  match?: number | null; // Optional: Narrows to match participants
+  title: string; // Required: Announcement title
+  content: string; // Required: Announcement content
+  image_url?: string; // Optional: Image URL
+  action_url?: string; // Optional: CTA URL
+  action_label?: string; // Optional: CTA button text
+  is_pinned?: boolean; // Optional: Pin to top (default: false)
+  expiry_date?: string | null; // Optional: Expiry date (ISO format)
+  // ❌ DO NOT include:
+  // - id (auto-generated by backend)
+  // - notification_type (auto-calculated by backend)
+  // - creator_info (set from request.user)
+  // - created_at / updated_at (auto-generated)
+  // - feed_type (not a model field)
+}
+
+/**
+ * Django input type for updating announcements
+ * Used when PATCHing to /api/announcements/{id}/
+ * All fields optional (partial update)
+ */
+export interface DjangoAnnouncementUpdate {
+  title?: string;
+  content?: string;
+  image_url?: string;
+  action_url?: string;
+  action_label?: string;
+  is_pinned?: boolean;
+  expiry_date?: string | null;
+  // ❌ DO NOT include:
+  // - club, league, match (cannot be changed after creation)
+  // - notification_type (auto-recalculated on save)
 }

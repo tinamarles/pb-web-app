@@ -7,13 +7,28 @@ import { cache } from "react";
 import { snakeToCamel, camelToSnake } from "./utils";
 import {
   MemberClub,
-  ClubDetailHome,
-  ClubEventsResponse,
-  ClubMembersResponse,
-  NotificationFeedResponse,
+  ClubHome,
+  League,
+  ClubMember,
+  Feed,
   Notification,
   Announcement,
+  AnnouncementCreate,
+  AnnouncementUpdate,
+  PaginatedResponse
+
 } from "./definitions";
+import {
+  DjangoPaginatedResponse,
+  DjangoLeague,
+  DjangoClubHome,
+  DjangoClubMember,
+  DjangoFeed,
+  DjangoAnnouncement,
+  DjangoAnnouncementCreate,
+  DjangoAnnouncementUpdate
+} from "./apiResponseTypes"
+
 import {
   RoleTypeValue,
   SkillLevelValue,
@@ -252,7 +267,7 @@ export const getClub = cache(async (clubId: string) => {
  * Get club HOME TAB data
  *
  * @param clubId - Club ID
- * @returns ClubDetailHome object (extends MemberClub with home tab data)
+ * @returns ClubHome object (extends MemberClub with home tab data)
  * @example const clubHome = await getClubHome('345');
  *
  * Backend: GET /api/clubs/{id}/home/
@@ -260,8 +275,8 @@ export const getClub = cache(async (clubId: string) => {
  * Returns: MemberClub fields + { latestAnnouncement, allAnnouncements, topMembers, nextEvent }
  */
 export const getClubHome = cache(async (clubId: string) => {
-  const apiData = await get<unknown>(`clubs/${clubId}/home`);
-  return snakeToCamel(apiData) as ClubDetailHome;
+  const apiData = await get<DjangoClubHome>(`clubs/${clubId}/home`);
+  return snakeToCamel(apiData) as ClubHome;
 });
 
 /**
@@ -281,20 +296,29 @@ export const getClubEvents = cache(
     filters?: {
       type?: "league" | "event" | "all";
       status?: "upcoming" | "past" | "all";
+      page?: string;      // Which page (default: 1)
+      pageSize?: string;  // Results per page (optional)
+      includeUserParticipation?: boolean;
     }
   ) => {
-    // Build query string
     const params = new URLSearchParams();
+   
     if (filters?.type) params.set("type", filters.type);
     if (filters?.status) params.set("status", filters.status);
-
-    const queryString = params.toString();
+    if (filters?.page) params.set("page", filters.page);
+    if (filters?.pageSize) params.set("page_size", filters.pageSize); // ← Converts to snake_case!
+    // ← NEW: Add include_user_participation if true
+    if (filters?.includeUserParticipation) {
+      params.set("include_user_participation", "true");
+    }
+    
+    const queryString = params.toString(); // ← CRITICAL! Convert params to string!
     const endpoint = `clubs/${clubId}/events${
       queryString ? `?${queryString}` : ""
     }`;
 
-    const apiData = await get<unknown>(endpoint);
-    return snakeToCamel(apiData) as ClubEventsResponse;
+    const apiData = await get<DjangoPaginatedResponse<DjangoLeague>>(endpoint);
+    return snakeToCamel(apiData) as PaginatedResponse<League>;
   }
 );
 
@@ -342,8 +366,8 @@ export const getClubMembers = cache(
       queryString ? `?${queryString}` : ""
     }`;
 
-    const apiData = await get<unknown>(endpoint);
-    return snakeToCamel(apiData) as ClubMembersResponse;
+    const apiData = await get<DjangoPaginatedResponse<DjangoClubMember>>(endpoint);
+    return snakeToCamel(apiData) as PaginatedResponse<ClubMember>;
   }
 );
 
@@ -364,8 +388,8 @@ export const getClubMembers = cache(
  * CRITICAL: Both types have notificationType field for badge counting
  */
 export const getNotificationFeed = cache(async () => {
-  const apiData = await get<unknown>("feed");
-  return snakeToCamel(apiData) as NotificationFeedResponse;
+  const apiData = await get<DjangoFeed>("feed");
+  return snakeToCamel(apiData) as Feed;
 });
 
 /**
@@ -431,8 +455,8 @@ export async function markNotificationAsRead(
 /**
  * Create new announcement (admin/captain only)
  *
- * @param data - Announcement creation data
- * @returns Created Announcement object
+ * @param data - AnnouncementCreate
+ * @returns Announcement (camelCase)
  * @example await createAnnouncement({
  *   club: 123,
  *   title: "New rules",
@@ -442,64 +466,37 @@ export async function markNotificationAsRead(
  * Backend: POST /api/announcements/
  * CRITICAL: notification_type is AUTO-CALCULATED by backend (match → MATCH_ANNOUNCEMENT, league → LEAGUE_ANNOUNCEMENT, club → CLUB_ANNOUNCEMENT)
  */
-export async function createAnnouncement(data: {
-  club: number;
-  league?: number | null; // Optional - narrows audience to league members
-  match?: number | null; // Optional - narrows audience to match participants
-  title: string;
-  content: string;
-  imageUrl?: string;
-  actionUrl?: string;
-  actionLabel?: string;
-  isPinned?: boolean;
-  expiryDate?: string | null;
-}): Promise<Announcement> {
-  // Convert camelCase to snake_case for Django
-  const snakeCaseData = {
-    club: data.club,
-    league: data.league,
-    match: data.match,
-    title: data.title,
-    content: data.content,
-    image_url: data.imageUrl,
-    action_url: data.actionUrl,
-    action_label: data.actionLabel,
-    is_pinned: data.isPinned,
-    expiry_date: data.expiryDate,
-    // ❌ DO NOT include notification_type - it's auto-calculated by backend!
-  };
-
-  const apiData = await post<unknown>("announcements", snakeCaseData);
+export async function createAnnouncement(
+  data: AnnouncementCreate
+): Promise<Announcement> {
+  // Step 1: Convert Frontend type (camelCase) → Django type (snake_case)
+  const djangoData = camelToSnake(data) as DjangoAnnouncementCreate;
+  
+  // Step 2: POST to Django with Django type
+  const apiData = await post<DjangoAnnouncement>("announcements", djangoData);
+  
+  // Step 3: Convert Django response (snake_case) → Frontend type (camelCase)
   return snakeToCamel(apiData) as Announcement;
 }
 
 /**
- * Update announcement (admin/captain only)
- *
+ * Update announcement
+ * 
  * @param id - Announcement ID
- * @param data - Partial update data
- * @returns Updated Announcement object
- * @example await updateAnnouncement(123, { title: "Updated title" });
- *
- * Backend: PATCH /api/announcements/{id}/
- * NOTE: notification_type cannot be manually updated - it's recalculated on save based on match/league/club
+ * @param data - Partial<AnnouncementUpdate> (camelCase)
+ * @returns Announcement (camelCase)
  */
 export async function updateAnnouncement(
   id: number,
-  data: Partial<{
-    title: string;
-    content: string;
-    imageUrl: string;
-    actionUrl: string;
-    actionLabel: string;
-    isPinned: boolean;
-    expiryDate: string | null;
-  }>
+  data: Partial<AnnouncementUpdate>
 ): Promise<Announcement> {
-  // Convert camelCase to snake_case for Django
-  const snakeCaseData = camelToSnake(data) as object;
-
-  const apiData = await patch<unknown>("announcements", id, snakeCaseData);
+  // Step 1: Convert Frontend type (camelCase) → Django type (snake_case)
+  const djangoData = camelToSnake(data) as Partial<DjangoAnnouncementUpdate>;
+  
+  // Step 2: PATCH to Django with Django type
+  const apiData = await patch<DjangoAnnouncement>("announcements", id, djangoData);
+  
+  // Step 3: Convert Django response (snake_case) → Frontend type (camelCase)
   return snakeToCamel(apiData) as Announcement;
 }
 
