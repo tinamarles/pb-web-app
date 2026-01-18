@@ -278,7 +278,15 @@ export interface DjangoEventLight {
   club: DjangoModelInfo;
   name: string;
   description: string;
+  is_event: boolean;
+  max_participants: number | null;
+  allow_reserves: boolean;
   image_url: string;
+  registration_opens_hours_before: number;
+  registration_closes_hours_before: number;
+  registration_open: boolean;
+  league_type: C.LeagueTypeValue;
+  minimum_skill_level: C.SkillLevelValue | null;
   next_session_date: string | null;
   next_session_start_time: string | null;
   next_session_end_time: string | null;
@@ -289,14 +297,8 @@ export interface DjangoEventLight {
 }
 
 export interface DjangoLeague extends DjangoEventLight {
-  is_event: boolean;
-  max_participants: number | null;
-  allow_reserves: boolean;
-  registration_open: boolean;
   registration_start_date: string | null;
   registration_end_date: string | null;
-  league_type: C.LeagueTypeValue;
-  minimum_skill_level: C.SkillLevelValue | null;
   start_date: string;
   end_date: string;
   is_active: boolean;

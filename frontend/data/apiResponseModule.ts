@@ -83,9 +83,9 @@ export const apiResponseModule: ModuleConfig[] = [
             url: "/courts",
           },
           {
-            icon: "leagues",
-            label: "Leagues",
-            url: "/leagues",
+            icon: "events",
+            label: "Events & Leagues",
+            url: "/event/list",
           },
           {
             icon: "coaches",
@@ -180,9 +180,9 @@ export const apiResponseModule: ModuleConfig[] = [
             url: "/courts",
           },
           {
-            icon: "leagues",
-            label: "Leagues",
-            url: "/leagues",
+            icon: "events",
+            label: "Events & Leagues",
+            url: "/event/list",
           },
           {
             icon: "coaches",
@@ -281,9 +281,9 @@ export const apiResponseModule: ModuleConfig[] = [
             url: "/courts",
           },
           {
-            icon: "leagues",
-            label: "Leagues",
-            url: "/leagues",
+            icon: "events",
+            label: "Events & Leagues",
+            url: "/event/list",
           },
           {
             icon: "coaches",
@@ -406,9 +406,9 @@ export const apiResponseModule: ModuleConfig[] = [
             url: "/courts",
           },
           {
-            icon: "leagues",
-            label: "Leagues",
-            url: "/leagues",
+            icon: "events",
+            label: "Events & Leagues",
+            url: "/event/list",
           },
           {
             icon: "coaches",

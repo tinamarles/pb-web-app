@@ -210,7 +210,11 @@ class EventLightSerializer(serializers.ModelSerializer):
     """
     
     club = serializers.SerializerMethodField()
-    
+    minimum_skill_level = serializers.IntegerField(
+                  source='minimum_skill_level.level',
+                  allow_null=True,
+                  read_only=True
+            )
     # Next session info (from next_occurrence object passed in context!)
     next_session_date = serializers.SerializerMethodField()
     next_session_start_time = serializers.SerializerMethodField()
@@ -231,9 +235,13 @@ class EventLightSerializer(serializers.ModelSerializer):
             'club',
             'name',
             'description',
+            'is_event',
+            'max_participants',
+            'allow_reserves',
             'image_url',
             'registration_opens_hours_before',
             'registration_closes_hours_before',
+            'registration_open',
             'league_type',
             'minimum_skill_level',
             'next_session_date',

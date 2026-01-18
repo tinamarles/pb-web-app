@@ -12,7 +12,7 @@ from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.pagination import PageNumberPagination
 
 # Local app imports
@@ -61,7 +61,7 @@ class ClubViewSet(viewsets.ModelViewSet):
     """
     queryset = Club.objects.all()
     # serializer_class = ClubSerializer
-    permission_classes = [IsAuthenticated] # Use the custom permission
+    permission_classes = [IsAuthenticatedOrReadOnly] # Use the custom permission
 
     def get_serializer_class(self):
         """

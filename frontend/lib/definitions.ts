@@ -346,21 +346,6 @@ export interface TopMember extends PublicUser {
   joinedDate: string;
 }
 
-export interface EventLight {
-  id: number;
-  club: ModelInfo;
-  name: string;
-  description: string;
-  imageUrl: string;
-  nextSessionDate: string | null;
-  nextSessionStartTime: string | null;
-  nextSessionEndTime: string | null;
-  nextSessionLocation: string | null;
-  nextSessionRegistrationOpen: boolean | null;
-  participantsCount: number;
-  captainInfo: UserInfo;
-}
-
 export interface ClubHome {
   club: ModelInfo;
   latestAnnouncement: Announcement | null;
@@ -384,15 +369,31 @@ export type ClubMember = TopMember & {
 /* +++++ EVENTS TAB +++++ */
 // maps to: DjangoLeague
 // used in Events Tab
-export interface League extends EventLight {
+export interface EventLight {
+  id: number;
+  club: ModelInfo;
+  name: string;
+  description: string;
   isEvent: boolean;
   maxParticipants: number | null;
   allowReserves: boolean;
+  imageUrl: string;
+  registrationOpensHoursBefore: number;
+  registrationClosesHoursBefore: number;
   registrationOpen: boolean;
-  registrationStartDate: string | null;
-  registrationEndDate: string | null;
   leagueType: C.LeagueTypeValue;
   minimumSkillLevel: C.SkillLevelValue | null;
+  nextSessionDate: string | null;
+  nextSessionStartTime: string | null;
+  nextSessionEndTime: string | null;
+  nextSessionLocation: string | null;
+  nextSessionRegistrationOpen: boolean | null;
+  participantsCount: number;
+  captainInfo: UserInfo;
+}
+export interface League extends EventLight {
+  registrationStartDate: string | null;
+  registrationEndDate: string | null;
   startDate: string;
   endDate: string;
   isActive: boolean;
@@ -403,7 +404,6 @@ export interface League extends EventLight {
   userIsParticipant?: boolean;
   userAttendanceStatus?: C.LeagueAttendanceStatusValue | null;
   nextSessionOccurrenceId?: number;
-
 }
 // +++ Form specific types
 export interface LoginFormValues {

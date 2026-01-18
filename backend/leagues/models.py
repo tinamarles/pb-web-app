@@ -58,6 +58,14 @@ class League(models.Model):
     # Event or League Banner Image to display on cards/details
     image_url = models.URLField(max_length=200, blank=True) 
     
+    # Full Fee - if a user has a subscription with a discount, the actual fee will be calculated based on that
+    #fee = models.DecimalField(
+        #max_digits=6,
+        #decimal_places=2,
+        #null=True,
+        #blank=True,
+        #help_text='Fee per session (events) or season enrollment (leagues). NULL = free.'
+    #)
     # Capacity control (dual-purpose field based on is_event flag)
     max_participants = models.IntegerField(
         blank=True,

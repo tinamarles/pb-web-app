@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { get } from "@/lib/actions";
+import { getPublic } from "@/lib/actions";
 import { MemberClub, PageProps, EmptyObject } from "@/lib/definitions";
 import { ModuleClientOnly as Module } from "@/shared";
 import { ClubListClient } from "@/components/club/ClubListClientPage";
@@ -21,9 +21,9 @@ export default async function ClubListPage({
 
   // 🎯 Determine mode from query param
   const isJoinMode = intent === "join";
-  console.log("ClubListPage - isJoinMode: ", isJoinMode);
+  
   // ✅ Server Component - fetch data directly and convert snake case to camel case
-  const apiData = await get<unknown>("clubs");
+  const apiData = await getPublic<unknown>("clubs");
   const clubs = snakeToCamel(apiData) as MemberClub[];
 
   return (

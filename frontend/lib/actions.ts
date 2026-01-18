@@ -89,7 +89,41 @@ export async function customPatch<T>(
 }
 
 /**
- * Generic GET request to Django API
+ * Generic GET request WITHOUT authentication (for public endpoints)
+ * @param endpoint - API endpoint (e.g., 'clubs', 'clubs/123')
+ * @returns Promise with typed response
+ */
+export async function getPublic<T>(endpoint: string): Promise<T> {
+
+  if (!API_BASE_URL) {
+    throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
+  }
+  
+  const url = `${API_BASE_URL}/api/${endpoint}/`;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // ✅ No cache for public data to stay fresh
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${endpoint}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Generic GET request to Django API with Authentication required
  * @param endpoint - Django API endpoint (without /api/ prefix)
  * @returns Promise with typed response data
  * @example await get<Club[]>('clubs')
