@@ -6,6 +6,72 @@
 // =====================================================
 
 // =====================================================
+// FILTERING
+// =====================================================
+
+// NEW: Event/League filter constants
+export const EventFilterType = {
+  ALL: 'all',
+  EVENT: 'event',
+  LEAGUE: 'league',
+} as const;
+
+export type EventFilterTypeValue = typeof EventFilterType[keyof typeof EventFilterType];
+
+export const EventFilterStatus = {
+  ALL: 'all',
+  UPCOMING: 'upcoming',
+  PAST: 'past',
+} as const;
+
+export type EventFilterStatusValue = typeof EventFilterStatus[keyof typeof EventFilterStatus];
+
+// Helper functions for selects/dropdowns
+export function getEventFilterTypeOptions(): EventFilterTypeValue[] {
+  return [EventFilterType.ALL, EventFilterType.EVENT, EventFilterType.LEAGUE];
+}
+
+export function getEventFilterStatusOptions(): EventFilterStatusValue[] {
+  return [EventFilterStatus.ALL, EventFilterStatus.UPCOMING, EventFilterStatus.PAST];
+}
+
+// =====================================================
+// EVENTS & LEAGUES
+// =====================================================
+
+export const EventAction = {
+  VIEW_DETAILS: 'VIEW_DETAILS',
+  JOIN: 'JOIN',
+  ACCEPT: 'ACCEPT',
+  DECLINE: 'DECLINE',
+  CHECK_IN: 'CHECK_IN',
+  MANAGE_ATTENDEES: 'MANAGE_ATTENDEES',
+  MY_MATCHES: 'MY_MATCHES',
+  MESSAGE_HOST: 'MESSAGE_HOST',
+  CANCEL: 'CANCEL',
+} as const;
+
+export type EventActionType = typeof EventAction[keyof typeof EventAction];
+
+export const EventCardModes = {
+  DASHBOARD_TODAY: 'dashboard-today',
+  DASHBOARD_UPCOMING: 'dashboard-upcoming',
+  DASHBOARD_PENDING: 'dashboard-pending',
+  CLUB_HOME: 'club-home',
+  CLUB_EVENTS: 'club-events',
+  CLUB_EVENTS_JOIN: 'club-events-join',
+  ALL_EVENTS: 'all-events',
+  BROWSE: 'browse',
+} as const;
+
+export type EventCardModeType = typeof EventCardModes[keyof typeof EventCardModes];
+
+// Helper
+export const isDashboardMode = (mode: EventCardModeType): boolean => {
+    return mode.startsWith('dashboard') || mode === 'club-events';
+};
+
+// =====================================================
 // USER & CLUB MODULE
 // =====================================================
 
@@ -294,6 +360,20 @@ export const DayOfWeek = {
 
 export type DayOfWeekValue = (typeof DayOfWeek)[keyof typeof DayOfWeek];
 
+/**
+ * Short day labels (single letter)
+ * Used for compact UI displays like day indicators
+ */
+export const DayOfWeekShort: Record<DayOfWeekValue, string> = {
+  [DayOfWeek.MONDAY]: "M",
+  [DayOfWeek.TUESDAY]: "T",
+  [DayOfWeek.WEDNESDAY]: "W",
+  [DayOfWeek.THURSDAY]: "T",
+  [DayOfWeek.FRIDAY]: "F",
+  [DayOfWeek.SATURDAY]: "S",
+  [DayOfWeek.SUNDAY]: "S",
+};
+
 export const DayOfWeekLabels: Record<DayOfWeekValue, string> = {
   [DayOfWeek.MONDAY]: "Monday",
   [DayOfWeek.TUESDAY]: "Tuesday",
@@ -315,6 +395,27 @@ export const DayOfWeekValues: Record<string, DayOfWeekValue> = {
   Sunday: DayOfWeek.SUNDAY,
 };
 
+/**
+ * Get array of all days with labels
+ * Used for iterating in UI components (e.g., day indicators)
+ * 
+ * @returns Array of {value, label, shortLabel} in Mon-Sun order
+ */
+export function getDayOfWeekOptions(): Array<{
+  value: DayOfWeekValue;
+  label: string;
+  shortLabel: string;
+}> {
+  return [
+    { value: DayOfWeek.MONDAY, label: DayOfWeekLabels[DayOfWeek.MONDAY], shortLabel: DayOfWeekShort[DayOfWeek.MONDAY] },
+    { value: DayOfWeek.TUESDAY, label: DayOfWeekLabels[DayOfWeek.TUESDAY], shortLabel: DayOfWeekShort[DayOfWeek.TUESDAY] },
+    { value: DayOfWeek.WEDNESDAY, label: DayOfWeekLabels[DayOfWeek.WEDNESDAY], shortLabel: DayOfWeekShort[DayOfWeek.WEDNESDAY] },
+    { value: DayOfWeek.THURSDAY, label: DayOfWeekLabels[DayOfWeek.THURSDAY], shortLabel: DayOfWeekShort[DayOfWeek.THURSDAY] },
+    { value: DayOfWeek.FRIDAY, label: DayOfWeekLabels[DayOfWeek.FRIDAY], shortLabel: DayOfWeekShort[DayOfWeek.FRIDAY] },
+    { value: DayOfWeek.SATURDAY, label: DayOfWeekLabels[DayOfWeek.SATURDAY], shortLabel: DayOfWeekShort[DayOfWeek.SATURDAY] },
+    { value: DayOfWeek.SUNDAY, label: DayOfWeekLabels[DayOfWeek.SUNDAY], shortLabel: DayOfWeekShort[DayOfWeek.SUNDAY] },
+  ];
+};
 /**
  * Recurrence Type
  * Maps to Django: public.constants.RecurrenceType

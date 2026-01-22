@@ -9,6 +9,7 @@ from rest_framework.routers import DefaultRouter
 # Import the ViewSets from different apps
 from users.views import CustomTokenObtainPairView, LogoutAndBlacklistRefreshToken, UserDetailsView
 from clubs.views import ClubViewSet, ClubMembershipViewSet
+from leagues.views import LeagueViewSet
 from notifications.views import AnnouncementViewSet, notification_feed    
 
 # Create a single router instance
@@ -17,6 +18,7 @@ router = DefaultRouter()
 # Register all viewsets with the single router
 
 router.register(r'clubs', ClubViewSet, basename='clubs')
+router.register(r'leagues', LeagueViewSet, basename='leagues')
 router.register(r'memberships', ClubMembershipViewSet, basename='club-membership')
 router.register(r'announcements', AnnouncementViewSet, basename='announcements')
 
@@ -30,6 +32,7 @@ urlpatterns = [
     path('api/members/', include('members.urls')),
     path('api/profile/', include('users.urls')),
     path('api/clubs/', include('clubs.urls')),
+    # path('api/leagues/', include('leagues.urls')),
     path('api/notifications/', include('notifications.urls')),
     path('api/feed/', notification_feed, name='notification_feed'),
     # Use include to attach the URLs from the single, master router

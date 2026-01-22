@@ -9,25 +9,29 @@ import {
   MemberClub,
   ClubHome,
   League,
+  Event,
   ClubMember,
   Feed,
   Notification,
   Announcement,
   AnnouncementCreate,
   AnnouncementUpdate,
-  PaginatedResponse
-
+  PaginatedResponse,
+  ClubListFilters,
+  EventListFilters,
 } from "./definitions";
 import {
   DjangoPaginatedResponse,
   DjangoLeague,
+  DjangoEvent,
   DjangoClubHome,
   DjangoClubMember,
   DjangoFeed,
   DjangoAnnouncement,
   DjangoAnnouncementCreate,
-  DjangoAnnouncementUpdate
-} from "./apiResponseTypes"
+  DjangoAnnouncementUpdate,
+  DjangoClubNested,
+} from "./apiResponseTypes";
 
 import {
   RoleTypeValue,
@@ -74,7 +78,12 @@ export async function customPatch<T>(
 
   const headers = await getAuthHeaders();
 
-  const response = await fetch(`${API_BASE_URL}/api/${fullEndpoint}/`, {
+  // ✅ FIX: Add trailing slash ONLY if no query params
+  const url = fullEndpoint.includes("?")
+    ? `${API_BASE_URL}/api/${fullEndpoint}` // No trailing slash with query params
+    : `${API_BASE_URL}/api/${fullEndpoint}/`; // Trailing slash without query params
+
+  const response = await fetch(url, {
     method: "PATCH",
     headers,
     body: JSON.stringify(data),
@@ -94,13 +103,15 @@ export async function customPatch<T>(
  * @returns Promise with typed response
  */
 export async function getPublic<T>(endpoint: string): Promise<T> {
-
   if (!API_BASE_URL) {
     throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
   }
-  
-  const url = `${API_BASE_URL}/api/${endpoint}/`;
 
+  // ✅ FIX: Add trailing slash ONLY if no query params
+  const url = endpoint.includes("?")
+    ? `${API_BASE_URL}/api/${endpoint}` // No trailing slash with query params
+    : `${API_BASE_URL}/api/${endpoint}/`; // Trailing slash without query params
+  
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -135,7 +146,12 @@ export async function get<T>(endpoint: string): Promise<T> {
 
   const headers = await getAuthHeaders();
 
-  const response = await fetch(`${API_BASE_URL}/api/${endpoint}/`, {
+  // ✅ FIX: Add trailing slash ONLY if no query params
+  const url = endpoint.includes("?")
+    ? `${API_BASE_URL}/api/${endpoint}` // No trailing slash with query params
+    : `${API_BASE_URL}/api/${endpoint}/`; // Trailing slash without query params
+  console.log("actions - get with url: ", url);
+  const response = await fetch(url, {
     cache: "no-store",
     headers,
   });
@@ -277,10 +293,24 @@ export async function checkBackendHealth(): Promise<boolean> {
  * Backend: GET /api/clubs/
  * Serializer: NestedClubSerializer (returns MemberClub[])
  */
-export const getClubs = cache(async () => {
-  const apiData = await get<unknown>("clubs");
-  return snakeToCamel(apiData) as MemberClub[];
-});
+export const getClubs = cache(
+  async (filters?: ClubListFilters, requireAuth: boolean = true) => {
+    const params = new URLSearchParams();
+
+    if (filters?.page) params.set("page", filters.page);
+    if (filters?.pageSize) params.set("page_size", filters.pageSize);
+    if (filters?.search) params.set("search", filters.search);
+
+    const queryString = params.toString();
+    const endpoint = `clubs${queryString ? `?${queryString}` : ""}`;
+    const fetchFn = requireAuth ? get : getPublic;
+
+    const apiData = await fetchFn<DjangoPaginatedResponse<DjangoClubNested>>(
+      endpoint
+    );
+    return snakeToCamel(apiData) as PaginatedResponse<MemberClub>; // ✅ Returns paginated response
+  }
+);
 
 /**
  * Get single club data (lightweight)
@@ -318,7 +348,7 @@ export const getClubHome = cache(async (clubId: string) => {
  *
  * @param clubId - Club ID
  * @param filters - Optional filters (type: 'league'|'event'|'all', status: 'upcoming'|'past'|'all')
- * @returns ClubEventsResponse { events: League[], count: number }
+ * @returns ClubEventsResponse { events: Event[], count: number }
  * @example const { events, count } = await getClubEvents('345', { type: 'league', status: 'upcoming' });
  *
  * Backend: GET /api/clubs/{id}/events/?type=league&status=upcoming
@@ -327,16 +357,11 @@ export const getClubHome = cache(async (clubId: string) => {
 export const getClubEvents = cache(
   async (
     clubId: string,
-    filters?: {
-      type?: "league" | "event" | "all";
-      status?: "upcoming" | "past" | "all";
-      page?: string;      // Which page (default: 1)
-      pageSize?: string;  // Results per page (optional)
-      includeUserParticipation?: boolean;
-    }
+    filters?: EventListFilters,
+    requireAuth: boolean = true
   ) => {
     const params = new URLSearchParams();
-   
+
     if (filters?.type) params.set("type", filters.type);
     if (filters?.status) params.set("status", filters.status);
     if (filters?.page) params.set("page", filters.page);
@@ -345,16 +370,19 @@ export const getClubEvents = cache(
     if (filters?.includeUserParticipation) {
       params.set("include_user_participation", "true");
     }
-    
+
     const queryString = params.toString(); // ← CRITICAL! Convert params to string!
     const endpoint = `clubs/${clubId}/events${
       queryString ? `?${queryString}` : ""
     }`;
+    const fetchFn = requireAuth ? get : getPublic;
+    const apiData = await fetchFn<DjangoPaginatedResponse<DjangoEvent>>(
+      endpoint
+    );
 
-    const apiData = await get<DjangoPaginatedResponse<DjangoLeague>>(endpoint);
-    return snakeToCamel(apiData) as PaginatedResponse<League>;
+    return snakeToCamel(apiData) as PaginatedResponse<Event>;
   }
-);
+); 
 
 /**
  * Get club MEMBERS TAB data (paginated, filterable)
@@ -400,11 +428,48 @@ export const getClubMembers = cache(
       queryString ? `?${queryString}` : ""
     }`;
 
-    const apiData = await get<DjangoPaginatedResponse<DjangoClubMember>>(endpoint);
+    const apiData = await get<DjangoPaginatedResponse<DjangoClubMember>>(
+      endpoint
+    );
     return snakeToCamel(apiData) as PaginatedResponse<ClubMember>;
   }
 );
 
+// ========================================
+// EVENT/LEAGUE -SPECIFIC ACTIONS
+// ========================================
+/**
+ * Get list of all events
+ *
+ * @returns Array of Event objects
+ * @example const events = await getEvents();
+ *
+ * Backend: GET /api/leagues/ -> LeagueViewSet
+ * Serializer: LeagueSerializer
+ * apiResponseType: DjangoEvent (alias for DjangoLeague)
+ */
+export const getEvents = cache(
+  async (filters?: EventListFilters, requireAuth: boolean = true) => {
+    const params = new URLSearchParams();
+
+    if (filters?.type) params.set("type", filters.type);
+    if (filters?.status) params.set("status", filters.status);
+    if (filters?.page) params.set("page", filters.page);
+    if (filters?.pageSize) params.set("page_size", filters.pageSize); // ← Converts to snake_case!
+    // ← NEW: Add include_user_participation if true
+    if (filters?.includeUserParticipation) {
+      params.set("include_user_participation", "true");
+    }
+
+    const queryString = params.toString();
+    const endpoint = `leagues${queryString ? `?${queryString}` : ""}`;
+    const fetchFn = requireAuth ? get : getPublic;
+    const apiData = await fetchFn<DjangoPaginatedResponse<DjangoEvent>>(
+      endpoint
+    );
+    return snakeToCamel(apiData) as PaginatedResponse<Event>; // ✅ Returns paginated response
+  }
+);
 // ========================================
 // NOTIFICATIONS & ANNOUNCEMENTS
 // ========================================
@@ -505,17 +570,17 @@ export async function createAnnouncement(
 ): Promise<Announcement> {
   // Step 1: Convert Frontend type (camelCase) → Django type (snake_case)
   const djangoData = camelToSnake(data) as DjangoAnnouncementCreate;
-  
+
   // Step 2: POST to Django with Django type
   const apiData = await post<DjangoAnnouncement>("announcements", djangoData);
-  
+
   // Step 3: Convert Django response (snake_case) → Frontend type (camelCase)
   return snakeToCamel(apiData) as Announcement;
 }
 
 /**
  * Update announcement
- * 
+ *
  * @param id - Announcement ID
  * @param data - Partial<AnnouncementUpdate> (camelCase)
  * @returns Announcement (camelCase)
@@ -526,10 +591,14 @@ export async function updateAnnouncement(
 ): Promise<Announcement> {
   // Step 1: Convert Frontend type (camelCase) → Django type (snake_case)
   const djangoData = camelToSnake(data) as Partial<DjangoAnnouncementUpdate>;
-  
+
   // Step 2: PATCH to Django with Django type
-  const apiData = await patch<DjangoAnnouncement>("announcements", id, djangoData);
-  
+  const apiData = await patch<DjangoAnnouncement>(
+    "announcements",
+    id,
+    djangoData
+  );
+
   // Step 3: Convert Django response (snake_case) → Frontend type (camelCase)
   return snakeToCamel(apiData) as Announcement;
 }

@@ -19,6 +19,7 @@ export { PeriodDate, type PeriodDateProps } from "./periodDate";
 export { Select, type SelectProps, type SelectOption } from "./select";
 export { FormField, type FormFieldProps } from "./formField";
 export { Avatar, type AvatarProps, type AvatarSize } from "./avatar";
+export { RecurringDayIndicator, type RecurringDayIndicatorProps } from "./RecurringDayIndicator";
 export { Sheet, type SheetProps } from "./sheet";
 export {
   LocationAutocomplete,

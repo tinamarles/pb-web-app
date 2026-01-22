@@ -1,24 +1,32 @@
 "use client";
 import { EmptyState } from "@/components";
+import { useRouter } from "next/navigation";
 import { MembershipStatusBadge } from "@/components";
 import { ExpiryDate, PeriodDate, Button } from "@/ui";
-import { isRegistrationOpen } from "@/lib/dateUtils";
+import { isDateToday, isRegistrationOpen } from "@/lib/dateUtils";
 import { useDashboard } from "@/providers/DashboardProvider";
 import { useAuth } from "@/providers/AuthUserProvider";
 import { useState, useEffect } from 'react';
-import { NotificationType } from "@/lib/constants";
+import { NotificationType, EventCardModes, EventAction, EventActionType } from "@/lib/constants";
 import { PendingInvitations } from "./PendingInvitations";
-import { Notification, Announcement, League } from "@/lib/definitions";
+import { Notification, Announcement, Event } from "@/lib/definitions";
 import { getClubEventsClient } from "@/lib/clientActions";
+import { EventListFilters } from "@/lib/definitions";
+import { EventFilterType, EventFilterStatus } from "@/lib/constants";
 
 import Image from "next/image";
 
 export function OverviewPage() {
+
+  // ========================================
+  // STATE & DATA
+  // ========================================
   const { notifications, markNotificationAsRead } = useAuth();
   const { currentMembership } = useDashboard();
-  const [events, setEvents] = useState<League[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const notificationsList = notifications.filter(
     (item): item is Notification & { feedType: "notification" } =>
@@ -37,9 +45,11 @@ export function OverviewPage() {
   const hasInvitations = eventInvitations.length > 0;
 
   const clubAnnouncements = announcementsList.filter(
-    (n) => n.notificationType === NotificationType.CLUB_ANNOUNCEMENT
+    (n) => n.notificationType === NotificationType.CLUB_ANNOUNCEMENT && n.club?.id === currentMembership?.club.id && n.isPinned
     // No isRead needed - announcements don't have it!
   );
+  console.log('Announcements: ', clubAnnouncements);
+
   const hasAnnouncements = clubAnnouncements.length > 0;
 
   useEffect(() => {
@@ -52,38 +62,57 @@ export function OverviewPage() {
      
       try {
         // Returns PaginatedResponse<League>
+        // build filters
+        const filters: EventListFilters = {
+            type: EventFilterType.EVENT,
+            status: EventFilterStatus.UPCOMING,
+            page: '1',
+            pageSize: '4',
+            includeUserParticipation: true
+          }
         const response = await getClubEventsClient(
           currentMembership.club.id, // No error!
-          'event',    // type: league | event | all
-          'upcoming', // status: upcoming | past | all
-          1,          // page
-          4,          // pageSize
-          true        // includeUserParticipation
+          filters
         );
         
         setEvents(response.results);  // ← Extract results array
         setTotalCount(response.count); // ← Total count from pagination
+        console.log('Results: ', response.results);
       } catch (error) {
-        console.error('Failed to fetch:', error);
+        // Error was thrown! Parse the error message
+        if (error instanceof Error && error.message.startsWith('[401]')) {
+          // redirect
+          router.push('/');
+        } else {
+          // other error
+          console.error('Failed to fetch:', error);
+        }
+         
       } finally {
         setLoading(false);
       }
     }
     
     fetchData();
-  }, [currentMembership?.club.id]); // Empty array = fetch once on mount
+  }, [currentMembership?.club.id, router]); // Empty array = fetch once on mount
 
   // Handle states...
   if (loading) return <div>Loading...</div>;
   if (!currentMembership) return <div>No club selected</div>;
 
-  console.log('Events fetched: ', events);
-  console.log('Total count of events:', totalCount);
+  const hasUpcomingEvents = events.length > 0;
   
   // TODO:
-  // - get today's events for user
   // - get club statistics for user
 
+  const todaysEvents = events.filter(
+    (ev) => isDateToday(ev.nextOccurrence?.date) && (ev.userIsParticipant || ev.userIsCaptain)
+  )
+  const hasTodaysEvents = todaysEvents.length > 0;
+  
+  // ========================================
+  // EVENT HANDLERS
+  // ========================================
   const openCreateEventModal = () => {
     console.log("Create Event clicked!");
   };
@@ -92,7 +121,21 @@ export function OverviewPage() {
     console.log("Register Button clicked");
   };
 
+  const handleEventAction = (action: EventActionType, event: Event) => {
+    switch (action) {
+      case EventAction.VIEW_DETAILS:
+        router.push(`/event/${event.id}`);
+        break;
+    }
+  }
+
+  // ========================================
+  // Render Club Announcement
+  // ========================================
   const ClubAnnouncement = () => {
+    //const pinnedClubAnnouncement = clubAnnouncements.filter(
+    //  (n) => n.club?.id === currentMembership.club.id && n.isPinned
+    //)
     return (
       <div className="flex flex-col gap-sm bg-surface-container-lowest rounded-md p-sm">
         <p className="title-sm emphasized text-on-surface">
@@ -137,14 +180,18 @@ export function OverviewPage() {
           <p className="title-md emphasized text-on-secondary mb-md">
             My Activities Today
           </p>
-          <EmptyState
-            icon="Calendar"
-            title="No events today"
-            description="Check back later or create your own event"
-            actionLabel="Create Event"
-            onAction={openCreateEventModal}
-            className="text-on-surface bg-surface-container-lowest rounded-md"
-          />
+          {hasTodaysEvents ? (
+            <p className="text-on-secondary">Event: {todaysEvents[0].name}</p>
+          ) : (
+            <EmptyState
+              icon="Calendar"
+              title="No events today"
+              description="Check back later or create your own event"
+              actionLabel="Create Event"
+              onAction={openCreateEventModal}
+              className="text-on-surface bg-surface-container-lowest rounded-md"
+            />
+          )}
         </div>
         {/* Right Column */}
         <div className="flex flex-col flex-1 flex-start p-md gap-md">
@@ -262,12 +309,7 @@ export function OverviewPage() {
       {/* Action Buttons */}
       <div className="flex gap-md p-md px-0">
         <Button variant="default" size="sm" icon="events" label="All Events" />
-        <Button
-          variant="default"
-          size="sm"
-          icon="calendar"
-          label="My Activities"
-        />
+        <Button variant="default" size="sm" icon="calendar" label="My Activities" />
         <Button variant="default" size="sm" icon="add" label="Event" />
       </div>
       {/* Pending Invitations */}
@@ -318,16 +360,23 @@ export function OverviewPage() {
             <Button
               variant="highlighted"
               size="sm"
-              href="/notifications"
-              label="View All"
+              href={`/club/${currentMembership.club.id}/events/?intent=join`}
+              label={`View All (${events.length})`}
             />
           </div>
-          <EmptyState
-            icon="events"
-            title="No upcoming events yet"
-            description="Check back later!"
-            className="text-on-surface bg-surface-container-lowest rounded-md"
-          />
+          {/* List container */}
+          <div className="">
+            {hasUpcomingEvents ? (
+              <p className='text-primary'> Events to show: {events.length}</p>
+            ) : (
+              <EmptyState
+                icon="events"
+                title="No upcoming events yet"
+                description="Check back later!"
+                className="text-on-surface bg-surface-container-lowest rounded-md"
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

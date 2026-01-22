@@ -12,7 +12,7 @@
   --elevation-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
-   --tw-shadow-color: rgba(0,0,0,0.8);
+  --tw-shadow-color: rgba(0, 0, 0, 0.8);
 
   /* Primitives (the Atoms) */
 
@@ -120,7 +120,6 @@
 
 /* ===== COLOR DESIGN TOKENS ===== */
 @theme {
- 
   /* Primary color - Purple */
   --color-primary: var(--purple-40);
   --color-on-primary: var(--neutral-100);
@@ -253,7 +252,9 @@
   /* Avatar sizes: xl, lg, md for the avatar; sm, xs, 2xs for the upload-button on top */
   --avatar-xl: var(--px-96);
   --avatar-lg: var(--px-64);
-  --avatar-md: var(--px-48); /* this avatar currently has no image upload button as too small */
+  --avatar-md: var(
+    --px-48
+  ); /* this avatar currently has no image upload button as too small */
   --avatar-sm: var(--px-40);
   --avatar-xs: var(--px-24);
   --avatar-btn-xl: var(--px-40); /* container button-xl on avatar-xl*/
@@ -263,7 +264,9 @@
   /* Icon sizes - used within buttons, input fields, navigation items */
   --icon-sm: var(--px-16);
   --icon-md: var(--px-18);
-  --icon-lg: var(--px-20); /* used for inputField icons like email, phone, password lock, location */
+  --icon-lg: var(
+    --px-20
+  ); /* used for inputField icons like email, phone, password lock, location */
   --icon-xl: var(--px-24);
   --icon-2xl: var(--px-32);
   --icon-5xl: var(--px-80);
@@ -599,16 +602,16 @@
 }
 
 @utility top-* {
-  top: --value(--p-*);
+  top: --value(--p- *);
 }
 @utility bottom-* {
-  bottom: --value(--p-*);
+  bottom: --value(--p- *);
 }
 @utility left-* {
-  left: --value(--p-*);
+  left: --value(--p- *);
 }
 @utility right-* {
-  right: --value(--p-*);
+  right: --value(--p- *);
 }
 
 /* +++ GENERAL UTILITIES +++ */
@@ -727,7 +730,7 @@
     background-size: cover;
     background-position: 50%;
     background-repeat: no-repeat;
-    box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, .2);
+    box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.2);
     height: 100px;
   }
   @media (min-width: 1024px) {
@@ -735,11 +738,11 @@
       height: 200px;
     }
   }
-  
+
   .clubList-Header-text {
     position: absolute;
     z-index: 20;
-    text-shadow: 0 2px 3px rgba(0, 0, 0, .8);
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.8);
     margin-left: 2rem;
     margin-right: 2rem;
     margin-top: 2rem;
@@ -776,26 +779,26 @@
 }
 /* CSS for Club Details layout */
 @layer components {
-	.club-details {
-		max-width: 1600px;
-		width: 100%;
-		
-	}
-	.club-details-topSection {
-		@apply gap-md;
-	}
-	@media (min-width: 640px) {
-		.club-details-topSection {
-			@apply px-lg;
-		}
-	}
-	.club-details-bottomSection {
-		@apply px-lg;
-	}
+  .club-details {
+    max-width: 1600px;
+    width: 100%;
+  }
+  .club-details-topSection {
+    @apply gap-md;
+  }
+  @media (min-width: 640px) {
+    .club-details-topSection {
+      @apply px-lg;
+    }
+  }
+  .club-details-bottomSection {
+    @apply px-lg;
+  }
 }
 /* CSS for Club Card component */
 @layer components {
-  .club-card {
+  .club-card,
+  .event-card {
     width: 100%;
     max-width: 1600px;
     position: relative;
@@ -805,38 +808,49 @@
     @apply border border-outline-variant;
   }
 
-  .club-card.grid {
+  .club-card.grid-display,
+  .event-card.grid-display,
+  .event-card.grid-sidebar {
     @apply cursor-pointer;
   }
 
-  .club-card.grid:hover {
-      @apply shadow-md shadow-primary/20;
-      @apply border-primary;
-      @apply transition-shadow duration-200;
+  .club-card.grid-display:hover,
+  .event-card.grid-display:hover,
+  .event-card.grid-sidebar:hover {
+    @apply shadow-md shadow-primary/20;
+    @apply border-primary;
+    @apply transition-shadow duration-200;
+    @apply min-w-0;
   }
 
   .banner-container,
   .image-container,
-  .banner-container.grid {
-      position: relative;
-      width: 100%;
-      height: 100px;
+  .banner-container.grid-display,
+  .banner-container.grid-sidebar {
+    position: relative;
+    width: 100%;
+    /* height: 100px; */
+    aspect-ratio: 2000 / 714;
   }
 
   @media (min-width: 640px) {
-      .banner-container:not(.grid) {
-          height: 250px;
-      }
+    .banner-container:not(.grid-display),
+    .banner-container:not(.grid-sidebar) {
+      /* height: 250px; */
+      aspect-ratio: 2000 / 714;
+    }
   }
 
   @media (min-width: 1024px) {
-      .banner-container:not(.grid) {
-          height: 375px;
-      }
+    .banner-container:not(.grid-display),
+    .banner-container:not(.grid-sidebar) {
+      /* height: 375px; */
+      aspect-ratio: 2000 / 714;
+    }
   }
   .club-logo {
     position: relative;
-    width: var(--px-64); 
+    width: var(--px-64);
     aspect-ratio: 1;
     overflow: hidden;
     @apply rounded-full;
@@ -845,160 +859,179 @@
   }
 
   .club-logo-bottom-left {
-      position: absolute;
-      bottom: calc(-1 * var(--px-64) / 2 );
-      @apply left-xl; 
+    position: absolute;
+    bottom: calc(-1 * var(--px-64) / 2);
+    @apply left-xl;
   }
 
   @media (min-width: 640px) {
-      .club-logo {
-          width: var(--px-128);
-      }
-      .club-logo-bottom-left {
-          bottom: calc(-1 * var(--px-128) / 2);
-          @apply left-xl; /* 20px */
-      }
+    .club-logo {
+      width: var(--px-128);
+    }
+    .club-logo-bottom-left {
+      bottom: calc(-1 * var(--px-128) / 2);
+      @apply left-xl; /* 20px */
+    }
   }
 
   @media (min-width: 1024px) {
-      .club-logo {
-          width: var(--px-256);
-          @apply border-2;
-          @apply shadow-md;
-      }
-      .club-logo-bottom-left {
-          bottom: calc(-1 * var(--px-256) / 2);
-          @apply left-4xl; /* 64px */
-      }
+    .club-logo {
+      width: var(--px-256);
+      @apply border-2;
+      @apply shadow-md;
+    }
+    .club-logo-bottom-left {
+      bottom: calc(-1 * var(--px-256) / 2);
+      @apply left-4xl; /* 64px */
+    }
   }
   /* GRID VARIANT - smaller, positioned inside card */
   .club-logo-grid {
-      position: absolute;
-      width: var(--px-64);  /* Smaller for grid */
-      aspect-ratio: 1;
-      overflow: hidden;
-      @apply rounded-full;
-      @apply border border-secondary;
-      @apply shadow-sm shadow-secondary;
-      @apply mt-15 ml-4;  /* Position inside card (matching your Avatar) */
+    position: absolute;
+    width: var(--px-64); /* Smaller for grid */
+    aspect-ratio: 1;
+    overflow: hidden;
+    @apply rounded-full;
+    @apply border border-secondary;
+    @apply shadow-sm shadow-secondary;
+    @apply mt-19 ml-4; /* Position inside card (matching your Avatar) */
   }
   .card-badge,
-  .card-badge.grid {
-      position: absolute;
-      z-index: 10;
-      @apply w-fit h-auto px-sm py-xs;
-      @apply rounded-sm;
-      @apply label-md;
-      @apply outline-1 outline-transparent;
+  .card-badge.grid-display,
+  .card-badge.grid-sidebar {
+    position: absolute;
+    z-index: 10;
+    @apply w-fit h-auto px-sm py-xs;
+    @apply rounded-sm;
+    @apply label-md;
+    @apply outline-1 outline-transparent;
   }
 
   @media (min-width: 640px) {
-    .card-badge:not(.grid) {
-        @apply label-lg;
-        @apply border-none outline-2 outline-transparent;
+    .card-badge:not(.grid-display),
+    .card-badge:not(.grid-sidebar) {
+      @apply label-lg;
+      @apply border-none outline-2 outline-transparent;
     }
   }
 
   @media (min-width: 1024px) {
-    .card-badge:not(.grid) {
-        @apply headline-md;
-        @apply outline-3;
+    .card-badge:not(.grid-display),
+    .card-badge:not(.grid-sidebar) {
+      @apply headline-md;
+      @apply outline-3;
     }
   }
   .card-badge-top-left,
-  .card-badge-top-left.grid {
+  .card-badge-top-left.grid-display,
+  .card-badge-top-left.grid-sidebar {
     @apply top-md left-md;
     @apply outline-white;
   }
 
   .card-badge-top-right,
-  .card-badge-top-right.grid {
+  .card-badge-top-right.grid-display,
+  .card-badge-top-right.grid-sidebar {
     @apply mt-md right-md;
   }
-  
 
   @media (min-width: 640px) {
-    .card-badge-top-left:not(.grid) {
-        @apply top-md left-xl;
-        @apply outline-white;
-        
+    .card-badge-top-left:not(.grid-display),
+    .card-badge-top-left:not(.grid-sidebar) {
+      @apply top-md left-xl;
+      @apply outline-white;
     }
-    .card-badge-top-right:not(.grid) {
-        @apply top-md right-xl;
+    .card-badge-top-right:not(.grid-display),
+    .card-badge-top-right:not(.grid-sidebar) {
+      @apply top-md right-xl;
     }
   }
 
   @media (min-width: 1024px) {
-    .card-badge-top-left:not(.grid) {
-        @apply top-lg left-2xl;
-        @apply outline-white;
+    .card-badge-top-left:not(.grid-display),
+    .card-badge-top-left:not(.grid-sidebar) {
+      @apply top-lg left-2xl;
+      @apply outline-white;
     }
-    .card-badge-top-right:not(.grid) {
-        @apply top-lg right-2xl;
+    .card-badge-top-right:not(.grid-display),
+    .card-badge-top-right:not(.grid-sidebar) {
+      @apply top-lg right-2xl;
     }
   }
   .card-content,
-  .card-content.grid {
-      padding-left: var(--px-96); 
-      position: relative;
-      @apply py-lg; /* 16px */
-      @apply flex flex-col;
+  .card-content.grid-display,
+  .card-content.grid-sidebar {
+    padding-left: var(--px-96);
+    position: relative;
+    @apply py-lg; /* 16px */
+    @apply flex flex-col;
   }
   @media (min-width: 640px) {
-    .card-content:not(.grid) {
-        padding-left: var(--px-192);
+    .card-content:not(.grid-display),
+    .card-content:not(.grid-sidebar) {
+      padding-left: var(--px-192);
     }
   }
 
   @media (min-width: 1024px) {
-    .card-content:not(.grid) {
-        padding-left: var(--px-400);
+    .card-content:not(.grid-display),
+    .card-content:not(.grid-sidebar) {
+      padding-left: var(--px-400);
     }
   }
   .club-name,
-  .club-name.grid {
-      @apply headline-sm emphasized;
-      @apply text-secondary;
+  .club-name.grid-display,
+  .club-name.grid-sidebar {
+    @apply headline-sm emphasized;
+    @apply text-secondary;
   }
   .club-location,
-  .club-location.grid {
-      @apply subheading-md;
-      @apply text-on-surface-variant;
+  .club-location.grid-display,
+  .club-location.grid-sidebar {
+    @apply subheading-md;
+    @apply text-on-surface-variant;
   }
   .club-members,
-  .club-members.grid {
-      @apply title-sm;
-      @apply text-secondary;
+  .club-members.grid-display,
+  .club-members.grid-sidebar {
+    @apply title-sm;
+    @apply text-secondary;
   }
   @media (min-width: 640px) {
-    .club-name:not(.grid) {
-        @apply headline-lg emphasized;
+    .club-name:not(.grid-display),
+    .club-name:not(.grid-sidebar) {
+      @apply headline-lg emphasized;
     }
-    .club-location:not(.grid) {
-        @apply headline-sm;
+    .club-location:not(.grid-display),
+    .club-location:not(.grid-sidebar) {
+      @apply headline-sm;
     }
-    .club-members:not(.grid) {
-        @apply title-md;
+    .club-members:not(.grid-display),
+    .club-members:not(.grid-sidebar) {
+      @apply title-md;
     }
   }
   @media (min-width: 1024px) {
-    .club-name:not(.grid) {
-        @apply display-md emphasized;
+    .club-name:not(.grid-display),
+    .club-name:not(.grid-sidebar) {
+      @apply display-md emphasized;
     }
-    .club-location:not(.grid) {
-        @apply headline-lg;
+    .club-location:not(.grid-display),
+    .club-location:not(.grid-sidebar) {
+      @apply headline-lg;
     }
-    .club-members:not(.grid) {
-        @apply headline-sm;
+    .club-members:not(.grid-display),
+    .club-members:not(.grid-sidebar) {
+      @apply headline-sm;
     }
   }
   .action-container {
-      @apply flex items-center justify-end;
-      @apply gap-sm pr-lg pb-md;
+    @apply flex items-center justify-end;
+    @apply gap-sm pr-lg pb-md;
   }
   @media (min-width: 1024px) {
     .action-container {
-        @apply gap-md;
+      @apply gap-md;
     }
   }
 }
@@ -1033,8 +1066,8 @@
   }
   @media (min-width: 640px) {
     .tab-item {
-        @apply title-lg emphasized;
-        @apply py-md gap-lg;
+      @apply title-lg emphasized;
+      @apply py-md gap-lg;
     }
   }
 }
@@ -1585,6 +1618,21 @@
   }
   @media (min-width: 1024px) {
     .grid-3 {
+      @apply grid-cols-3;
+    }
+  }
+
+  .grid-3-card {
+    @apply grid grid-cols-1 gap-sm;
+  }
+  @media (min-width: 768px) {
+    .grid-3-card {
+      @apply grid-cols-2 gap-lg;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .grid-3-card {
       @apply grid-cols-3;
     }
   }
@@ -2794,7 +2842,9 @@
     border-top-left-radius: var(--radius-xl);
     border-top-right-radius: var(--radius-xl);
     box-shadow: var(--elevation-4);
-    max-height: calc(90vh - 84px); /* Adjust max height to account for nav + FAB */
+    max-height: calc(
+      90vh - 84px
+    ); /* Adjust max height to account for nav + FAB */
     overflow-y: auto;
     animation: sheet-slide-in 300ms ease-out;
     @apply flex flex-col;
@@ -2858,7 +2908,7 @@
   /* Purpose: Control slide-in direction independent of breakpoints */
   /* Usage: <Sheet mode="right"> or <Sheet mode="bottom"> or <Sheet mode="left"> or <Sheet mode="center"> */
   /* No mode = default responsive behavior (bottom → right → center based on breakpoint) */
-  
+
   /* MODE: RIGHT - Always slide from right (all breakpoints) */
   /* Use case: Notification panel, side menus */
   .sheet-content[data-mode="right"] {
@@ -2875,10 +2925,14 @@
     transform: none; /* Override centered transform */
   }
   @keyframes sheet-slide-in-right {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
-  
+
   /* MODE: LEFT - Always slide from left (all breakpoints) */
   /* Use case: Navigation drawers, filter panels */
   .sheet-content[data-mode="left"] {
@@ -2894,12 +2948,16 @@
     animation: sheet-slide-in-left 300ms ease-out;
     transform: none; /* Override centered transform */
   }
-  
+
   @keyframes sheet-slide-in-left {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
-  
+
   /* MODE: BOTTOM - Always slide from bottom (all breakpoints) */
   /* Use case: Action sheets, settings panels */
   .sheet-content[data-mode="bottom"] {
@@ -2915,12 +2973,16 @@
     animation: sheet-slide-in-bottom 300ms ease-out;
     transform: none; /* Override centered transform */
   }
-  
+
   @keyframes sheet-slide-in-bottom {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
-  
+
   /* MODE: CENTER - Always centered modal (all breakpoints) */
   /* Use case: Dialogs, confirmations, forms */
   .sheet-content[data-mode="center"] {
@@ -2934,13 +2996,13 @@
     border-radius: var(--radius-xl);
     animation: sheet-fade-in 300ms ease-out;
   }
-  
+
   @keyframes sheet-fade-in {
-    from { 
+    from {
       opacity: 0;
       transform: translate(-50%, -50%) scale(0.95);
     }
-    to { 
+    to {
       opacity: 1;
       transform: translate(-50%, -50%) scale(1);
     }
@@ -2977,7 +3039,7 @@
       max-width: calc(100% - var(--w-sidebar-tablet));
     }
   }
-  
+
   /* Desktop: Account for desktop sidebar on ALL modes */
   @media (min-width: 1024px) {
     .sheet-content[data-mode="right"],
@@ -2987,7 +3049,7 @@
       max-width: calc(100% - var(--w-sidebar));
     }
   }
-  
+
   /* Mobile adjustments for explicit modes */
   @media (max-width: 639px) {
     /* RIGHT mode: Account for bottom nav on mobile */
@@ -2995,13 +3057,13 @@
       bottom: var(--h-bottomNav);
       max-height: calc(100vh - var(--h-bottomNav));
     }
-    
+
     /* LEFT mode: Account for bottom nav on mobile */
     .sheet-content[data-mode="left"] {
       bottom: var(--h-bottomNav);
       max-height: calc(100vh - var(--h-bottomNav));
     }
-    
+
     /* BOTTOM mode: Account for bottom nav on mobile */
     .sheet-content[data-mode="bottom"] {
       bottom: var(--h-bottomNav);
@@ -3014,14 +3076,13 @@
       max-height: calc(90vh - var(--h-bottomNav));
     }
   }
-
 }
 /* === BADGE COMPONENT CLASSES === */
 @layer components {
   .badge {
     @apply inline-flex items-center justify-center gap-1 shrink-0;
     @apply rounded-full px-2 overflow-hidden whitespace-nowrap;
-    
+
     width: 16px;
     height: 16px;
     border: 1px transparent;

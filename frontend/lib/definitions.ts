@@ -34,6 +34,23 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+// +++ Filtering types
+// NEW: Event list filters
+export interface EventListFilters {
+  type?: 'event' | 'league' | 'all';
+  status?: 'upcoming' | 'past' | 'all';
+  page?: string;
+  pageSize?: string;
+  includeUserParticipation?: boolean;
+}
+
+// NEW: Club list filters
+export interface ClubListFilters {
+  page?: string;
+  pageSize?: string;
+  search?: string;
+}
+
 /** Address
  * apiResponseType: DjangoAddress
  * backend: public.AddressSerializer
@@ -69,7 +86,7 @@ export interface ClubMembershipType {
   registrationOpenDate: string | null;
   registrationCloseDate: string | null;
   requiresApproval: boolean;
-  annualFee: number;
+  annualFee: string; // decimal field in Django
   currentMemberCount: number; // ✅ From @property
   isAtCapacity: boolean; // ✅ From @property
   isRegistrationOpen: boolean;
@@ -177,7 +194,7 @@ export interface PublicUser extends UserInfo {
   // apiResponseType: DjangoUserBase
   // backend: users.CustomUserSerializer
   email: string; // Required but optional in response
-  skillLevel: number | null; // ✅ null=True - NULL OK
+  skillLevel: string | null; // decimal field in Django ✅ null=True - NULL OK
   isCoach: boolean;
   homePhone: string; // ✅ blank=True only - NO null!
   mobilePhone: string; // ✅ blank=True only - NO null!
@@ -346,11 +363,19 @@ export interface TopMember extends PublicUser {
   joinedDate: string;
 }
 
+/**
+ * ClubHome - Club home tab data
+ * apiResponseType: DjangoClubHome
+ * backend: clubs.ClubHomeSerializer
+ *
+ * UPDATED 2026-01-19:
+ * - nextEvent now uses League (not EventLight alias)
+ */
 export interface ClubHome {
   club: ModelInfo;
   latestAnnouncement: Announcement | null;
   topMembers: TopMember[];
-  nextEvent: EventLight | null;
+  nextEvent: League | null; // ⚡ CHANGED: Use League directly
 }
 
 /* +++++ MEMBERS TAB +++++ */
@@ -369,42 +394,104 @@ export type ClubMember = TopMember & {
 /* +++++ EVENTS TAB +++++ */
 // maps to: DjangoLeague
 // used in Events Tab
-export interface EventLight {
+/**
+ * ClubInfo - minimal club info used in league/event cards
+ * apiResponseType: DjangoClubInfo
+ * backend: leagues.LeagueSerializer.get_club_info()
+ */
+export interface ClubInfo {
   id: number;
-  club: ModelInfo;
+  name: string;
+  logoUrl: string;
+}
+/**
+ * NextOccurrence - next session info for events/leagues
+ * apiResponseType: DjangoNextOccurrence
+ * backend: leagues.NextOccurrenceSerializer
+ */
+export interface NextOccurrence {
+  date: string; // ISO date
+  startTime: string; // HH:MM format
+  endTime: string; // HH:MM format
+  locationId: number;
+  locationName: string;
+  locationAddress: Address;
+}
+/**
+ * League/Event (unified type)
+ * apiResponseType: DjangoLeague
+ * backend: leagues.LeagueSerializer
+ *
+ * UPDATED 2026-01-19:
+ * - Removed flat nextSession* fields
+ * - Added nextOccurrence object
+ * - club changed to clubInfo (includes logo)
+ */
+export interface League {
+  id: number;
   name: string;
   description: string;
   isEvent: boolean;
-  maxParticipants: number | null;
-  allowReserves: boolean;
-  imageUrl: string;
-  registrationOpensHoursBefore: number;
-  registrationClosesHoursBefore: number;
-  registrationOpen: boolean;
-  leagueType: C.LeagueTypeValue;
-  minimumSkillLevel: C.SkillLevelValue | null;
-  nextSessionDate: string | null;
-  nextSessionStartTime: string | null;
-  nextSessionEndTime: string | null;
-  nextSessionLocation: string | null;
-  nextSessionRegistrationOpen: boolean | null;
-  participantsCount: number;
+  clubInfo: ClubInfo; // ⚡ CHANGED: Full object with logo
   captainInfo: UserInfo;
-}
-export interface League extends EventLight {
-  registrationStartDate: string | null;
-  registrationEndDate: string | null;
+  minimumSkillLevel: C.SkillLevelValue | null;
+  nextOccurrence: NextOccurrence | null; // ⚡ NEW: Nested object
+  maxParticipants: number | null;
+  fee: string | null; // decimal field in Django
+  allowReserves: boolean;
+  participantsCount: number;
   startDate: string;
   endDate: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  // NEW: User participation fields (optional - only when requested)
+  imageUrl: string;
+  leagueType: C.LeagueTypeValue;
+  recurringDays: C.DayOfWeekValue[];
+  upcomingOccurrences: NextOccurrence[];
+
+  // Optional user-specific fields (only when requested)
   userIsCaptain?: boolean;
   userIsParticipant?: boolean;
-  userAttendanceStatus?: C.LeagueAttendanceStatusValue | null;
-  nextSessionOccurrenceId?: number;
 }
+
+/**
+ * EventLight - Alias for backwards compatibility
+ * Now just references League (they're the same!)
+ */
+export type EventLight = League;
+
+/**
+ * Event - based on League plus additional fields that
+ *         will be added in future for tags, join logic etc.
+ * Used by <EventCard> component
+ *
+ * NOTES:
+ * Tag.category -> needs to become a constant!!
+ * userStatus.joinReason -> needs to become a constant!?
+ */
+export interface Tag {
+  id: number;
+  slug: string; // 'beginner', 'women-only'
+  name: string; // 'Beginner', 'Women Only'
+  category: "SKILL" | "DEMOGRAPHIC" | "ACCESS" | "SPECIAL";
+  color: string;
+}
+
+export type Event = League & {
+  tags?: Tag[];
+  userStatus?: {
+    isMember: boolean;
+    isParticipant: boolean;
+    isCaptain: boolean;
+    canJoin: boolean;
+    joinReason?: string;
+    calculatedPrice?: number;
+  };
+};
+
+// ⚡ Helper to check if event is recurring (frontend-side)
+export function isRecurring(event: Event): boolean {
+  return event.recurringDays && event.recurringDays.length > 0;
+}
+
 // +++ Form specific types
 export interface LoginFormValues {
   identifier: string;

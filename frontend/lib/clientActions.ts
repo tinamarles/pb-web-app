@@ -9,7 +9,8 @@
  * Pattern: Client Component → clientActions.ts → API Route → Django
  */
 
-import type { League, PaginatedResponse } from './definitions';
+import type { League, Event, PaginatedResponse } from './definitions';
+import { EventListFilters } from './definitions';
 
 /**
  * Fetch club events from the client side
@@ -19,7 +20,7 @@ import type { League, PaginatedResponse } from './definitions';
  * @param status - Filter by status ('upcoming' | 'past' | 'all')
  * @param page - Which page to fetch (default: 1)
  * @param pageSize - Number of results per page (default: backend default, usually 20)
- * @returns PaginatedResponse<League> with results array and pagination metadata
+ * @returns PaginatedResponse<Event> with results array and pagination metadata
  * 
  * @example
  * // Dashboard overview - only 4 events
@@ -30,27 +31,23 @@ import type { League, PaginatedResponse } from './definitions';
  */
 export async function getClubEventsClient(
   clubId: number,
-  type: 'event' | 'league' | 'all' = 'all',
-  status: 'upcoming' | 'past' | 'all' = 'all',
-  page: number = 1,
-  pageSize?: number,  // Optional - uses backend default if not specified
-  includeUserParticipation: boolean = false
-): Promise<PaginatedResponse<League>> {
+  filters?: EventListFilters,  // ✅ Filter object
+  requireAuth: boolean = true
+): Promise<PaginatedResponse<Event>> {
     
-  const params = new URLSearchParams({
-    type,
-    status,
-    page: page.toString(),
-  });
+  const params = new URLSearchParams();
 
-  // Only add pageSize if explicitly provided
-  if (pageSize !== undefined) {
-    params.set('pageSize', pageSize.toString());
-  }
-
-  if (includeUserParticipation) {
+  // Add filters if provided
+  if (filters?.type) params.set('type', filters.type);
+  if (filters?.status) params.set('status', filters.status);
+  if (filters?.page) params.set('page', filters.page);
+  if (filters?.pageSize) params.set('pageSize', filters.pageSize);
+  if (filters?.includeUserParticipation) {
     params.set('includeUserParticipation', 'true');
   }
+
+  // ✅ Add requireAuth param to query string
+  if (!requireAuth) params.set('requireAuth', 'false');
 
   const response = await fetch(`/api/club/${clubId}/events?${params}`, {
     method: 'GET',
@@ -59,7 +56,7 @@ export async function getClubEventsClient(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || 'Failed to fetch events');
+    throw new Error(`[${response.status}] ${error.error || 'Failed to fetch events'}`);
   }
 
   return response.json();

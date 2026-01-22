@@ -5,15 +5,15 @@
 # ========================================
 
 # Django imports
-from django.db.models import Q, Count, Exists, OuterRef
+from django.db.models import Q, Min, Max, Count, Exists, OuterRef
 from django.utils import timezone
 
 # Django REST Framework imports
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters  # ✅ filters for SearchFilter
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend  # ✅ For filtering
 
 # Local app imports
 from .models import Club, ClubMembership, Role
@@ -35,23 +35,23 @@ from leagues.serializers import LeagueSerializer
 from notifications.models import Announcement
 from notifications.serializers import NotificationSerializer
 from public.constants import NotificationType, MembershipStatus, RoleType
-
-class ClubPagination(PageNumberPagination):
-    """Pagination for club members list"""
-    page_size = 20
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+from public.pagination import StandardPagination  # ✅ Import shared pagination!
 
 class ClubViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Club CRUD operations + custom tab actions
     
     STANDARD REST ENDPOINTS (use get_serializer_class()):
-    - GET    /api/clubs/              → list (uses NestedClubSerializer)
+    - GET    /api/clubs/              → list (uses NestedClubSerializer) ✅ PAGINATED + SEARCHABLE!
     - POST   /api/clubs/              → create (uses ClubSerializer)
     - GET    /api/clubs/{id}/         → retrieve (uses NestedClubSerializer)
     - PATCH  /api/clubs/{id}/         → update (uses ClubSerializer)
     - DELETE /api/clubs/{id}/         → destroy (uses ClubSerializer)
+    
+    FILTERING & SEARCH (for list endpoint):
+    - search: Search by club name (e.g., ?search=jerome)
+    - page: Page number (e.g., ?page=2)
+    - page_size: Items per page (e.g., ?page_size=20)
     
     CUSTOM @action ENDPOINTS (instantiate serializers INSIDE methods):
     - GET    /api/clubs/{id}/home/          → ClubHomeSerializer
@@ -60,8 +60,14 @@ class ClubViewSet(viewsets.ModelViewSet):
     - GET    /api/clubs/{id}/subscriptions/ → ClubMembershipTypeSerializer
     """
     queryset = Club.objects.all()
-    # serializer_class = ClubSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly] # Use the custom permission
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
+    # ✅ Add pagination for list endpoint (reuses StandardPagination)
+    pagination_class = StandardPagination
+    
+    # ✅ Add filtering and search for list endpoint
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ['name', 'short_name']  # ✅ Search by name or short_name
 
     def get_serializer_class(self):
         """
@@ -162,26 +168,32 @@ class ClubViewSet(viewsets.ModelViewSet):
         
         # ✨ NEW: Use SessionOccurrence for MUCH simpler query!
         # No subqueries needed - SessionOccurrence has pre-calculated dates!
-        
-        # Step 1: Find earliest upcoming SessionOccurrence
-        # 🚨 CRITICAL: Filter out cancelled sessions and inactive events!
-        next_occurrence = SessionOccurrence.objects.filter(
-            league_session__league__club=club,
-            league_session__league__is_event=True,
-            league_session__league__is_active=True,  # Exclude inactive events
-            league_session__is_active=True,          # Exclude inactive sessions
-            is_cancelled=False,                      # Exclude cancelled occurrences
-            session_date__gte=today
-        ).select_related(
-            'league_session__league__captain',
-            'league_session__league__club',
-            'league_session__court_location'
-        ).order_by('session_date', 'start_datetime').first()
-        
-        # Step 2: Get the event (league) from the occurrence
-        next_event = None
-        if next_occurrence:
-            next_event = next_occurrence.league_session.league
+        # ⚡ NEW: Find event with upcoming sessions, let property handle next_occurrence!
+        next_event = League.objects.filter(
+            club=club,
+            is_event=True,
+            is_active=True
+        ).annotate(
+            has_upcoming_sessions=Exists(
+                SessionOccurrence.objects.filter(
+                    league=OuterRef('pk'),
+                    session_date__gte=today,
+                    is_cancelled=False
+                )
+            ),
+            # ⚡ NEW: Find earliest session date
+            earliest_session_date=Min(
+                'all_occurrences__session_date',
+                filter=Q(
+                    all_occurrences__session_date__gte=today,
+                    all_occurrences__is_cancelled=False
+                )
+            )
+        ).filter(
+            has_upcoming_sessions=True
+        ).order_by('earliest_session_date').select_related('captain', 'club').first()  # ⚡ ORDER BY!
+
+        # Serializer will call next_event.next_occurrence property automatically!
         
         # ========================================
         # 4. SERIALIZE
@@ -192,8 +204,7 @@ class ClubViewSet(viewsets.ModelViewSet):
             'club': club,
             'latest_announcement': latest_announcement,
             'top_members': top_members,
-            'next_event': next_event,
-            'next_occurrence': next_occurrence,  # ← Pass SessionOccurrence!
+            'next_event': next_event, # Serializer calls .next_occurrence property!
         }
 
         serializer = ClubHomeSerializer(data) # ‼️ change to ClubHomeSerializer
@@ -213,19 +224,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         Query Params:
         - type: 'league' | 'event' | 'all' (default: 'all')
         - status: 'upcoming' | 'past' | 'all' (default: 'upcoming')
-        - include_user_participation: 'true' | 'false' (default: 'false')  ← NEW!
-        
-        TypeScript Type: ???
-
-        UPDATED 2026-01-13:
-        - Now uses SessionOccurrence to determine upcoming/past status
-        - Works correctly for recurring events with past start_date
-        - Filters out cancelled sessions
-
-        UPDATED 2026-01-15:
-        - Added optional include_user_participation parameter
-        - When enabled, includes user_is_captain, user_is_participant, user_attendance_status
-        - Allows frontend to filter for user's activities without separate API call
+        - include_user_participation: 'true' | 'false' (default: 'false')
         """
         club = self.get_object()
         today = timezone.now().date()
@@ -248,97 +247,135 @@ class ClubViewSet(viewsets.ModelViewSet):
         # ========================================
         # Filter by status using SessionOccurrence
         # ========================================
-        # ✅ NEW: Use SessionOccurrence instead of start_date!
-        # This works for recurring events with past start_date
         status_filter = request.query_params.get('status', 'upcoming')
         
         if status_filter == 'upcoming':
-            # Show leagues/events that have future SessionOccurrences
-            # (Excludes cancelled sessions)
+            # ⚡ UPDATED: Use direct FK
             has_upcoming_sessions = SessionOccurrence.objects.filter(
-                league_session__league=OuterRef('pk'),
+                league=OuterRef('pk'),  # ⚡ CHANGED!
                 session_date__gte=today,
                 is_cancelled=False
             )
             queryset = queryset.annotate(
-                has_upcoming=Exists(has_upcoming_sessions)
+                has_upcoming=Exists(has_upcoming_sessions),
+                # ⚡ NEW: For ordering by earliest session
+                earliest_session_date=Min(
+                    'all_occurrences__session_date',
+                    filter=Q(
+                        all_occurrences__session_date__gte=today,
+                        all_occurrences__is_cancelled=False
+                    )
+                )
             ).filter(has_upcoming=True)
             
         elif status_filter == 'past':
-            # Show leagues/events where ALL sessions are in the past
+            # ⚡ UPDATED: Use direct FK
             has_future_sessions = SessionOccurrence.objects.filter(
-                league_session__league=OuterRef('pk'),
+                league=OuterRef('pk'),  # ⚡ CHANGED!
                 session_date__gte=today
             )
             queryset = queryset.annotate(
-                has_future=Exists(has_future_sessions)
+                has_future=Exists(has_future_sessions),
+                # ⚡ NEW: For past events, order by most recent end_date
+                latest_session_date=Max(
+                    'all_occurrences__session_date',
+                    filter=Q(
+                        all_occurrences__is_cancelled=False
+                    )
+                )
             ).filter(has_future=False)
         
-        # Order by most recent start_date
-        queryset = queryset.order_by('-start_date')
+        else:
+            # ⚡ BUGFIX 2026-01-22: For 'all' status, also annotate earliest_session_date
+            # so we can order by next occurrence, not start_date!
+            queryset = queryset.annotate(
+                earliest_session_date=Min(
+                    'all_occurrences__session_date',
+                    filter=Q(
+                        all_occurrences__session_date__gte=today,
+                        all_occurrences__is_cancelled=False
+                    )
+                )
+            )
+        
+        # ⚡ UPDATED: Order by session dates, not start_date!
+        if status_filter == 'upcoming':
+            queryset = queryset.order_by('earliest_session_date')
+        elif status_filter == 'past':
+            queryset = queryset.order_by('-latest_session_date')  # Most recent past first
+        else:
+            # ⚡ BUGFIX 2026-01-22: For 'all', order by next occurrence (not start_date!)
+            # Events with no future sessions will have earliest_session_date=None, so they go to end
+            from django.db.models import F
+            queryset = queryset.order_by(F('earliest_session_date').asc(nulls_last=True))
         
         # Optimize queries
         queryset = queryset.select_related(
             'club',
             'captain',
             'minimum_skill_level'
-        ).prefetch_related(
-            'sessions__occurrences'
         )
+        # ⚡ REMOVED: .prefetch_related('sessions__occurrences') - not needed anymore!
+        
+        # ⚡ ALWAYS annotate participants count (serializer needs it!)
+        from public.constants import LeagueParticipationStatus
+        queryset = queryset.annotate(
+            league_participants_count=Count(
+                'league_participants',
+                filter=Q(league_participants__status=LeagueParticipationStatus.ACTIVE)
+            )
+        )
+        
+        # ⚡ NEW: Add user participation annotations if requested
+        if include_user_participation and request.user.is_authenticated:
+            from django.db.models import Case, When, BooleanField
+            from leagues.models import LeagueParticipation
+            from public.constants import LeagueParticipationStatus
+            
+            user = request.user
+            
+            # Annotate user_is_captain
+            queryset = queryset.annotate(
+                user_is_captain=Case(
+                    When(captain=user, then=True),
+                    default=False,
+                    output_field=BooleanField()
+                )
+            )
+            
+            # Annotate user_is_participant
+            queryset = queryset.annotate(
+                user_is_participant=Exists(
+                    LeagueParticipation.objects.filter(
+                        league=OuterRef('pk'),
+                        member=user,
+                        status__in=[
+                            LeagueParticipationStatus.ACTIVE,
+                            LeagueParticipationStatus.RESERVE
+                        ]
+                    )
+                )
+            ) 
 
         # ✅ Paginate
-        paginator = ClubPagination()
+        paginator = StandardPagination()
         page = paginator.paginate_queryset(queryset, request)
         
         # ========================================
-        # SERIALIZATION (UPDATED!)
+        # SERIALIZATION
         # ========================================
         
-        results = []
+        # ⚡ SIMPLIFIED: No more manual context passing!
+        # Serializer uses obj.next_occurrence property automatically
         
-        for league in page:
-            # Get next occurrence for this league
-            next_occurrence = self._get_next_occurrence(league, today)
-            
-            # Build context (same as before)
-            context = {
-                'request': request,
-                'next_occurrence': next_occurrence,
-            }
-            
-            # NEW: Add user participation info if requested
-            if include_user_participation and request.user.is_authenticated:
-                context['include_user_participation'] = True
-                
-                # Check if user has attendance for next occurrence
-                user_attendance = None
-                if next_occurrence:
-                    user_attendance = LeagueAttendance.objects.filter(
-                        league_participation__member=request.user,
-                        session_occurrence=next_occurrence
-                    ).first()
-                
-                context['user_attendance'] = user_attendance
-            
-            # Serialize with context
-            serializer = LeagueSerializer(league, context=context)
-            results.append(serializer.data)
+        context = {'request': request}
+        if include_user_participation:
+            context['include_user_participation'] = True
         
-        return paginator.get_paginated_response(results)
-    
-    def _get_next_occurrence(self, league, today):
-        """
-        Helper method to get next upcoming SessionOccurrence for a league.
+        serializer = LeagueSerializer(page, many=True, context=context)
         
-        Returns SessionOccurrence or None.
-        """
-        return SessionOccurrence.objects.filter(
-            league_session__league=league,
-            session_date__gte=today,
-            is_cancelled=False
-        ).order_by('session_date', 'start_datetime').first()
+        return paginator.get_paginated_response(serializer.data)
         
-    
     # ========================================
     # MEMBERS TAB
     # ========================================
@@ -380,7 +417,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         if status_param:
             queryset = queryset.filter(status=status_param)
         
-        # ✅ Filter by skill level
+        #  Filter by skill level
         level = request.query_params.get('level')
         if level:
             queryset = queryset.filter(levels__level=level)
@@ -389,7 +426,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         queryset = queryset.select_related('member').prefetch_related('roles', 'levels')
         
         # ✅ Paginate
-        paginator = ClubPagination()
+        paginator = StandardPagination()
         page = paginator.paginate_queryset(queryset, request)
         
         # Serialize

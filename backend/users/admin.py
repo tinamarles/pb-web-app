@@ -25,5 +25,29 @@ class CustomUserAdmin(UserAdmin):
     # This will enable filtering by 'first name', 'last name', and 'is_coach'
     list_filter = ('is_coach', 'first_name', 'last_name')
 
+    def get_search_results(self, request, queryset, search_term):
+        """Filter autocomplete by club when editing a League"""
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        
+        referer = request.META.get('HTTP_REFERER', '')
+        if '/admin/leagues/league/' in referer and '/change/' in referer:
+            try:
+                parts = referer.split('/admin/leagues/league/')[1]
+                league_id = parts.split('/')[0]
+                
+                if league_id.isdigit():
+                    from leagues.models import League
+                    from public.constants import MembershipStatus
+                    
+                    league = League.objects.get(pk=league_id)
+                    queryset = queryset.filter(
+                        club_memberships__club=league.club,
+                        club_memberships__status=MembershipStatus.ACTIVE
+                    ).distinct()
+            except (ValueError, IndexError, League.DoesNotExist):
+                pass
+        
+        return queryset, use_distinct
+
 admin.site.register(CustomUser, CustomUserAdmin)
 # Register your models here.

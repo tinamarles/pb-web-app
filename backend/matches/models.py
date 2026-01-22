@@ -421,7 +421,7 @@ class MLPTeam(models.Model):
     def current_roster_version(self):
         """Returns currently active roster version (cached)"""
         return self.roster_versions.filter(
-            effective_from__lte=timezone.now().date()
+            effective_from__lte=timezone.localtime().date()
         ).order_by('-effective_from').first()
     
     def get_current_roster(self):

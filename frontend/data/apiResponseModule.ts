@@ -69,7 +69,7 @@ export const apiResponseModule: ModuleConfig[] = [
     navigation: [
       {
         icon: "sparkles",
-        label: "Resources",
+        label: "Discover",
         url: "",
         submenu: [
           {
@@ -166,7 +166,7 @@ export const apiResponseModule: ModuleConfig[] = [
       },
       {
         icon: "sparkles",
-        label: "Resources",
+        label: "Discover",
         url: "",
         submenu: [
           {
@@ -267,7 +267,7 @@ export const apiResponseModule: ModuleConfig[] = [
       },
       {
         icon: "sparkles",
-        label: "Resources",
+        label: "Discover",
         url: "",
         submenu: [
           {
@@ -392,7 +392,7 @@ export const apiResponseModule: ModuleConfig[] = [
       },
       {
         icon: "sparkles",
-        label: "Resources",
+        label: "Discover",
         url: "",
         submenu: [
           {

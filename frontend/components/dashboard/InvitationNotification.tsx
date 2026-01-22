@@ -38,6 +38,9 @@ export function InvitationNotification({
     if (notification.actionUrl) {
       router.push(notification.actionUrl);
     }
+    if (notification.league) {
+      router.push(`/event/${notification.league.id}`);
+    }
   };
 
   const handleDismiss = () => {

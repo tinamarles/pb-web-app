@@ -7,7 +7,7 @@ from datetime import timedelta
 User = get_user_model()
 
 def get_default_expiry_date():
-    return timezone.now().date() + timedelta(days=30)
+    return timezone.localtime().date() + timedelta(days=30)
 
 class Notification(models.Model):
     """

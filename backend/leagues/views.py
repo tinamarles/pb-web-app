@@ -1,14 +1,15 @@
 # leagues/views.py
-from django.db.models import Exists, OuterRef, Prefetch, Q, Case, When, BooleanField, Count
+from django.db.models import Exists, OuterRef, Q, Case, When, BooleanField, Count, Min
 from django.utils import timezone
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import League, LeagueParticipation, SessionOccurrence
-from .serializers import LeagueListSerializer, LeagueDetailSerializer
+from .serializers import LeagueSerializer, LeagueDetailSerializer
+from .filters import LeagueFilter  # ✅ NEW: Import custom filter!
 from public.constants import LeagueParticipationStatus
-
+from public.pagination import StandardPagination
 
 class LeagueViewSet(viewsets.ModelViewSet):
     """
@@ -16,8 +17,10 @@ class LeagueViewSet(viewsets.ModelViewSet):
     
     ENDPOINTS:
     - GET    /api/leagues/                                        → list (all)
-    - GET    /api/leagues/?is_event=true                         → list (events only)
-    - GET    /api/leagues/?is_event=false                        → list (leagues only)
+    - GET    /api/leagues/?type=event                            → list (events only)
+    - GET    /api/leagues/?type=league                           → list (leagues only)
+    - GET    /api/leagues/?status=upcoming                       → list (upcoming only)
+    - GET    /api/leagues/?status=past                           → list (past only)
     - GET    /api/leagues/?club=5                                → list (for specific club)
     - GET    /api/leagues/?include_user_participation=true       → list (with user data - auth required)
     - GET    /api/leagues/?search=beginner                       → search by name/description
@@ -26,6 +29,11 @@ class LeagueViewSet(viewsets.ModelViewSet):
     - POST   /api/leagues/                                       → create (auth required)
     - PATCH  /api/leagues/{id}/                                  → update (auth required)
     - DELETE /api/leagues/{id}/                                  → destroy (auth required)
+    
+    FILTERING (uses LeagueFilter - NO hard-coded values!):
+    - type: Uses EventFilterType constants (all/event/league)
+    - status: Uses EventFilterStatus constants (all/upcoming/past)
+    - club: Filter by club ID
     
     PERFORMANCE:
     - Without include_user_participation: 2 queries (leagues + occurrences)
@@ -39,36 +47,46 @@ class LeagueViewSet(viewsets.ModelViewSet):
       * Events: LeagueAttendance count for next occurrence
     """
     permission_classes = [IsAuthenticatedOrReadOnly]  # ✅ Public can browse!
+    
+    # ✅ NEW: Add pagination (Django handles automatically for list endpoint!)
+    pagination_class = StandardPagination
+    
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
-    # ✅ Enable filtering
-    filterset_fields = ['is_event', 'club']
+    # ✅ USE CUSTOM FILTERSET (instead of filterset_fields)
+    filterset_class = LeagueFilter  # ← Uses constants from public.constants!
     
     # ✅ Enable search
     search_fields = ['name', 'description']
     
     # ✅ Enable ordering
-    ordering_fields = ['start_date', 'created_at', 'name']
-    ordering = ['-start_date']  # Default: newest first
+    # ⚡ BUGFIX 2026-01-22: Use earliest_session_date instead of start_date!
+    # start_date = when league STARTED (could be months ago)
+    # earliest_session_date = next upcoming session (what users care about!)
+    ordering_fields = ['earliest_session_date', 'created_at', 'name']
+    ordering = ['earliest_session_date']  # Default: soonest upcoming first
     
     def get_serializer_class(self):
         """Use different serializers for list vs detail"""
         if self.action == 'list':
-            return LeagueListSerializer  # Lighter for list view
+            return LeagueSerializer  # Lighter for list view
         return LeagueDetailSerializer    # Full data for detail
-    
+
     def get_queryset(self):
         """
         Optimized queryset with:
         1. Active-only filter (for non-staff users)
-        2. Prefetch next occurrence (for both events and leagues)
+        2. Always includes participants count (needed by serializer)
         3. Optional user participation data (captain + participant status)
         
         PERFORMANCE ANALYSIS:
         - Base: 1 query for leagues
-        - Prefetch: +1 query for next occurrences  
         - Annotations: NO extra queries (added to main query!)
-        - Total: 2 queries for 100+ leagues ✅
+        - Total: 1 query for 100+ leagues ✅
+        
+        UPDATED 2026-01-19:
+        - Removed prefetch (next_occurrence property handles it)
+        - Always annotate participants_count (serializer needs it)
         """
         queryset = League.objects.all()
         
@@ -76,23 +94,31 @@ class LeagueViewSet(viewsets.ModelViewSet):
         if not self.request.user.is_staff:
             queryset = queryset.filter(is_active=True)
         
-        # ✅ PREFETCH 1: Related data (club, captain, skill level)
+        # ✅ PREFETCH: Related data (club, captain, skill level)
         queryset = queryset.select_related(
             'club',
             'minimum_skill_level',
             'captain'
         )
-        
-        # ✅ PREFETCH 2: Next occurrence ONLY (not all 52 occurrences!)
-        today = timezone.now().date()
-        queryset = queryset.prefetch_related(
-            Prefetch(
-                'sessions__occurrences',
-                queryset=SessionOccurrence.objects.filter(
-                    session_date__gte=today,
-                    is_cancelled=False
-                ).select_related('league_session__court_location').order_by('session_date')[:1],  # ← ONLY FIRST!
-                to_attr='next_occurrence_list'
+        # ⚡ ANNOTATION 0: Add earliest_session_date for ordering!
+        # This is what users actually care about - when's the next session?
+        today = timezone.localtime().date()
+        queryset = queryset.annotate(
+            earliest_session_date=Min(
+                'all_occurrences__session_date',
+                filter=Q(
+                    all_occurrences__session_date__gte=today,
+                    all_occurrences__is_cancelled=False
+                )
+            )
+        )
+        # ⚡ ANNOTATION 1: Always count participants (needed by serializer!)
+        # For leagues: Total active participants
+        # For events: Serializer uses next_occurrence.attendance_count instead
+        queryset = queryset.annotate(
+            league_participants_count=Count(
+                'league_participants',
+                filter=Q(league_participants__status=LeagueParticipationStatus.ACTIVE)
             )
         )
         
@@ -102,7 +128,10 @@ class LeagueViewSet(viewsets.ModelViewSet):
         if include_participation and self.request.user.is_authenticated:
             user = self.request.user
             
-            # ✅ ANNOTATION 1: Check if user is captain
+            # 🐛 DEBUG
+            print(f"🐛 LeagueViewSet.get_queryset() - Adding user participation annotations for user: {user.username}")
+            
+            # ✅ ANNOTATION 2: Check if user is captain
             queryset = queryset.annotate(
                 user_is_captain=Case(
                     When(captain=user, then=True),
@@ -111,7 +140,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 )
             )
             
-            # ✅ ANNOTATION 2: Check if user is participant
+            # ✅ ANNOTATION 3: Check if user is participant
             queryset = queryset.annotate(
                 user_is_participant=Exists(
                     LeagueParticipation.objects.filter(
@@ -125,14 +154,16 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 )
             )
             
-            # ✅ ANNOTATION 3: Count participants (for leagues)
-            # Events will count attendance in serializer
-            queryset = queryset.annotate(
-                league_participants_count=Count(
-                    'league_participants',
-                    filter=Q(league_participants__status=LeagueParticipationStatus.ACTIVE)
-                )
-            )
+            # 🐛 DEBUG: Check first item if it's a retrieve action
+            if self.action == 'retrieve' and queryset.exists():
+                first = queryset.first()
+                print(f"🐛 RETRIEVE action - League: {first.name}")
+                print(f"🐛 Has user_is_captain attr: {hasattr(first, 'user_is_captain')}")
+                print(f"🐛 Has user_is_participant attr: {hasattr(first, 'user_is_participant')}")
+                if hasattr(first, 'user_is_captain'):
+                    print(f"🐛 user_is_captain value: {first.user_is_captain}")
+                if hasattr(first, 'user_is_participant'):
+                    print(f"🐛 user_is_participant value: {first.user_is_participant}")
         
         return queryset
     

@@ -216,7 +216,7 @@ class ClubMembershipType(models.Model):
     @property
     def is_registration_open(self):
         """Check if registration is currently open for this type"""
-        today = timezone.now().date()
+        today = timezone.localtime().date()
         
         # Check opening date
         if self.registration_open_date and today < self.registration_open_date:

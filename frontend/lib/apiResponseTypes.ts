@@ -66,7 +66,7 @@ export type DjangoUserBase = DjangoUserInfo & {
   // Django AbstractUser fields
   email: string;
   // CustomUser model fields
-  skill_level: number | null; // DecimalField, null=True
+  skill_level: string | null; // DecimalField, null=True
   is_coach: boolean; // default=False
   home_phone: string; // CharField, blank=True
   mobile_phone: string; // CharField, blank=True
@@ -145,7 +145,7 @@ export interface DjangoClubMembershipType {
   registration_open_date: string | null; // Model has null=True, blank=True
   registration_close_date: string | null; // Model has null=True, blank=True
   requires_approval: boolean;
-  annual_fee: number;
+  annual_fee: string; // decimal field with default 0.00
   current_member_count: number;
   is_at_capacity: boolean;
   is_registration_open: boolean;
@@ -235,7 +235,7 @@ export interface DjangoClubHome {
   club: DjangoModelInfo;
   latest_announcement: DjangoAnnouncement | null;
   top_members: DjangoTopMember[];
-  next_event: DjangoEventLight | null;
+  next_event: DjangoLeague | null;
 }
 
 /**
@@ -273,43 +273,80 @@ export type DjangoClubMember = DjangoTopMember & {
 // APP LEAGUES TYPES
 // ========================================
 
-export interface DjangoEventLight {
+/**
+ * Minimal club info (used inside league/event serializers)
+ * Maps to: get_club_info() method in LeagueSerializer
+ */
+export interface DjangoClubInfo {
   id: number;
-  club: DjangoModelInfo;
+  name: string;
+  logo_url: string;
+}
+
+/**
+ * Next Occurrence (for events and recurring leagues)
+ * Maps to:
+ * - backend: leagues.NextOccurrenceSerializer
+ * - frontend: type NextOccurrence
+ *
+ * Used inside DjangoLeague as next_occurrence field
+ */
+export interface DjangoNextOccurrence {
+  date: string; // ISO date from session_date
+  start_time: string; // Time format HH:MM from league_session.start_time
+  end_time: string; // Time format HH:MM from league_session.end_time
+  location_id: number; // From league_session.court_location.id
+  location_name: string; // From league_session.court_location.name
+  location_address: DjangoAddress; // Full address of location
+}
+
+/**
+ * League/Event (unified type)
+ * Maps to:
+ * - backend: leagues.LeagueSerializer
+ * - frontend: type Event
+ *
+ * UPDATED 2026-01-19:
+ * - Removed flat next_session_* fields
+ * - Added next_occurrence object (nested NextOccurrenceSerializer)
+ * - club is now DjangoClubInfo (not DjangoModelInfo)
+ * - Uses obj.next_occurrence @property (not prefetch)
+ *
+ * DESIGN:
+ * - Works for BOTH events and leagues (is_event boolean)
+ * - For recurring events: next_occurrence is earliest upcoming session
+ * - For leagues: next_occurrence is next session
+ * - participants_count differs:
+ *   * Leagues: Total LeagueParticipation.ACTIVE count
+ *   * Events: LeagueAttendance.ATTENDING count for next_occurrence
+ */
+export interface DjangoLeague {
+  id: number;
   name: string;
   description: string;
   is_event: boolean;
-  max_participants: number | null;
-  allow_reserves: boolean;
-  image_url: string;
-  registration_opens_hours_before: number;
-  registration_closes_hours_before: number;
-  registration_open: boolean;
-  league_type: C.LeagueTypeValue;
-  minimum_skill_level: C.SkillLevelValue | null;
-  next_session_date: string | null;
-  next_session_start_time: string | null;
-  next_session_end_time: string | null;
-  next_session_location: string | null;
-  next_session_registration_open: boolean | null;
-  participants_count: number;
+  club_info: DjangoClubInfo; // ⚡ CHANGED: Full object with logo
   captain_info: DjangoUserInfo;
-}
-
-export interface DjangoLeague extends DjangoEventLight {
-  registration_start_date: string | null;
-  registration_end_date: string | null;
+  minimum_skill_level: C.SkillLevelValue | null;
+  next_occurrence: DjangoNextOccurrence | null; // ⚡ NEW: Nested object
+  max_participants: number | null;
+  fee: string | null; // decimal field
+  allow_reserves: boolean;
+  participants_count: number; // Smart count (leagues vs events)
   start_date: string;
   end_date: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  // NEW: User participation fields (optional - only when requested)
+  image_url: string;
+  league_type: C.LeagueTypeValue;
+  recurring_days: number[];
+  upcoming_occurrences: DjangoNextOccurrence[];
+
+  // Optional user-specific fields (only when include_user_participation=true)
   user_is_captain?: boolean;
   user_is_participant?: boolean;
-  user_attendance_status?: C.LeagueAttendanceStatusValue | null;
-  next_session_occurrence_id?: number;
 }
+
+export type DjangoEvent = DjangoLeague
+
 // ========================================
 // APP NOTIFICATIONS TYPES
 // ========================================

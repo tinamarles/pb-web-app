@@ -29,10 +29,11 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
   // 🎯 Filter clubs in join mode - exclude clubs user is already a member of
   const memberships = isMemberUser ? (user as MemberUser).clubMemberships : [];
   const memberClubIds = memberships.map((m) => m.club.id);
-
+  
   const clubsToList = isJoinMode
     ? clubs.filter((club) => !memberClubIds.includes(club.id))
     : clubs;
+  
   const clubsAvailable = clubsToList.length > 0;
 
   // ========================================
@@ -127,7 +128,7 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
               club={club}
               actions={false}
               joinMode={isJoinMode}
-              variant="grid"
+              variant="grid-display"
               onClick={() => handleCardClick(club.id)}
             />
           ))}

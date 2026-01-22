@@ -89,7 +89,7 @@ class AnnouncementViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        today = timezone.now().date()
+        today = timezone.localtime().date()
 
         # Get clubs user is member of
         user_clubs = user.club_memberships.values_list('club', flat=True)
@@ -123,7 +123,7 @@ def notification_feed(request):
     Returns merged list sorted by created_at descending.    
     """
     user = request.user
-    today = timezone.now().date()
+    today = timezone.localtime().date()
     
     # Get notifications with related objects (prevents N+1 queries)
     notifications = Notification.objects.filter(

@@ -1,9 +1,8 @@
 import { Metadata } from "next";
-import { getPublic } from "@/lib/actions";
-import { MemberClub, PageProps, EmptyObject } from "@/lib/definitions";
+import { getClubs } from "@/lib/actions";
+import { PageProps, EmptyObject, ClubListFilters } from "@/lib/definitions";
 import { ModuleClientOnly as Module } from "@/shared";
 import { ClubListClient } from "@/components/club/ClubListClientPage";
-import { snakeToCamel } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Club List | PickleHub",
@@ -21,10 +20,24 @@ export default async function ClubListPage({
 
   // 🎯 Determine mode from query param
   const isJoinMode = intent === "join";
-  
+
+  // build filters:
+  const filters: ClubListFilters = {
+    // page, pageSize, search
+    page: "1", // ✅ "Give me page NUMBER 1"
+    pageSize: "20", // ✅ "20 items per page"
+    search: "",
+  };
+  const requireAuth = false;
+  console.log("club/list: calling getClubs with filters:", filters);
+
   // ✅ Server Component - fetch data directly and convert snake case to camel case
-  const apiData = await getPublic<unknown>("clubs");
-  const clubs = snakeToCamel(apiData) as MemberClub[];
+  const {
+    results: clubs,
+    count,
+    next,
+    previous,
+  } = await getClubs(filters, requireAuth);
 
   return (
     <Module type="profile">

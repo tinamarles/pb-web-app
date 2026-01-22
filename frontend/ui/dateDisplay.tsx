@@ -1,10 +1,11 @@
 // === MODIFICATION LOG ===
-// Date: 2025-12-25 UTC
+// Date: 2026-01-22 UTC
 // Modified by: Assistant
-// Changes: Created universal DateDisplay component for all date formatting needs
-// Purpose: Single component that handles nulls, formatting, and display logic
-// Why: User has many optional date fields - this eliminates ?? '' everywhere!
-// Formats: short, long, iso, numeric, weekday-short, weekday-long
+// Changes: Fixed date parsing to use LOCAL timezone instead of UTC
+// Why: new Date("2026-01-23") treats string as UTC midnight, causing timezone bugs!
+//      Now using parseLocalDate() helper to parse "YYYY-MM-DD" in user's local timezone
+// Previous: Used new Date(dateString) - broke for users in timezones behind UTC (showed previous day!)
+// Bug: Frontend showed "Fri, Jan 22" for "2026-01-23" - off by one day!
 // ========================
 
 export interface DateDisplayProps {
@@ -51,12 +52,20 @@ export function DateDisplay({
   return <span className={className}>{formattedDate}</span>;
 }
 
+// Helper: Parse "YYYY-MM-DD" in LOCAL timezone (not UTC!)
+function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  // month is 0-indexed in JavaScript Date!
+  return new Date(year, month - 1, day);
+}
+
 // Helper: Format date based on format type
 function formatDate(
   dateString: string,
   format: DateDisplayProps["format"]
 ): string {
-  const date = new Date(dateString);
+  // ✅ Parse in local timezone (not UTC!)
+  const date = parseLocalDate(dateString);
 
   switch (format) {
     case "short":

@@ -7,6 +7,7 @@ from public.constants import MembershipStatus
 from users.serializers import CustomUserSerializer, UserInfoSerializer
 from notifications.serializers import AnnouncementSerializer
 from leagues.models import League
+from leagues.serializers import LeagueSerializer
 from django_typomatic import ts_interface
 
 # Get the active user model
@@ -408,16 +409,12 @@ class ClubHomeSerializer(serializers.Serializer):
         This avoids re-querying for participants count.
         """
         next_event = instance.get('next_event')
-        next_occurrence = instance.get('next_occurrence')
         
         if not next_event:
             return None
         
         # Pass next_occurrence in context so EventLightSerializer can use it!
-        serializer = EventLightSerializer(
-            next_event,
-            context={'next_occurrence': next_occurrence}
-        )
+        serializer = LeagueSerializer(next_event)
         
         return serializer.data
 

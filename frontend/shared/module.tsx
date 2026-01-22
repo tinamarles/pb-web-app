@@ -56,6 +56,7 @@ export const Module = memo(function Module({
     if (pathname.startsWith("/profile")) return "Profile";
     if (pathname.startsWith("/admin")) return "Admin Dashboard";
     if (pathname.startsWith("/club")) return "Clubs";
+    if (pathname.startsWith("/event")) return "Events";
 
     // 3. Fallback to moduleData.title
     const moduleData = getModuleData(type);
@@ -194,11 +195,11 @@ export const Module = memo(function Module({
       },
       {
         type: "link",
-        id: "leagues",
-        icon: "leagues",
-        label: "Leagues",
-        href: "/leagues",
-        active: pathname === "/leagues",
+        id: "events",
+        icon: "events",
+        label: "Events",
+        href: "/event/list",
+        active: pathname === "/event/list",
       },
       {
         type: "fab",

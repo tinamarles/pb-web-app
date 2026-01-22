@@ -1,28 +1,92 @@
 // === MODIFICATION LOG ===
-// Date: 2025-12-25 UTC
+// Date: 2026-01-20 UTC
 // Modified by: Assistant
-// Changes: Created date utility functions for common date operations
-// Purpose: Centralized date logic - checking ranges, comparing dates, etc.
-// Why: User needs clean helper functions for button disabled states, validations, etc.
+// Changes: Fixed ALL date parsing to use LOCAL timezone instead of UTC
+// Why: new Date("2026-01-20") treats string as UTC midnight, causing timezone bugs!
+//      Now using parseLocalDate() helper to parse "YYYY-MM-DD" in user's local timezone
+// Previous: All functions used new Date(dateString) - broke for users in timezones behind UTC
 // ========================
 
 /**
- * Check if today falls within a date range (inclusive)
- *
- * @param startDate - Start of the range (nullable)
- * @param endDate - End of the range (nullable)
- * @returns true if today is within the range, false otherwise
- *
- * @example
- * // Registration is open
- * const isOpen = isWithinDateRange(membership.openDate, membership.closeDate);
- * <Button disabled={!isOpen}>Register</Button>
- *
- * @example
- * // Event sign-up window
- * const canSignUp = isWithinDateRange(event.signUpStart, event.signUpEnd);
+ * 🔧 HELPER: Parse "YYYY-MM-DD" string in LOCAL timezone (not UTC!)
+ * 
+ * @param dateString - Date string in "YYYY-MM-DD" format
+ * @returns Date object in local timezone
+ * 
+ * ⚠️ CRITICAL: new Date("2026-01-20") treats it as UTC midnight!
+ *    - In EST (UTC-5): "2026-01-20" becomes 2026-01-19 at 7pm!
+ *    - This helper parses it as 2026-01-20 midnight in YOUR timezone
  */
+function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  // month is 0-indexed in JavaScript Date!
+  return new Date(year, month - 1, day);
+}
+/**
+ * Format time string to readable 12-hour format
+ *
+ * @param time - Time string in "HH:MM:SS" or "HH:MM" format (nullable)
+ * @returns Formatted time string (e.g., "1:00 PM"), or fallback if invalid
+ *
+ * @example
+ * formatTime("13:00:00") // "1:00 PM"
+ * formatTime("09:30:00") // "9:30 AM"
+ * formatTime("00:00:00") // "12:00 AM"
+ * formatTime(null) // "N/A"
+ */
+export function formatTime(time: string | null | undefined): string {
+  if (!time) {
+    return "N/A";
+  }
 
+  try {
+    // Parse time string (HH:MM:SS or HH:MM)
+    const [hours, minutes] = time.split(':').map(Number);
+    
+    // Create a date object with arbitrary date (we only care about time)
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    
+    // Format to 12-hour time with AM/PM
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch {
+    return "Invalid Time";
+  }
+}
+
+/**
+ * Format time range to readable string
+ *
+ * @param startTime - Start time in "HH:MM:SS" or "HH:MM" format (nullable)
+ * @param endTime - End time in "HH:MM:SS" or "HH:MM" format (nullable)
+ * @returns Formatted time range (e.g., "7:00 PM - 9:00 PM"), or fallback if invalid
+ *
+ * @example
+ * formatTimeRange("19:00:00", "21:00:00") // "7:00 PM - 9:00 PM"
+ * formatTimeRange("09:30:00", "11:00:00") // "9:30 AM - 11:00 AM"
+ * formatTimeRange(null, "21:00:00") // "N/A"
+ */
+export function formatTimeRange(
+  startTime: string | null | undefined,
+  endTime: string | null | undefined
+): string {
+  if (!startTime || !endTime) {
+    return "N/A";
+  }
+
+  const start = formatTime(startTime);
+  const end = formatTime(endTime);
+  
+  if (start === "Invalid Time" || end === "Invalid Time") {
+    return "Invalid Time";
+  }
+
+  return `${start} - ${end}`;
+}
 /**
  * Format date to readable string (e.g., "Dec 31, 2025")
  *
@@ -44,7 +108,8 @@ export function formatDate(
   }
 
   try {
-    const d = new Date(date);
+    // ✅ Parse in local timezone
+    const d = parseLocalDate(date);
     return d.toLocaleDateString("en-US", {
       month: format === "long" ? "long" : "short",
       day: "numeric",
@@ -55,6 +120,22 @@ export function formatDate(
   }
 }
 
+/**
+ * Check if today falls within a date range (inclusive)
+ *
+ * @param startDate - Start of the range (nullable)
+ * @param endDate - End of the range (nullable)
+ * @returns true if today is within the range, false otherwise
+ *
+ * @example
+ * // Registration is open
+ * const isOpen = isWithinDateRange(membership.openDate, membership.closeDate);
+ * <Button disabled={!isOpen}>Register</Button>
+ *
+ * @example
+ * // Event sign-up window
+ * const canSignUp = isWithinDateRange(event.signUpStart, event.signUpEnd);
+ */
 export function isWithinDateRange(
   startDate: string | null | undefined,
   endDate: string | null | undefined
@@ -67,10 +148,11 @@ export function isWithinDateRange(
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Normalize to start of day
 
-  const start = new Date(startDate);
+  // ✅ Parse in local timezone
+  const start = parseLocalDate(startDate);
   start.setHours(0, 0, 0, 0);
 
-  const end = new Date(endDate);
+  const end = parseLocalDate(endDate);
   end.setHours(23, 59, 59, 999); // Include the entire end date
 
   // Check if today is within range (inclusive)
@@ -112,17 +194,19 @@ export function isPastDate(date: string | null | undefined): boolean {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const checkDate = new Date(date);
+  // ✅ Parse in local timezone
+  const checkDate = parseLocalDate(date);
   checkDate.setHours(0, 0, 0, 0);
 
   return checkDate < today;
 }
 
 /**
+ * Check if dateToCheck is BEFORE dateToCheckAgainst
  * 
- * @param dateToCheck 
- * @param dateToCheckAgainst 
- * @returns true if dateToCheck > dateToCheckAgainst
+ * @param dateToCheck - First date
+ * @param dateToCheckAgainst - Second date
+ * @returns true if dateToCheck < dateToCheckAgainst
  */
 export function isPastDateCheck(
   dateToCheck: string | null | undefined,
@@ -132,10 +216,11 @@ export function isPastDateCheck(
     return false;
   }
 
-  const checkDateAgainst = new Date(dateToCheckAgainst);
+  // ✅ Parse in local timezone
+  const checkDateAgainst = parseLocalDate(dateToCheckAgainst);
   checkDateAgainst.setHours(0, 0, 0, 0);
 
-  const checkDate = new Date(dateToCheck);
+  const checkDate = parseLocalDate(dateToCheck);
   checkDate.setHours(0, 0, 0, 0);
 
   return checkDateAgainst > checkDate;
@@ -159,7 +244,8 @@ export function isFutureDate(date: string | null | undefined): boolean {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const checkDate = new Date(date);
+  // ✅ Parse in local timezone
+  const checkDate = parseLocalDate(date);
   checkDate.setHours(0, 0, 0, 0);
 
   return checkDate > today;
@@ -183,7 +269,8 @@ export function isDateToday(date: string | null | undefined): boolean {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const checkDate = new Date(date);
+  // ✅ Parse in local timezone
+  const checkDate = parseLocalDate(date);
   checkDate.setHours(0, 0, 0, 0);
 
   return checkDate.getTime() === today.getTime();
@@ -210,7 +297,8 @@ export function getDaysUntil(date: string | null | undefined): number | null {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const targetDate = new Date(date);
+  // ✅ Parse in local timezone
+  const targetDate = parseLocalDate(date);
   targetDate.setHours(0, 0, 0, 0);
 
   const diffTime = targetDate.getTime() - today.getTime();

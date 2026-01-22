@@ -195,7 +195,7 @@ export const FEED_NAV_ITEMS: NavItem[] = [
  * Organized into sections for better mobile UX:
  * - Settings: Account, privacy, notifications, appearance, home screen
  * - Features: Memberships, performance, community, blog
- * - Resources: Courts, coaches, drills, links
+ * - Discover: Courts, coaches, drills, links
  * - Learn: Feature exploration
  */
 export const MORE_MENU_SECTIONS: NavSection[] = [
@@ -240,8 +240,8 @@ export const MORE_MENU_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: "Resources",
-    id: "resources",
+    title: "Discover",
+    id: "discover",
     separator: false,
     items: [
       { icon: "courts", label: "Courts", href: "/courts" },
@@ -255,7 +255,7 @@ export const MORE_MENU_SECTIONS: NavSection[] = [
     id: "learn",
     separator: false,
     items: [
-      { icon: "sparkles", label: "Explore Our Features", href: "/explore" },
+      { icon: "sparkles", label: "Discover Our Features", href: "/explore" },
     ],
   },
 ];

@@ -154,3 +154,24 @@ export function getClubPermissions(user: User | null, clubId: number) {
     membership: getClubMembership(user, clubId),
   };
 }
+
+/**
+ * Convert string decimal from API to number for calculations
+ * 
+ * @param value - String decimal from Django DecimalField
+ * @param defaultValue - Fallback if null/undefined (default: 0)
+ * @returns Number for calculations
+ * 
+ * @example
+ * const fee = toNumber(event.fee);  // "40.00" → 40
+ * const fee = toNumber(event.fee, 10);  // null → 10
+ */
+export function toNumber(
+  value: string | null | undefined,
+  defaultValue: number = 0
+): number {
+  if (value === null || value === undefined || value === '') {
+    return defaultValue;
+  }
+  return Number(value);
+}

@@ -80,6 +80,32 @@ class LeagueAttendanceStatus(models.IntegerChoices):
     ATTENDING = 1, 'Attending'
     CANCELLED = 2, 'Cancelled'
     ABSENT = 3, 'Absent (no-show)'
+    
+# ==============================================
+# EVENT/LEAGUE FILTERING (for API queries)
+# ==============================================
+
+class EventFilterType(models.TextChoices):
+    """
+    Filter for API queries to get all, only events, or only leagues
+    Maps to League.is_event field
+    
+    Frontend: EventFilterType constant in lib/constants.ts
+    """
+    ALL = 'all', 'All'
+    EVENT = 'event', 'Events Only'
+    LEAGUE = 'league', 'Leagues Only'
+
+class EventFilterStatus(models.TextChoices):
+    """
+    Filter for API queries to get upcoming, past, or all events/leagues
+    Uses SessionOccurrence dates to determine status
+    
+    Frontend: EventFilterStatus constant in lib/constants.ts
+    """
+    ALL = 'all', 'All'
+    UPCOMING = 'upcoming', 'Upcoming'
+    PAST = 'past', 'Past'
 
 # ==============================================
 # COURTS MODULE

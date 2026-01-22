@@ -20,5 +20,18 @@ export default async function ClubHomePage({
 
   console.log("Club Home Page - clubHome data: ", club);  
 
-  return <h1>Club Home Page for Club: {club.club.name}</h1>;
+  return (
+    <div className="flex flex-col gap-md">
+      <h2 className="subheading-lg text-secondary">HOME TAB for club: {club.club.name}</h2>
+      <p className="mt-2 title-lg text-on-surface">
+        Announcement: {club.latestAnnouncement?.title}
+      </p>
+      <p className="title-lg text-secondary">
+        Event: {club.nextEvent?.name} . {club.nextEvent?.nextOccurrence?.date}
+      </p>
+      <p className="title-md text-on-surface">
+        Top Members: showing {club.topMembers.length}
+      </p>
+    </div>
+  )
 }

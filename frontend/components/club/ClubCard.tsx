@@ -16,7 +16,7 @@ import { MemberClub } from "@/lib/definitions";
 import { ClubType, getClubTypeLabel } from "@/lib/constants";
 import { join } from "path";
 
-export type ClubCardVariant = "grid" | "detail";
+export type ClubCardVariant = "grid-display" | "detail";
 
 export interface ClubCardProps {
   club: MemberClub;
@@ -31,7 +31,7 @@ const getImageSizes = (variant: ClubCardVariant): string => {
   switch (variant) {
     case "detail":
       return "100vw"; // Full width for detail page
-    case "grid":
+    case "grid-display":
     default:
       return "(max-width: 639px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw"; // Grid responsive
   }
@@ -42,7 +42,7 @@ const getLogoSizes = (variant: ClubCardVariant): string => {
   switch (variant) {
     case "detail":
       return "(max-width: 639px) 64px, (max-width: 1023px) 128px, 256px";
-    case "grid":
+    case "grid-display":
     default:
       return "(max-width: 639px) 64px, (max-width: 1023px) 64px, 64px";
   }
@@ -53,7 +53,7 @@ const getLogoClasses = (variant: ClubCardVariant): string => {
   switch (variant) {
     case "detail":
       return "club-logo club-logo-bottom-left";
-    case "grid":
+    case "grid-display":
     default:
       return "club-logo-grid";
   }
@@ -76,9 +76,6 @@ export function ClubCard({
   const intent = searchParams.get("intent");
   const isJoinMode = intent === "join";
 
-  console.log("ClubCard Component - intent", intent);
-  console.log("ClubCard Component - isJoinMode", isJoinMode);
-
   // ========================================
   // EVENT HANDLERS
   // ========================================
@@ -98,7 +95,7 @@ export function ClubCard({
   // Handle click on Admin Dashboard button
   const handleAdminClick = () => {
     setSelectedClub(club.id);
-  }
+  };
 
   // ========================================
   // Render Club Banner
@@ -106,7 +103,7 @@ export function ClubCard({
   const renderClubBanner = () => {
     return (
       <>
-        <div className={`banner-container ${variant}`}>
+        <div className={`banner-container min-w-0 ${variant}`}>
           <Image
             src={
               club.bannerUrl ??
@@ -166,15 +163,15 @@ export function ClubCard({
           {club.memberCount} {memberLabel}
         </p>
         {!actions && !isMember && joinMode && (
-        <Button
-          size="sm"
-          label="Join"
-          icon="add"
-          variant="outlined"
-          onClick={handleJoinClick}
-          className="w-fit absolute bottom-2 right-2 py-xs"
-        />
-      )}
+          <Button
+            size="sm"
+            label="Join"
+            icon="add"
+            variant="outlined"
+            onClick={handleJoinClick}
+            className="w-fit absolute bottom-2 right-2 py-xs"
+          />
+        )}
       </div>
     );
   };
@@ -189,7 +186,6 @@ export function ClubCard({
         <ResponsiveButton
           mobile={{ size: "sm", label: "Admin", icon: "dashboard" }}
           desktop={{ size: "md", label: "Admin Dashboard", icon: "dashboard" }}
-          
           variant="filled"
           onClick={handleAdminClick}
           href="/admin/settings"
@@ -197,10 +193,9 @@ export function ClubCard({
       )}
       {/* Show Contact Club Button */}
       <ResponsiveButton
-        mobile={{ size: "sm", label: "Club", icon: "email" }}
-        desktop={{ size: "md", label: "Contact Club", icon: "email" }}
-        
-        variant="filled"
+        mobile={{ size: "sm", label: "Club", icon: "send" }}
+        desktop={{ size: "md", label: "Message Club", icon: "send" }}
+        variant="outlined"
         onClick={handleContactClick}
       />
       {/* Show Join Button only if user is NOT a member */}
@@ -208,7 +203,6 @@ export function ClubCard({
         <ResponsiveButton
           mobile={{ size: "sm", label: "Join", icon: "add" }}
           desktop={{ size: "md", label: "Join", icon: "add" }}
-          
           variant="filled"
           onClick={handleJoinClick}
         />
