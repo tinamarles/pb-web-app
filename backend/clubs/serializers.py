@@ -7,7 +7,8 @@ from public.constants import MembershipStatus
 from users.serializers import CustomUserSerializer, UserInfoSerializer
 from notifications.serializers import AnnouncementSerializer
 from leagues.models import League
-from leagues.serializers import LeagueSerializer
+
+from leagues.mixins import CaptainInfoMixin
 from django_typomatic import ts_interface
 
 # Get the active user model
@@ -45,6 +46,27 @@ class ClubMembershipSkillLevelSerializer(serializers.ModelSerializer):
             'id', 
             'level', 
             'description']
+
+class ClubInfoSerializer(serializers.Serializer):
+    """
+    Reusable minimal club data serializer.
+    
+    ✅ USE THIS instead of duplicating get_club_info()!
+    
+    Matches frontend TypeScript type:
+    interface ClubInfo {
+      id: number;
+      name: string;
+      logoUrl: string;  // ← snake_case in backend!
+    }
+    
+    Usage:
+    class MySerializer(serializers.ModelSerializer):
+        club_info = ClubInfoSerializer(source='club')
+    """
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    logo_url = serializers.CharField()
 
 class NestedClubSerializer(serializers.ModelSerializer):
     '''
@@ -195,7 +217,7 @@ class TopMemberSerializer(serializers.Serializer):
         
         return user_data
 
-class EventLightSerializer(serializers.ModelSerializer):
+class EventLightSerializer(CaptainInfoMixin, serializers.ModelSerializer):
     """
     Lightweight event serializer for Home Tab.
     
@@ -226,7 +248,7 @@ class EventLightSerializer(serializers.ModelSerializer):
     # Participants info
     participants_count = serializers.SerializerMethodField()
     
-    # Captain info
+    # Captain info -> uses CaptainInfoMixin now
     captain_info = serializers.SerializerMethodField()
     
     class Meta:
@@ -320,23 +342,6 @@ class EventLightSerializer(serializers.ModelSerializer):
         
         # Use the SessionOccurrence's @property!
         return next_occurrence.current_participants_count
-    
-    # ========================================
-    # CAPTAIN INFO
-    # ========================================
-    def get_captain_info(self, obj):
-        """
-        Return captain info.
-        Use captain if exists, else fall back to created_by.
-        
-        Returns snake_case dict (matching existing pattern).
-        """
-        captain = obj.captain if obj.captain else obj.created_by
-        
-        if not captain:
-            return None
-        
-        return UserInfoSerializer(captain).data
 
 class ClubHomeSerializer(serializers.Serializer):
     """
@@ -414,6 +419,7 @@ class ClubHomeSerializer(serializers.Serializer):
             return None
         
         # Pass next_occurrence in context so EventLightSerializer can use it!
+        from leagues.serializers import LeagueSerializer
         serializer = LeagueSerializer(next_event)
         
         return serializer.data

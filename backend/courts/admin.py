@@ -21,7 +21,12 @@ class CourtClubAffiliationInline(admin.TabularInline):
 class CourtScheduleBlockInline(admin.TabularInline):
     model = CourtScheduleBlock
     extra = 0
-    fields = ('day_of_week', 'start_time', 'end_time', 'block_type', 'is_active')
+    fields = (
+        'day_of_week', 
+        'start_time', 
+        'end_time', 
+        'block_type', 
+        'is_active')
 
 
 @admin.register(CourtLocation)
@@ -194,7 +199,7 @@ class CourtScheduleBlockAdmin(admin.ModelAdmin):
     )
     search_fields = (
         'court_location__name',
-        'description'
+        'title'
     )
     ordering = ('court_location', 'day_of_week', 'start_time')
     readonly_fields = ('created_at', 'updated_at')
@@ -207,8 +212,7 @@ class CourtScheduleBlockAdmin(admin.ModelAdmin):
             'fields': (
                 'block_type',
                 'title',
-                'description',
-                'courts_affected'
+                'courts_used'
             )
         }),
         ('Display', {

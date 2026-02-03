@@ -826,7 +826,8 @@ class SessionOccurrenceAdmin(admin.ModelAdmin):
         'time_range',
         'get_location',
         'is_cancelled',
-        'attendance_count'
+        'attendance_count',
+        'registration_open'
     )
     list_filter = (
         ClubFilterForSessionOccurrence,  # ✅ 1️⃣ Select club FIRST!
@@ -846,10 +847,9 @@ class SessionOccurrenceAdmin(admin.ModelAdmin):
         'session_date',
         'start_datetime',
         'end_datetime',
-        'registration_opens_at',
-        'registration_closes_at',
         'created_at',
-        'updated_at'
+        'updated_at',
+        'registration_open'
     )
     
     # ✅ ADD THE INLINE HERE!

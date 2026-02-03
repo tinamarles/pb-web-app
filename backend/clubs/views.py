@@ -143,7 +143,8 @@ class ClubViewSet(viewsets.ModelViewSet):
         """
         
         club = self.get_object()
-        today = timezone.now().date()
+        # today = timezone.now().date()
+        today = timezone.localtime().date()
         
         # ========================================
         # 1. LATEST ANNOUNCEMENT (just one!)
@@ -227,7 +228,8 @@ class ClubViewSet(viewsets.ModelViewSet):
         - include_user_participation: 'true' | 'false' (default: 'false')
         """
         club = self.get_object()
-        today = timezone.now().date()
+        # today = timezone.now().date()
+        today = timezone.localtime().date()
         
         # Filter by type
         event_type = request.query_params.get('type', 'all')
@@ -322,7 +324,8 @@ class ClubViewSet(viewsets.ModelViewSet):
         queryset = queryset.annotate(
             league_participants_count=Count(
                 'league_participants',
-                filter=Q(league_participants__status=LeagueParticipationStatus.ACTIVE)
+                filter=Q(league_participants__status=LeagueParticipationStatus.ACTIVE),
+                distinct=True
             )
         )
         

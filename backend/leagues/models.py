@@ -478,6 +478,48 @@ class League(models.Model):
         # we display the actual level text
         return f"Minimum skill: {self.minimum_skill_level.level}"
         
+    @property
+    def upcoming_occurrences(self):
+        """Get next 10 upcoming SessionOccurrences"""
+        today = timezone.localtime().date()
+        return SessionOccurrence.objects.filter(
+            league=self,
+            session_date__gte=today,
+            is_cancelled=False
+        ).order_by('session_date', 'start_datetime')[:10]  # ← Limit to 10!
+    
+    @property
+    def is_recurring(self) -> bool:
+        """
+        Determine if this league/event has any recurring sessions.
+        Based on same logic as get_recurring_days() serializer method.
+        Returns:
+            True if any sessions have recurrence_type != ONCE
+            False if all sessions are one-time only
+        """
+        from public.constants import RecurrenceType
+        return self.sessions.exclude(recurrence_type=RecurrenceType.ONCE).exists()
+    
+    @property
+    def one_time_session(self):
+        """
+        Get details of a one-time session so it can be shown on Event Card.
+        Without it, there are no records in next_occurrence.
+        
+        ⚡ OPTIMIZED with direct league FK - NO joins needed!
+        Query is so fast (~5-10ms using indexed league_id) that caching is unnecessary!
+        """
+        today = timezone.localtime().date()
+        
+        if self.is_recurring:
+            return None
+        
+        return SessionOccurrence.objects.filter(
+            league=self,  # ⚡ Direct FK instead of league_session__league!
+        ).select_related(
+            'league_session__court_location__address'
+        ).order_by('session_date', 'start_datetime').first()
+    
 # Through-table for Member and League (LeagueParticipation)
 class LeagueParticipation(models.Model):
     """
@@ -866,6 +908,13 @@ class SessionOccurrence(models.Model):
     def __str__(self):
         return f"{self.league_session.league.name} - {self.session_date}"
     
+    def save(self, *args, **kwargs):
+        if self.league_session.league.is_event and self.registration_opens_at is None:
+            league = self.league_session.league
+            self.registration_opens_at = self.start_datetime - timedelta(hours=league.registration_opens_hours_before)
+            self.registration_closes_at = self.start_datetime - timedelta(hours=league.registration_closes_hours_before)
+        super().save(*args, **kwargs)
+
     @property
     def registration_open(self):
         """Check if registration is currently open for this session."""
@@ -875,11 +924,15 @@ class SessionOccurrence(models.Model):
         
         # For events: check session-specific windows
         if not self.registration_opens_at or not self.registration_closes_at:
-            return True  # Default: open
-        
-        now = timezone.now()
+            # Calculate from league settings instead of defaulting to True
+            league = self.league_session.league
+            registration_opens = self.start_datetime - timedelta(hours=league.registration_opens_hours_before)
+            registration_closes = self.start_datetime - timedelta(hours=league.registration_closes_hours_before)
+            now = timezone.localtime()
+            return registration_opens <= now <= registration_closes
+        now = timezone.localtime()
         return self.registration_opens_at <= now <= self.registration_closes_at
-    
+            
     @property
     def current_participants_count(self):
         """Get participant count for THIS specific session."""

@@ -309,7 +309,8 @@ class CourtScheduleBlock(models.Model):
     block_type = models.IntegerField(
         blank=True,
         null=True,
-        choices=BlockType
+        choices=BlockType,
+        default=BlockType.PUBLIC
     )
     # Access control
     skill_level_min = models.DecimalField(
@@ -333,7 +334,26 @@ class CourtScheduleBlock(models.Model):
         blank=True,
         help_text='Maximum number of players allowed in this time block'
     )
-    
+
+    courts_used = models.IntegerField(
+        default=1,
+        help_text='Numbers of courts assigned for this block'
+    )
+    background_color = models.CharField(
+        blank=True,
+        default='#bdc8d0', # var(--lightgrey-80), --var(color-accent2)
+        help_text='Color the block should show - default is Accent2'
+    )
+    text_color = models.CharField(
+        blank=True,
+        default='#1e2021', # var(--neutral-12), --var(color-on-accent2)
+        help_text='Color of the text shown on the block - default is on-Accent2'
+    )
+    title = models.CharField(
+        blank=True,
+        help_text='Title of the block'
+    )
+
     # Reservations
     requires_reservation = models.BooleanField(
         default=False,
@@ -423,7 +443,10 @@ class CourtScheduleBlock(models.Model):
 
 class CourtLocationSchedule(models.Model):
 
-    court_location = models.ForeignKey(CourtLocation, on_delete=models.CASCADE, related_name="schedule")
+    court_location = models.ForeignKey(
+        CourtLocation, 
+        on_delete=models.CASCADE, 
+        related_name="schedule")
     day_of_week = models.IntegerField(
         choices=DayOfWeek
     )

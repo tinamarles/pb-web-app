@@ -82,6 +82,13 @@ class LeagueAttendanceStatus(models.IntegerChoices):
     ABSENT = 3, 'Absent (no-show)'
     
 # ==============================================
+# ACTIVITY TYPE (for API response)
+# ==============================================
+class ActivityType(models.TextChoices):
+    EVENT = 'event', 'Event'
+    BOOKING = 'booking', 'Booking'
+
+# ==============================================
 # EVENT/LEAGUE FILTERING (for API queries)
 # ==============================================
 
