@@ -104,33 +104,6 @@ export const apiResponseModule: ModuleConfig[] = [
           },
         ],
       },
-      {
-        icon: "zap",
-        label: "Quick Actions",
-        url: "",
-        submenu: [
-          {
-            icon: "calendar",
-            label: "View Your Schedule",
-            url: "/schedule",
-          },
-          {
-            icon: "book-court",
-            label: "Book a Court",
-            url: "/book_court",
-          },
-          {
-            icon: "matches",
-            label: "Record a Result",
-            url: "/add_result",
-          },
-          {
-            icon: "send",
-            label: "Contact a Member",
-            url: "/contact_member",
-          },
-        ],
-      },
     ],
     search: true,
     help: true,
@@ -209,10 +182,10 @@ export const apiResponseModule: ModuleConfig[] = [
           {
             icon: "calendar",
             label: "View Your Schedule",
-            url: "/schedule",
+            url: "/event/my-activities",
           },
           {
-            icon: "book-court",
+            icon: "bookcourt",
             label: "Book a Court",
             url: "/book_court",
           },
@@ -245,13 +218,7 @@ export const apiResponseModule: ModuleConfig[] = [
     help: true,
     actions: [],
     navigationButtons: [
-      {
-        id: "home",
-        label: "Home",
-        variant: "subtle",
-        size: "md",
-        href: "/",
-      },
+
     ],
   },
   {
@@ -310,10 +277,10 @@ export const apiResponseModule: ModuleConfig[] = [
           {
             icon: "calendar",
             label: "View Your Schedule",
-            url: "/schedule",
+            url: "/event/my-activities",
           },
           {
-            icon: "book-court",
+            icon: "bookcourt",
             label: "Book a Court",
             url: "/book_court",
           },
@@ -435,10 +402,10 @@ export const apiResponseModule: ModuleConfig[] = [
           {
             icon: "calendar",
             label: "View Your Schedule",
-            url: "/schedule",
+            url: "/event/my-activities",
           },
           {
-            icon: "book-court",
+            icon: "bookcourt",
             label: "Book a Court",
             url: "/book_court",
           },

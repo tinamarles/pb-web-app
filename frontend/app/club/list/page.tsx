@@ -29,7 +29,6 @@ export default async function ClubListPage({
     search: "",
   };
   const requireAuth = false;
-  console.log("club/list: calling getClubs with filters:", filters);
 
   // ✅ Server Component - fetch data directly and convert snake case to camel case
   const {

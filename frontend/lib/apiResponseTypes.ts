@@ -120,6 +120,15 @@ export interface DjangoAddress {
 // ========================================
 /**
 /**
+ * Minimal club info (used inside league/event serializers)
+ * Maps to: get_club_info() method in LeagueSerializer
+ */
+export interface DjangoClubInfo {
+  id: number;
+  name: string;
+  logo_url: string;
+}
+/**
  * Basic Role Fields without permission flags
  * Maps to: 
  * - backend: RoleSerializer
@@ -268,20 +277,19 @@ export type DjangoClubMember = DjangoTopMember & {
   created_at: string;
   is_preferred_club: boolean;
 };
-
+// ========================================
+// APP COURT TYPES
+// ========================================
+export interface DjangoCourtInfo {
+  id: number;
+  name: string;
+  address: DjangoAddress;
+}
 // ========================================
 // APP LEAGUES TYPES
 // ========================================
 
-/**
- * Minimal club info (used inside league/event serializers)
- * Maps to: get_club_info() method in LeagueSerializer
- */
-export interface DjangoClubInfo {
-  id: number;
-  name: string;
-  logo_url: string;
-}
+
 
 /**
  * Next Occurrence (for events and recurring leagues)
@@ -291,13 +299,26 @@ export interface DjangoClubInfo {
  *
  * Used inside DjangoLeague as next_occurrence field
  */
-export interface DjangoNextOccurrence {
+export interface DjangoSession {
+  id: number;
   date: string; // ISO date from session_date
   start_time: string; // Time format HH:MM from league_session.start_time
   end_time: string; // Time format HH:MM from league_session.end_time
-  location_id: number; // From league_session.court_location.id
-  location_name: string; // From league_session.court_location.name
-  location_address: DjangoAddress; // Full address of location
+  court_info: DjangoCourtInfo;
+  participants_count: number;
+  user_attendance_status: C.LeagueAttendanceStatusValue | null;
+  registration_open: boolean;
+  max_participants: number | null;
+}
+
+export type DjangoParticipant = DjangoUserInfo & {
+  skill_level: string | null; // DecimalField, null=True
+}
+
+export interface DjangoSessionParticipants {
+  session_id: number;
+  participants: DjangoParticipant[];
+  count: number;
 }
 
 /**
@@ -328,7 +349,8 @@ export interface DjangoLeague {
   club_info: DjangoClubInfo; // ⚡ CHANGED: Full object with logo
   captain_info: DjangoUserInfo;
   minimum_skill_level: C.SkillLevelValue | null;
-  next_occurrence: DjangoNextOccurrence | null; // ⚡ NEW: Nested object
+  next_session: DjangoSession | null; // ⚡ NEW: Nested object
+  one_time_session_info: DjangoSession | null; // Session info for one-time Sessions
   max_participants: number | null;
   fee: string | null; // decimal field
   allow_reserves: boolean;
@@ -338,7 +360,10 @@ export interface DjangoLeague {
   image_url: string;
   league_type: C.LeagueTypeValue;
   recurring_days: number[];
-  upcoming_occurrences: DjangoNextOccurrence[];
+  is_recurring: boolean;
+  upcoming_sessions?: DjangoSession[];
+  user_has_upcoming_sessions?: boolean;
+  user_next_session_id?: number | null;
 
   // Optional user-specific fields (only when include_user_participation=true)
   user_is_captain?: boolean;
@@ -466,4 +491,44 @@ export interface DjangoAnnouncementUpdate {
   // ❌ DO NOT include:
   // - club, league, match (cannot be changed after creation)
   // - notification_type (auto-recalculated on save)
+}
+
+/** API endpoint: api/profile/activities
+ * 
+ */
+
+export interface DjangoUserActivities {
+  activities: DjangoActivityItem[];
+}
+
+export type DjangoActivityItem = DjangoEventActivity | DjangoBookingActivity;
+
+export interface DjangoEventActivity {
+  type: typeof C.ActivityType.EVENT;
+  event: {
+    id: number;
+    name: string;
+    is_event: boolean;
+    club_info: DjangoClubInfo;
+    captain_info: DjangoUserInfo | null;
+    image_url: string;
+    user_is_captain: boolean;
+    user_is_participant: boolean;
+  };
+  session: DjangoSession;
+}
+
+export interface DjangoBookingActivity {
+  type: typeof C.ActivityType.BOOKING;
+  event: {
+    id: number;
+    booking_type: C.BookingTypeValue;
+    captain_info: DjangoUserInfo;
+    user_is_organizer: boolean;
+    court_number: string;
+    with_players: DjangoUserInfo[];
+    external_booking_reference: string;
+    notes: string;
+  };
+  session: DjangoSession;
 }

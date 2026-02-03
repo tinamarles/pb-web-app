@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { getEvents } from "@/lib/actions";
+import { getMyClubsEvents } from "@/lib/actions";
 import { PageProps, EmptyObject, EventListFilters } from "@/lib/definitions";
 import { EventFilterType, EventFilterStatus, EventCardModes } from "@/lib/constants";
 import { ModuleClientOnly as Module } from "@/shared";
@@ -7,13 +7,13 @@ import { ModuleClientOnly as Module } from "@/shared";
 import { ClubEventsClient } from "@/components/club/ClubEventsClient";
 
 export const metadata: Metadata = {
-  title: "League & Events List | PickleHub",
-  description: "View all the leagues and events available.",
+  title: "All Events of my Clubs | PickleHub",
+  description: "View all the leagues and events available of all joined clubs.",
 };
 type Params = EmptyObject; // Empty - no params in URL
 type SearchParams = { intent?: string };
 
-export default async function EventListPage({
+export default async function MyClubsEventListPage({
   searchParams,
 }: PageProps<Params, SearchParams>) {
   // await the searchParams (a Promise) and extract intent
@@ -31,20 +31,38 @@ export default async function EventListPage({
     pageSize: '20', // ✅ "20 items per page"
     includeUserParticipation: false
   }
-  const requireAuth = false;
 
   // ✅ Server Component - fetch data directly and convert snake case to camel case
-  const { results: events, count, next, previous } = await getEvents(filters, requireAuth);
+  const { results: events, count, next, previous } = await getMyClubsEvents(filters);
   
+
+  const ShowHeader = () => {
+    const imageUrl = "https://res.cloudinary.com/dvjri35p2/image/upload/v1768917298/default_Event_g0c5xy.jpg"
+    return (
+        <div className="container relative p-0 ">
+          <div
+            className="clubList-Header"
+            style={{
+              backgroundImage: `url("${imageUrl}")`,
+            }}
+          ></div>
+          <h1 className="clubList-Header-text">
+            {`${isJoinMode ? "Select an event to join" : "Browse all Events of your clubs"}`}
+          </h1>
+          <div className="clubList-search"></div>
+        </div>
+    )
+  }
   return (
     <Module type="default">
       <div className="page__content">
+        <ShowHeader />
         <ClubEventsClient 
           events={events} 
           joinMode={isJoinMode} 
           gridLimit={false}
-          cardMode={EventCardModes.ALL_EVENTS}
-          showHeader={true}
+          cardMode={EventCardModes.MY_CLUB_EVENTS}
+          showHeader={false}
           showActions={true}
         />
       </div>

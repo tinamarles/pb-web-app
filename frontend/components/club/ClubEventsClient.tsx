@@ -4,21 +4,40 @@ import { useSearchParams } from "next/navigation";
 import { Event, MemberUser } from "@/lib/definitions";
 import { Button} from "@/ui";
 import { EmptyState } from "../EmptyState";
+import { useAuth } from "@/providers/AuthUserProvider";
 import { EventCard } from "../event/EventCard";
-import { EventAction, EventActionType, EventCardModes } from "@/lib/constants";
-
+import { EventAction, EventActionType, EventCardModes, EventCardModeType } from "@/lib/constants";
+import { toast } from "sonner";
+/**
+ * This component is used by
+ * - Club Details - Event Tab: app/club/[clubId]/events
+ * - Dashboard - Club Events: app/(sidebarLayout)/dashboard/events
+ * - Dashboard - Club Leagues: app/(sidebarLayout)/dashboard/leagues
+ * - Resources > Events & Leagues: app/event/list
+ */
 interface ClubEventsClientProps {
     events: Event[];
     joinMode: boolean;
     gridLimit?: boolean;
+    cardMode?: EventCardModeType;
+    showHeader?: boolean;
+    showActions?: boolean;
 }
 
-export function ClubEventsClient({ events, joinMode, gridLimit}: ClubEventsClientProps) {
+export function ClubEventsClient({ 
+  events, 
+  joinMode, 
+  gridLimit,
+  cardMode = EventCardModes.CLUB_EVENTS,
+  showHeader = false,
+  showActions = true }: ClubEventsClientProps) {
 
   // ========================================
   // STATE & DATA
   // ========================================
   const router = useRouter();
+  const { user } = useAuth();
+
   const eventsAvailable = events.length > 0;
   const searchParams = useSearchParams();
   const intent = searchParams.get("intent");
@@ -41,9 +60,15 @@ export function ClubEventsClient({ events, joinMode, gridLimit}: ClubEventsClien
     
     switch (action) {
         case EventAction.VIEW_DETAILS:
-            const url = isJoinMode
+            console.log('ClubEventsClient: VIEW_DETAILS for event:', event.name)
+            const url = joinMode
                 ? `/event/${event.id}/?intent=join`
                 : `/event/${event.id}`;
+                // If user is not logged in, needs to login
+                // Middleware automatically handles this but user should get a notification as well
+                if (!user) {
+                  toast.info("You need to be logged in to view Event Details!");
+                }
                 router.push(url);
             break;
         case EventAction.CHECK_IN:
@@ -65,52 +90,81 @@ export function ClubEventsClient({ events, joinMode, gridLimit}: ClubEventsClien
   };
 
   // ========================================
+  // FUNCTIONS & COMPONENTS
+  // ========================================
+  const EventListActions = () => {
+
+    return (
+      <div className="flex justify-between items-center border-b border-outline-variant">
+        <div className="flex flex-1">
+          <p className="body-md text-info">
+            Click a card to view sessions and more Information about the activity.
+          </p>
+        </div>
+
+        <div className="flex gap-md pb-sm justify-end">
+          <Button
+            variant="default"
+            size="sm"
+            icon="add"
+            label="Create an Event"
+          />
+        </div>
+      </div>
+    );
+  };
+  const EventListHeader = () => {
+    
+    const imageUrl =
+      "https://res.cloudinary.com/dvjri35p2/image/upload/v1768051542/ClubListHeader_awq942.jpg";
+
+    return (
+        <div className="container relative p-0 ">
+          <div
+            className="clubList-Header"
+            style={{
+              backgroundImage: `url("${imageUrl}")`,
+            }}
+          ></div>
+          <h1 className="clubList-Header-text">
+            {`${isJoinMode ? "Select an Activity to join" : "Browse all our Activities"}`}
+          </h1>
+          <div className="clubList-search"></div>
+        </div>
+    );
+  };
+  // ========================================
   // Event List: Lists Events and Leagues
   // ========================================
   function EventList() {
 
     return (
-        <>
-            {/* Action buttons */}
-            <div className="flex justify-between items-center border-b border-outline-variant">
-                <div className="flex flex-1">
-                    <p className="body-md text-info">
-                    Click a card to view more Information about the activity.
-                    </p>
-                </div>
-
-                <div className="flex gap-md pb-sm justify-end">
-                    <Button
-                    variant="default"
-                    size="sm"
-                    icon="add"
-                    label="Create an Event"
-                    />
-                </div>
-            </div>
-
-            {/* Show Event Cards */}
-            <div className={`clubList-container ${gridVariant}`}>
-            
-                {events.map((event) => (
-                    
-                    <EventCard
-                        key={event.id}
-                        event={event}
-                        mode={EventCardModes.CLUB_EVENTS}
-                        variant={cardVariant}
-                        onAction={handleEventAction}
-                    />
-                ))}
-            </div>
-        </>
+      <div className={`clubList-container ${gridVariant}`}>
+      
+          {events.map((event) => (
+              
+              <EventCard
+                  key={event.id}
+                  event={event}
+                  mode={cardMode}
+                  variant={cardVariant}
+                  onAction={handleEventAction}
+              />
+          ))}
+      </div>
     );
   }
   // ========================================
   // RENDER
   // ========================================
   return (
-    <>
+    <div className="container p-0 mx-auto">
+      {showHeader && 
+        <EventListHeader />
+      }
+      {showActions && 
+        <EventListActions />
+      }
       {eventsAvailable ? (
         <EventList />
       ) : (
@@ -128,6 +182,7 @@ export function ClubEventsClient({ events, joinMode, gridLimit}: ClubEventsClien
           href="/event/create"
         />
       )}
-    </>
+    </div>
   );
 }
+ 

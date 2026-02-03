@@ -19,6 +19,8 @@ import {
   PaginatedResponse,
   ClubListFilters,
   EventListFilters,
+  SessionParticipants,
+  UserActivities,
 } from "./definitions";
 import {
   DjangoPaginatedResponse,
@@ -31,6 +33,8 @@ import {
   DjangoAnnouncementCreate,
   DjangoAnnouncementUpdate,
   DjangoClubNested,
+  DjangoSessionParticipants,
+  DjangoUserActivities
 } from "./apiResponseTypes";
 
 import {
@@ -385,6 +389,102 @@ export const getClubEvents = cache(
 ); 
 
 /**
+ * Get events from ALL clubs the user is a member of
+ *
+ * @param filters - Optional EventListFilters (type, status, page, pageSize)
+ * @returns PaginatedResponse<Event> with results array and pagination metadata
+ * @example 
+ * // Get all upcoming events from user's clubs
+ * const response = await getMyClubsEvents({ 
+ *   type: EventFilterType.EVENT, 
+ *   status: EventFilterStatus.UPCOMING,
+ *   page: '1',
+ *   pageSize: '20'
+ * });
+ *
+ * Backend: GET /api/leagues/my-clubs/?type=event&status=upcoming
+ * Serializer: LeagueSerializer
+ * 
+ * 🎯 ADDED: 2026-01-28 - Server-side filtering to clubs where user is ACTIVE member
+ * 
+ * AUTHENTICATION: ✅ Required (redirects to /login if not authenticated)
+ * 
+ * PERFORMANCE: 
+ * - Server-side filtering (database does the work!)
+ * - 2 queries (memberships + leagues)
+ * - Scales to thousands of events
+ * - Pagination works correctly (filters BEFORE paginating)
+ * 
+ * WHY THIS EXISTS:
+ * - "All Events" button on dashboard/overview
+ * - Shows events from ALL clubs user is member of
+ * - Client-side filtering would break with pagination!
+ */
+export const getMyClubsEvents = cache(
+  async (
+    filters?: EventListFilters
+  ): Promise<PaginatedResponse<Event>> => {
+    const params = new URLSearchParams();
+   
+    if (filters?.type) params.set("type", filters.type);
+    if (filters?.status) params.set("status", filters.status);
+    if (filters?.page) params.set("page", filters.page);
+    if (filters?.pageSize) params.set("page_size", filters.pageSize);
+    
+    // Note: includeUserParticipation is always true for this endpoint
+    // Backend automatically includes user participation data
+    
+    const queryString = params.toString();
+    const endpoint = `my-clubs-events${
+      queryString ? `?${queryString}` : ""
+    }`;
+
+    const apiData = await get<DjangoPaginatedResponse<DjangoEvent>>(endpoint);
+    return snakeToCamel(apiData) as PaginatedResponse<Event>;
+  }
+);
+
+export const getUserActivities = cache(
+  async(): Promise<UserActivities> => {
+    const endpoint = `profile/activities`;
+
+    const apiData = await get<DjangoUserActivities>(endpoint);
+    return snakeToCamel(apiData) as UserActivities;
+  }
+);
+
+/**
+ * Get Session Participants Data
+ *
+ * @param sessionId - Club ID
+ * @returns SessionParticipants { session_id: number, participants: SessionParticipants[], count: number }
+ * @example const { events, count } = await getClubEvents('345', { type: 'league', status: 'upcoming' });
+ *
+ * Backend: GET /api/clubs/{id}/events/?type=league&status=upcoming
+ * Serializer: LeagueSerializer
+ */
+export const getSessionParticipants = cache(
+  async (
+    sessionId: string,
+    requireAuth: boolean = true
+  ) => {
+    const params = new URLSearchParams();
+
+    const queryString = params.toString(); // ← CRITICAL! Convert params to string!
+    const endpoint = `leagues/session/${sessionId}/participants${
+      queryString ? `?${queryString}` : ""
+    }`;
+    console.log('calling Participants from Django with: ', endpoint);
+    const fetchFn = requireAuth ? get : getPublic;
+    const apiData = await fetchFn<DjangoSessionParticipants>(
+      endpoint
+    );
+
+    return snakeToCamel(apiData) as SessionParticipants;
+  }
+); 
+
+/**
  * Get club MEMBERS TAB data (paginated, filterable)
  *
  * @param clubId - Club ID
@@ -470,6 +570,38 @@ export const getEvents = cache(
     return snakeToCamel(apiData) as PaginatedResponse<Event>; // ✅ Returns paginated response
   }
 );
+
+/**
+ * Get single event data (lightweight)
+ *
+ * @param eventId - Event ID
+ * @returns Single Event object
+ * @example const event = await getEvent('345');
+ *
+ * Backend: GET /api/leagues/{id}/
+ * Serializer: LeagueDetailSerializer (returns Event)
+ */
+export const getEvent = cache(
+  async (
+    eventId: string,
+    filters?: EventListFilters,
+    requireAuth: boolean = true
+  ) => {
+    const params = new URLSearchParams();
+
+    if (filters?.includeUserParticipation) {
+      params.set("include_user_participation", "true");
+    }
+
+    const queryString = params.toString();
+    const endpoint = `leagues/${eventId}${
+      queryString ? `?${queryString}` : ""
+    }`;
+    const fetchFn = requireAuth ? get : getPublic;
+    const apiData = await fetchFn<DjangoEvent>(endpoint);
+  return snakeToCamel(apiData) as Event;
+});
+
 // ========================================
 // NOTIFICATIONS & ANNOUNCEMENTS
 // ========================================

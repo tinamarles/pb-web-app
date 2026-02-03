@@ -37,8 +37,8 @@ export interface PaginatedResponse<T> {
 // +++ Filtering types
 // NEW: Event list filters
 export interface EventListFilters {
-  type?: 'event' | 'league' | 'all';
-  status?: 'upcoming' | 'past' | 'all';
+  type?: "event" | "league" | "all";
+  status?: "upcoming" | "past" | "all";
   page?: string;
   pageSize?: string;
   includeUserParticipation?: boolean;
@@ -151,6 +151,7 @@ export interface Club extends MemberClub {
  * apiResponseType: DjangoClubMembership
  * backend: clubs.ClubMembershipSerializer
  */
+
 export interface ClubMembership {
   id: number;
   club: MemberClub; // required in Django
@@ -351,6 +352,92 @@ export interface AnnouncementUpdate {
 }
 /**
  * =============================
+ * Courts and User Booking
+ * =============================
+ */
+export interface CourtInfo {
+  id: number;
+  name: string;
+  address: Address;
+}
+/**
+ * =============================
+ * User Activities
+ * =============================
+ */
+export interface UserActivities {
+  activities: ActivityItem[];
+}
+
+/**
+ * Single activity item (either session or booking)
+ */
+export type ActivityItem = EventActivity | BookingActivity;
+
+/**
+ * Event activity (league/event session)
+ * Uses minimal Event-like structure with Event type
+ */
+export interface EventActivity {
+  type: typeof C.ActivityType.EVENT;
+
+  // Event/League info (subset of Next.js Event type)
+  event: {
+    id: number;
+    name: string;
+    isEvent: boolean;
+    clubInfo: ClubInfo;
+    captainInfo: UserInfo | null;
+    imageUrl: string;
+    tags?: Tag[]; // has to be optional because currently backend does not send tags!
+    userIsCaptain: boolean;
+    userIsParticipant: boolean;
+  };
+
+  // Session occurrence info
+  session: Session; // NOTE: Session type has slightly changed
+}
+
+/**
+ * Court booking activity
+ */
+export interface BookingActivity {
+  type: typeof C.ActivityType.BOOKING;
+  event: {
+    id: number;
+    bookingType: C.BookingTypeValue;
+    captainInfo: UserInfo; // not null -> has to have a value
+    userIsOrganizer: boolean;
+    courtNumber: string;
+    withPlayers: UserInfo[];
+    externalBookingReference: string;
+    notes: string;
+  };
+  session: Session;
+}
+
+/**
+ * Calendar view modes
+ */
+export type CalendarViewMode = 'grid' | 'daily' | 'weekly';
+
+/**
+ * Week data structure for weekly view
+ * NOTE: Uses ActivityItem directly (no conversion needed!)
+ */
+export interface WeekData {
+  startDate: Date;  // Monday
+  endDate: Date;    // Sunday
+  days: Array<{
+    date: Date;
+    dayOfWeek: C.DayOfWeekValue;  // ✅ Use constant type instead of number!
+    activities: ActivityItem[];
+    hasActivities: boolean;
+  }>;
+}
+
+/**
+ * =============================
  * Club Detail
  * =============================
  */
@@ -404,18 +491,36 @@ export interface ClubInfo {
   name: string;
   logoUrl: string;
 }
+
 /**
  * NextOccurrence - next session info for events/leagues
  * apiResponseType: DjangoNextOccurrence
  * backend: leagues.NextOccurrenceSerializer
  */
-export interface NextOccurrence {
+export interface Session {
+  id: number;
   date: string; // ISO date
   startTime: string; // HH:MM format
   endTime: string; // HH:MM format
-  locationId: number;
-  locationName: string;
-  locationAddress: Address;
+  //locationId: number;
+  //locationName: string;
+  //locationAddress: Address;
+  courtInfo: CourtInfo;
+  participantsCount: number;
+  userAttendanceStatus: C.LeagueAttendanceStatusValue | null;
+  registrationOpen: boolean;
+  maxParticipants: number | null;
+}
+// Type for participant data
+export type Participant = UserInfo & {
+  skillLevel: string | null; // DecimalField, null=True
+};
+
+// API Response type
+export interface SessionParticipants {
+  sessionId: number;
+  participants: Participant[];
+  count: number;
 }
 /**
  * League/Event (unified type)
@@ -424,7 +529,7 @@ export interface NextOccurrence {
  *
  * UPDATED 2026-01-19:
  * - Removed flat nextSession* fields
- * - Added nextOccurrence object
+ * - Added nextSession object
  * - club changed to clubInfo (includes logo)
  */
 export interface League {
@@ -435,7 +540,8 @@ export interface League {
   clubInfo: ClubInfo; // ⚡ CHANGED: Full object with logo
   captainInfo: UserInfo;
   minimumSkillLevel: C.SkillLevelValue | null;
-  nextOccurrence: NextOccurrence | null; // ⚡ NEW: Nested object
+  nextSession: Session | null; // ⚡ NEW: Nested object
+  oneTimeSessionInfo: Session | null;
   maxParticipants: number | null;
   fee: string | null; // decimal field in Django
   allowReserves: boolean;
@@ -445,7 +551,10 @@ export interface League {
   imageUrl: string;
   leagueType: C.LeagueTypeValue;
   recurringDays: C.DayOfWeekValue[];
-  upcomingOccurrences: NextOccurrence[];
+  isRecurring: boolean;
+  upcomingSessions?: Session[];
+  userHasUpcomingSessions?: boolean;
+  userNextSessionId?: number | null;
 
   // Optional user-specific fields (only when requested)
   userIsCaptain?: boolean;

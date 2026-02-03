@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from 'next/headers';
+import { cookies } from "next/headers";
 import { getClubEvents } from "@/lib/actions";
 
 /**
@@ -22,26 +22,23 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ clubId: string }> }
 ) {
-  
   try {
     // ✅ Extract requireAuth from query
     const searchParams = request.nextUrl.searchParams;
-    const requireAuth = searchParams.get('requireAuth') !== 'false'; // Default: true
-    
+    const requireAuth = searchParams.get("requireAuth") !== "false"; // Default: true
+
     // ✅ Only check token if auth required
     if (requireAuth) {
       const cookieStore = await cookies();
-      const accessToken = cookieStore.get('access_token')?.value;
+      const accessToken = cookieStore.get("access_token")?.value;
 
       if (!accessToken) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
     // ✅ STEP 2: AWAIT params (Next.js 15+ requirement)
     const { clubId } = await params;
-    
-    console.log('🔍 Route received clubId:', clubId); // Debug log
-    
+
     // ✅ STEP 3: Extract query params
     const type = searchParams.get("type") || "all";
     const status = searchParams.get("status") || "all";
@@ -73,8 +70,12 @@ export async function GET(
       filters.includeUserParticipation = true;
     }
 
-    console.log('🔍 Calling getClubEvents with:', { clubId, filters, requireAuth }); // Debug log
-    
+    console.log("🔍 Calling getClubEvents with:", {
+      clubId,
+      filters,
+      requireAuth,
+    }); // Debug log
+
     // ✅ STEP 4: Call server action (token already verified!)
     const data = await getClubEvents(clubId, filters, requireAuth);
 

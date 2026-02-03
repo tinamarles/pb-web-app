@@ -69,6 +69,9 @@ import {
   DollarSign,
   Ticket,
   Tickets,
+  Clock4,
+  ChartColumnIncreasing,
+  ClipboardClock,
 
 } from "lucide-react";
 
@@ -123,6 +126,7 @@ const iconMap = {
   subscriptions: DollarSign,
   event: Ticket,
   events: Tickets,
+  skill: ChartColumnIncreasing,
   'account-settings': UserLock,
   'add-notification': BellPlus,
 
@@ -136,6 +140,7 @@ const iconMap = {
   menu: Menu,
   close: X,
   add: Plus,
+  clock: Clock4,
   upload: Upload,
   download: Download,
   edit: Edit,
@@ -144,6 +149,7 @@ const iconMap = {
   signin: LogIn,
   help: MessageCircleQuestionMark,
   register: UserCheck,
+  sessionschedule: ClipboardClock,
 
   // Form & Input Icons
   calendar: Calendar,

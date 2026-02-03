@@ -167,13 +167,6 @@ function SidebarMenuItem({
       href={item.href}
       className={itemClasses}
       aria-disabled={item.disabled}
-      onClick={(e) => {
-        console.log("🖱️ MENUITEM CLICK:", {
-          href: item.href,
-          label: item.label,
-          context: "sidebar",
-        });
-      }}
     >
       {content}
     </Link>
@@ -276,9 +269,6 @@ function DropdownMenuItem({
       href={href}
       className={itemClasses}
       aria-disabled={disabled}
-      onClick={(e) => {
-        console.log("🖱️ MENUITEM CLICK:", { href, label, context: "dropdown" });
-      }}
     >
       {content}
     </Link>

@@ -8,9 +8,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthUserProvider";
 import { MemberClub, MemberUser } from "@/lib/definitions";
-import { Button} from "@/ui";
+import { Button } from "@/ui";
 import { EmptyState } from "../EmptyState";
 import { ClubCard } from "./ClubCard";
+import { toast } from "sonner";
 
 interface ClubListClientProps {
   clubs: MemberClub[];
@@ -29,11 +30,11 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
   // 🎯 Filter clubs in join mode - exclude clubs user is already a member of
   const memberships = isMemberUser ? (user as MemberUser).clubMemberships : [];
   const memberClubIds = memberships.map((m) => m.club.id);
-  
+
   const clubsToList = isJoinMode
     ? clubs.filter((club) => !memberClubIds.includes(club.id))
     : clubs;
-  
+
   const clubsAvailable = clubsToList.length > 0;
 
   // ========================================
@@ -45,6 +46,11 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
     const url = isJoinMode
       ? `/club/${clubId}/home?intent=join`
       : `/club/${clubId}/home`;
+    // If user is not logged in, needs to login
+    // Middleware automatically handles this but user should get a notification as well
+    if (!user) {
+      toast.info("You need to be logged in to view Club Details!");
+    }
     router.push(url);
   };
 
@@ -82,7 +88,6 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
   // ClubList
   // ========================================
   function ClubList() {
-    console.log("clubs:", clubsToList);
     const imageUrl =
       "https://res.cloudinary.com/dvjri35p2/image/upload/v1768051542/ClubListHeader_awq942.jpg";
 
@@ -122,7 +127,6 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
         {/* Show Club Cards */}
         <div className="clubList-container grid-3 xl:grid-cols-4">
           {clubsToList.map((club) => (
-            
             <ClubCard
               key={club.id}
               club={club}

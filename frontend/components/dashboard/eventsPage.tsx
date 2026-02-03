@@ -4,7 +4,7 @@ import { useDashboard } from "@/providers/DashboardProvider";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from 'react';
 import { EventListFilters } from "@/lib/definitions";
-import { EventFilterType, EventFilterStatus } from "@/lib/constants";
+import { EventFilterType, EventFilterStatus, EventCardModes } from "@/lib/constants";
 import { Event } from "@/lib/definitions";
 import { getClubEventsClient } from "@/lib/clientActions";
 import { ClubEventsClient } from "../club/ClubEventsClient";
@@ -78,6 +78,13 @@ export function EventsPage() {
     // ========================================
 
     return (
-        <ClubEventsClient events={events} joinMode={joinMode} gridLimit={true}/>
+        <ClubEventsClient 
+          events={events} 
+          joinMode={joinMode} 
+          gridLimit={true}
+          cardMode={EventCardModes.CLUB_EVENTS}
+          showHeader={false}
+          showActions={true}
+        />
     )
 }

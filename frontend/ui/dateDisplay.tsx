@@ -12,10 +12,12 @@ export interface DateDisplayProps {
   date: string | null | undefined;
   format?:
     | "short"
+    | "short-noYear"
     | "long"
     | "iso"
     | "numeric"
     | "weekday-short"
+    | "weekday-short-noYear"
     | "weekday-long";
   nullText?: string;
   className?: string;
@@ -76,6 +78,13 @@ function formatDate(
         day: "numeric",
       });
 
+    case 'short-noYear':
+      // Dec 25 (no year)
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+
     case "long":
       // December 25, 2024
       return date.toLocaleDateString("en-US", {
@@ -103,6 +112,14 @@ function formatDate(
         year: "numeric",
         month: "short",
         day: "numeric",
+      });
+
+    case "weekday-short-noYear":
+      // Wed, Dec 25, 2024
+      return date.toLocaleDateString("en-US", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
       });
 
     case "weekday-long":

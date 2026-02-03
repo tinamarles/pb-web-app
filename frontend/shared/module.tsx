@@ -98,7 +98,8 @@ export const Module = memo(function Module({
 
   // 3. Prep headerProps with JSON data
   const prepHeaderProps = (): HeaderProps => {
-    const moduleData = getModuleData(type);
+    // If user is NOT logged in only load 'landing' module 
+    const moduleData = user ? getModuleData(type) : getModuleData('landing');
 
     // Convert JSON navigation to LinkItem[] format (with submenu support)
     const links: LinkItem[] = (moduleData.navigation || []).map((nav) => ({

@@ -2,22 +2,35 @@
 import { EmptyState } from "@/components";
 import { useRouter } from "next/navigation";
 import { MembershipStatusBadge } from "@/components";
-import { ExpiryDate, PeriodDate, Button } from "@/ui";
+import { ExpiryDate, PeriodDate, Button, DateDisplay } from "@/ui";
 import { isDateToday, isRegistrationOpen } from "@/lib/dateUtils";
 import { useDashboard } from "@/providers/DashboardProvider";
 import { useAuth } from "@/providers/AuthUserProvider";
-import { useState, useEffect } from 'react';
-import { NotificationType, EventCardModes, EventAction, EventActionType } from "@/lib/constants";
+import { useState, useEffect } from "react";
+import {
+  NotificationType,
+  EventCardModes,
+  EventAction,
+  EventActionType,
+} from "@/lib/constants";
 import { PendingInvitations } from "./PendingInvitations";
 import { Notification, Announcement, Event } from "@/lib/definitions";
 import { getClubEventsClient } from "@/lib/clientActions";
 import { EventListFilters } from "@/lib/definitions";
-import { EventFilterType, EventFilterStatus } from "@/lib/constants";
+import {
+  EventFilterType,
+  EventFilterStatus,
+  SessionAction,
+  SessionActionType,
+} from "@/lib/constants";
+import { SessionCard, SessionCardProps } from "../event/SessionCard";
+import { EventCarousel } from "../event/EventCarousel";
+import { getTodayISO } from "@/lib/dateUtils";
 
 import Image from "next/image";
+import { EventCard } from "../event/EventCard";
 
 export function OverviewPage() {
-
   // ========================================
   // STATE & DATA
   // ========================================
@@ -45,10 +58,12 @@ export function OverviewPage() {
   const hasInvitations = eventInvitations.length > 0;
 
   const clubAnnouncements = announcementsList.filter(
-    (n) => n.notificationType === NotificationType.CLUB_ANNOUNCEMENT && n.club?.id === currentMembership?.club.id && n.isPinned
+    (n) =>
+      n.notificationType === NotificationType.CLUB_ANNOUNCEMENT &&
+      n.club?.id === currentMembership?.club.id &&
+      n.isPinned
     // No isRead needed - announcements don't have it!
   );
-  console.log('Announcements: ', clubAnnouncements);
 
   const hasAnnouncements = clubAnnouncements.length > 0;
 
@@ -59,40 +74,39 @@ export function OverviewPage() {
         setLoading(false);
         return; // ← Exit early, safe!
       }
-     
+
       try {
         // Returns PaginatedResponse<League>
         // build filters
         const filters: EventListFilters = {
-            type: EventFilterType.EVENT,
-            status: EventFilterStatus.UPCOMING,
-            page: '1',
-            pageSize: '4',
-            includeUserParticipation: true
-          }
+          type: EventFilterType.ALL,
+          status: EventFilterStatus.UPCOMING,
+          page: "1",
+          pageSize: "10",
+          includeUserParticipation: true,
+        };
         const response = await getClubEventsClient(
           currentMembership.club.id, // No error!
           filters
         );
-        
-        setEvents(response.results);  // ← Extract results array
+
+        setEvents(response.results); // ← Extract results array
         setTotalCount(response.count); // ← Total count from pagination
-        console.log('Results: ', response.results);
+        console.log("Results: ", response.results);
       } catch (error) {
         // Error was thrown! Parse the error message
-        if (error instanceof Error && error.message.startsWith('[401]')) {
+        if (error instanceof Error && error.message.startsWith("[401]")) {
           // redirect
-          router.push('/');
+          router.push("/login");
         } else {
           // other error
-          console.error('Failed to fetch:', error);
+          console.error("Failed to fetch:", error);
         }
-         
       } finally {
         setLoading(false);
       }
     }
-    
+
     fetchData();
   }, [currentMembership?.club.id, router]); // Empty array = fetch once on mount
 
@@ -101,15 +115,17 @@ export function OverviewPage() {
   if (!currentMembership) return <div>No club selected</div>;
 
   const hasUpcomingEvents = events.length > 0;
-  
+
   // TODO:
   // - get club statistics for user
 
   const todaysEvents = events.filter(
-    (ev) => isDateToday(ev.nextOccurrence?.date) && (ev.userIsParticipant || ev.userIsCaptain)
-  )
+    (ev) =>
+      isDateToday(ev.nextSession?.date) &&
+      (ev.userIsParticipant || ev.userIsCaptain)
+  );
   const hasTodaysEvents = todaysEvents.length > 0;
-  
+
   // ========================================
   // EVENT HANDLERS
   // ========================================
@@ -126,12 +142,40 @@ export function OverviewPage() {
       case EventAction.VIEW_DETAILS:
         router.push(`/event/${event.id}`);
         break;
+      case EventAction.MANAGE_ATTENDEES:
+        // for captains: to go deal with this session's attendees
+        alert(
+          `User wants to manage attendees for: ${event.name} and date: ${event.nextSession?.date}`
+        );
+      // router.push(`admin/events/${event.id}/${event.nextSession?.id}/attendees`)
     }
-  }
+  };
+  const handleTodaysEventAction = (
+    action: SessionActionType,
+    sessionId: number
+  ) => {
+    switch (action) {
+      case SessionAction.CHECK_IN:
+        // this JOIN function is for the user to join an Event session
+        alert("Captain wants to check-in this Event Session");
+        break;
+      case SessionAction.CANCEL:
+        // this JOIN function is for the user to join an Event session
+        alert("User wants to Cancel this Event/League Session");
+        break;
+      case SessionAction.MANAGE_ATTENDEES:
+        alert("Captain wants to go to manage the attendees");
+        break;
+      case SessionAction.MY_MATCHES:
+        alert("User wants to see his matches");
+        break;
+    }
+  };
 
   // ========================================
-  // Render Club Announcement
+  // Components and functions
   // ========================================
+
   const ClubAnnouncement = () => {
     //const pinnedClubAnnouncement = clubAnnouncements.filter(
     //  (n) => n.club?.id === currentMembership.club.id && n.isPinned
@@ -171,17 +215,47 @@ export function OverviewPage() {
     );
   };
 
+  const RenderTodaysSessionCards = () => {
+    return todaysEvents.map((todaySession) => {
+      if (!todaySession.nextSession) {
+        return;
+      }
+      return (
+        <SessionCard
+          key={todaySession.nextSession?.id}
+          isEvent={todaySession.isEvent}
+          variant="today"
+          session={todaySession.nextSession}
+          userIsParticipant={todaySession.userIsParticipant || true}
+          userIsCaptain={todaySession.userIsCaptain}
+          eventName={todaySession.name}
+          onAction={handleTodaysEventAction}
+        />
+      );
+    });
+  };
+
+  const RenderUpcomingEventCards = () => (
+    <EventCarousel events={events} onAction={handleEventAction} />
+  );
+
+  // ========================================
+  // RENDER
+  // ========================================
   return (
-    <div className="">
+    <>
       {/* Hero Section */}
       <div className="flex flex-col lg:flex-row bg-secondary">
         {/* Left column: Todays activities */}
         <div className="flex flex-col flex-1 flex-start p-md">
           <p className="title-md emphasized text-on-secondary mb-md">
-            My Activities Today
+            My Activities Today -{" "}
+            <DateDisplay date={getTodayISO()} format="weekday-short-noYear" />
           </p>
           {hasTodaysEvents ? (
-            <p className="text-on-secondary">Event: {todaysEvents[0].name}</p>
+            <div className="@container/card flex flex-col gap-sm">
+              <RenderTodaysSessionCards />
+            </div>
           ) : (
             <EmptyState
               icon="Calendar"
@@ -196,8 +270,8 @@ export function OverviewPage() {
         {/* Right Column */}
         <div className="flex flex-col flex-1 flex-start p-md gap-md">
           {/* Club Announcement */}
-          <div className="">
-            <p className="title-md emphasized text-on-secondary mb-md">
+          <>
+            <p className="title-md emphasized text-on-secondary">
               Latest Club Announcement
             </p>
             {hasAnnouncements ? (
@@ -210,7 +284,7 @@ export function OverviewPage() {
                 className="text-on-surface bg-surface-container-lowest rounded-md"
               />
             )}
-          </div>
+          </>
           {/* Membership Information */}
           {currentMembership && (
             <div className="flex flex-col gap-sm bg-surface-container-lowest rounded-md p-sm">
@@ -277,7 +351,7 @@ export function OverviewPage() {
                   <Button
                     variant="outlined"
                     size="sm"
-                    label="Edit Membership"
+                    label="Membership"
                     icon="edit"
                     href={`/admin/members/${currentMembership.id}`}
                   />
@@ -308,8 +382,20 @@ export function OverviewPage() {
       </div>
       {/* Action Buttons */}
       <div className="flex gap-md p-md px-0">
-        <Button variant="default" size="sm" icon="events" label="All Events" />
-        <Button variant="default" size="sm" icon="calendar" label="My Activities" />
+        <Button 
+          variant="default" 
+          size="sm" 
+          icon="events" 
+          label="All Events" 
+          href="/event/my-clubs"
+        />
+        <Button
+          variant="default"
+          size="sm"
+          icon="calendar"
+          label="My Activities"
+          href="/event/my-activities"
+        />
         <Button variant="default" size="sm" icon="add" label="Event" />
       </div>
       {/* Pending Invitations */}
@@ -349,36 +435,18 @@ export function OverviewPage() {
         </div>
       </div>
       {/* Upcoming Events */}
-      <div className="bg-background">
-        {/* Content container */}
-        <div className="flex flex-col p-md gap-sm">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <span className="title-md emphasized text-on-surface">
-              Upcoming Events
-            </span>
-            <Button
-              variant="highlighted"
-              size="sm"
-              href={`/club/${currentMembership.club.id}/events/?intent=join`}
-              label={`View All (${events.length})`}
-            />
-          </div>
-          {/* List container */}
-          <div className="">
-            {hasUpcomingEvents ? (
-              <p className='text-primary'> Events to show: {events.length}</p>
-            ) : (
-              <EmptyState
-                icon="events"
-                title="No upcoming events yet"
-                description="Check back later!"
-                className="text-on-surface bg-surface-container-lowest rounded-md"
-              />
-            )}
-          </div>
+      {hasUpcomingEvents ? (
+        <div className="club-details-bottomSection p-0 pt-md">
+          <RenderUpcomingEventCards />
         </div>
-      </div>
-    </div>
+      ) : (
+        <EmptyState
+          icon="events"
+          title="No upcoming events yet"
+          description="Check back later!"
+          className="text-on-surface bg-surface-container-lowest rounded-md"
+        />
+      )}
+    </>
   );
 }

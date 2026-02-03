@@ -2,7 +2,7 @@ import { PageProps } from "@/lib/definitions";
 import { Metadata } from "next";
 import { getClubEvents } from "@/lib/actions";
 import { EventListFilters } from "@/lib/definitions";
-import { EventFilterType, EventFilterStatus } from "@/lib/constants";
+import { EventFilterType, EventFilterStatus, EventCardModes } from "@/lib/constants";
 import { ClubEventsClient } from "@/components/club/ClubEventsClient";
 
 export const metadata: Metadata = {
@@ -44,7 +44,14 @@ export default async function ClubEventsPage({
   
   return (
     <div className="flex flex-col gap-md">
-      <ClubEventsClient events={events} joinMode={isJoinMode} />
+      <ClubEventsClient 
+        events={events} 
+        joinMode={isJoinMode} 
+        cardMode={EventCardModes.CLUB_EVENTS}
+        gridLimit={false}
+        showHeader={false}
+        showActions={true}
+      />
     </div>
   );
 }

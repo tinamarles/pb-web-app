@@ -11,20 +11,22 @@
 
 // NEW: Event/League filter constants
 export const EventFilterType = {
-  ALL: 'all',
-  EVENT: 'event',
-  LEAGUE: 'league',
+  ALL: "all",
+  EVENT: "event",
+  LEAGUE: "league",
 } as const;
 
-export type EventFilterTypeValue = typeof EventFilterType[keyof typeof EventFilterType];
+export type EventFilterTypeValue =
+  (typeof EventFilterType)[keyof typeof EventFilterType];
 
 export const EventFilterStatus = {
-  ALL: 'all',
-  UPCOMING: 'upcoming',
-  PAST: 'past',
+  ALL: "all",
+  UPCOMING: "upcoming",
+  PAST: "past",
 } as const;
 
-export type EventFilterStatusValue = typeof EventFilterStatus[keyof typeof EventFilterStatus];
+export type EventFilterStatusValue =
+  (typeof EventFilterStatus)[keyof typeof EventFilterStatus];
 
 // Helper functions for selects/dropdowns
 export function getEventFilterTypeOptions(): EventFilterTypeValue[] {
@@ -32,7 +34,11 @@ export function getEventFilterTypeOptions(): EventFilterTypeValue[] {
 }
 
 export function getEventFilterStatusOptions(): EventFilterStatusValue[] {
-  return [EventFilterStatus.ALL, EventFilterStatus.UPCOMING, EventFilterStatus.PAST];
+  return [
+    EventFilterStatus.ALL,
+    EventFilterStatus.UPCOMING,
+    EventFilterStatus.PAST,
+  ];
 }
 
 // =====================================================
@@ -40,35 +46,66 @@ export function getEventFilterStatusOptions(): EventFilterStatusValue[] {
 // =====================================================
 
 export const EventAction = {
-  VIEW_DETAILS: 'VIEW_DETAILS',
-  JOIN: 'JOIN',
-  ACCEPT: 'ACCEPT',
-  DECLINE: 'DECLINE',
-  CHECK_IN: 'CHECK_IN',
-  MANAGE_ATTENDEES: 'MANAGE_ATTENDEES',
-  MY_MATCHES: 'MY_MATCHES',
-  MESSAGE_HOST: 'MESSAGE_HOST',
-  CANCEL: 'CANCEL',
+  VIEW_DETAILS: "VIEW_DETAILS",
+  JOIN: "JOIN",
+  ACCEPT: "ACCEPT",
+  DECLINE: "DECLINE",
+  CHECK_IN: "CHECK_IN",
+  MANAGE_ATTENDEES: "MANAGE_ATTENDEES",
+  MY_MATCHES: "MY_MATCHES",
+  MESSAGE_HOST: "MESSAGE_HOST",
+  CANCEL: "CANCEL",
+  SESSION_SCHEDULE: "SESSION_SCHEDULE",
 } as const;
 
-export type EventActionType = typeof EventAction[keyof typeof EventAction];
+export type EventActionType = (typeof EventAction)[keyof typeof EventAction];
+
+export const SessionAction = {
+  JOIN: "JOIN",
+  PLAYERS: "PLAYERS",
+  CANCEL: "CANCEL",
+  CHECK_IN: "CHECK_IN",
+  MANAGE_ATTENDEES: "MANAGE_ATTENDEES",
+  MY_MATCHES: "MY_MATCHES",
+  SESSION_SCHEDULE: "SESSION_SCHEDULE",
+} as const;
+
+export type SessionActionType =
+  (typeof SessionAction)[keyof typeof SessionAction];
 
 export const EventCardModes = {
-  DASHBOARD_TODAY: 'dashboard-today',
-  DASHBOARD_UPCOMING: 'dashboard-upcoming',
-  DASHBOARD_PENDING: 'dashboard-pending',
-  CLUB_HOME: 'club-home',
-  CLUB_EVENTS: 'club-events',
-  CLUB_EVENTS_JOIN: 'club-events-join',
-  ALL_EVENTS: 'all-events',
-  BROWSE: 'browse',
+  DASHBOARD_TODAY: "dashboard-today",
+  DASHBOARD_UPCOMING: "dashboard-upcoming",
+  DASHBOARD_PENDING: "dashboard-pending",
+  CLUB_HOME: "club-home",
+  CLUB_EVENTS: "club-events",
+  MY_CLUB_EVENTS: "my-club-events",
+  CLUB_EVENTS_JOIN: "club-events-join",
+  ALL_EVENTS: "all-events",
+  BROWSE: "browse",
+  EVENT_DETAIL: "event-detail",
 } as const;
 
-export type EventCardModeType = typeof EventCardModes[keyof typeof EventCardModes];
+export type EventCardModeType =
+  (typeof EventCardModes)[keyof typeof EventCardModes];
 
 // Helper
 export const isDashboardMode = (mode: EventCardModeType): boolean => {
-    return mode.startsWith('dashboard') || mode === 'club-events';
+  return mode.startsWith("dashboard") || mode === "club-events";
+};
+
+export const ActivityType = {
+  EVENT: "event",
+  BOOKING: "booking",
+} as const;
+
+export type ActivityTypeValue =
+  (typeof ActivityType)[keyof typeof ActivityType];
+
+// Labels for display (if needed)
+export const ActivityTypeLabels: Record<ActivityTypeValue, string> = {
+  [ActivityType.EVENT]: "Event",
+  [ActivityType.BOOKING]: "Booking",
 };
 
 // =====================================================
@@ -170,7 +207,7 @@ export const SkillLevel = {
 export type SkillLevelValue = (typeof SkillLevel)[keyof typeof SkillLevel];
 
 export const SkillLevelLabels: Record<SkillLevelValue, string> = {
-  [SkillLevel.OPEN]: "Open (Not Assessed)",
+  [SkillLevel.OPEN]: "All Levels",
   [SkillLevel.INTERMEDIATE_PLUS]: "3.5+ (Advanced Intermediate)",
   [SkillLevel.ADVANCED_PLUS]: "4.0+ (Advanced)",
 };
@@ -394,11 +431,60 @@ export const DayOfWeekValues: Record<string, DayOfWeekValue> = {
   Saturday: DayOfWeek.SATURDAY,
   Sunday: DayOfWeek.SUNDAY,
 };
+/** ========================================
+ * DAY OF WEEK CONVERSION HELPERS
+ * ========================================
+ * 
+ * CRITICAL: JavaScript's Date.getDay() uses different numbering!
+ * - JavaScript .getDay(): 0=Sunday, 1=Monday, 2=Tuesday, ..., 6=Saturday
+ * - Our DayOfWeek constant: 0=Monday, 1=Tuesday, ..., 6=Sunday
+ * 
+ * WHY: Our system follows ISO 8601 / European standard (Monday = start of week)
+ *      Future: Will support user preference for week start day
+ * 
+ * ALWAYS use these helpers when working with JavaScript Date objects!
+ */
 
+/**
+ * Convert JavaScript Date.getDay() to our DayOfWeek constant
+ * @param date - JavaScript Date object
+ * @returns DayOfWeekValue (0=Monday, 1=Tuesday, ..., 6=Sunday)
+ * 
+ * @example
+ * const monday = new Date('2026-02-09');  // Monday
+ * const ourDay = jsDateToDayOfWeek(monday);  // Returns 0 (DayOfWeek.MONDAY)
+ */
+export function jsDateToDayOfWeek(date: Date): DayOfWeekValue {
+  const jsDay = date.getDay();  // 0=Sun, 1=Mon, 2=Tue, ..., 6=Sat
+  
+  // Convert: JS Sunday (0) → Our Sunday (6)
+  if (jsDay === 0) return DayOfWeek.SUNDAY;
+  
+  // Convert: JS Mon-Sat (1-6) → Our Mon-Sat (0-5)
+  return (jsDay - 1) as DayOfWeekValue;
+}
+
+/**
+ * Convert our DayOfWeek constant to JavaScript Date.getDay() format
+ * @param dayOfWeek - Our DayOfWeekValue (0=Monday, ..., 6=Sunday)
+ * @returns JavaScript day number (0=Sunday, 1=Monday, ..., 6=Saturday)
+ * 
+ * @example
+ * const jsDay = dayOfWeekToJsDay(DayOfWeek.MONDAY);  // Returns 1
+ * const date = new Date();
+ * date.setDate(date.getDate() + (jsDay - date.getDay()));  // Jump to Monday
+ */
+export function dayOfWeekToJsDay(dayOfWeek: DayOfWeekValue): number {
+  // Convert: Our Sunday (6) → JS Sunday (0)
+  if (dayOfWeek === DayOfWeek.SUNDAY) return 0;
+  
+  // Convert: Our Mon-Sat (0-5) → JS Mon-Sat (1-6)
+  return dayOfWeek + 1;
+}
 /**
  * Get array of all days with labels
  * Used for iterating in UI components (e.g., day indicators)
- * 
+ *
  * @returns Array of {value, label, shortLabel} in Mon-Sun order
  */
 export function getDayOfWeekOptions(): Array<{
@@ -407,15 +493,43 @@ export function getDayOfWeekOptions(): Array<{
   shortLabel: string;
 }> {
   return [
-    { value: DayOfWeek.MONDAY, label: DayOfWeekLabels[DayOfWeek.MONDAY], shortLabel: DayOfWeekShort[DayOfWeek.MONDAY] },
-    { value: DayOfWeek.TUESDAY, label: DayOfWeekLabels[DayOfWeek.TUESDAY], shortLabel: DayOfWeekShort[DayOfWeek.TUESDAY] },
-    { value: DayOfWeek.WEDNESDAY, label: DayOfWeekLabels[DayOfWeek.WEDNESDAY], shortLabel: DayOfWeekShort[DayOfWeek.WEDNESDAY] },
-    { value: DayOfWeek.THURSDAY, label: DayOfWeekLabels[DayOfWeek.THURSDAY], shortLabel: DayOfWeekShort[DayOfWeek.THURSDAY] },
-    { value: DayOfWeek.FRIDAY, label: DayOfWeekLabels[DayOfWeek.FRIDAY], shortLabel: DayOfWeekShort[DayOfWeek.FRIDAY] },
-    { value: DayOfWeek.SATURDAY, label: DayOfWeekLabels[DayOfWeek.SATURDAY], shortLabel: DayOfWeekShort[DayOfWeek.SATURDAY] },
-    { value: DayOfWeek.SUNDAY, label: DayOfWeekLabels[DayOfWeek.SUNDAY], shortLabel: DayOfWeekShort[DayOfWeek.SUNDAY] },
+    {
+      value: DayOfWeek.MONDAY,
+      label: DayOfWeekLabels[DayOfWeek.MONDAY],
+      shortLabel: DayOfWeekShort[DayOfWeek.MONDAY],
+    },
+    {
+      value: DayOfWeek.TUESDAY,
+      label: DayOfWeekLabels[DayOfWeek.TUESDAY],
+      shortLabel: DayOfWeekShort[DayOfWeek.TUESDAY],
+    },
+    {
+      value: DayOfWeek.WEDNESDAY,
+      label: DayOfWeekLabels[DayOfWeek.WEDNESDAY],
+      shortLabel: DayOfWeekShort[DayOfWeek.WEDNESDAY],
+    },
+    {
+      value: DayOfWeek.THURSDAY,
+      label: DayOfWeekLabels[DayOfWeek.THURSDAY],
+      shortLabel: DayOfWeekShort[DayOfWeek.THURSDAY],
+    },
+    {
+      value: DayOfWeek.FRIDAY,
+      label: DayOfWeekLabels[DayOfWeek.FRIDAY],
+      shortLabel: DayOfWeekShort[DayOfWeek.FRIDAY],
+    },
+    {
+      value: DayOfWeek.SATURDAY,
+      label: DayOfWeekLabels[DayOfWeek.SATURDAY],
+      shortLabel: DayOfWeekShort[DayOfWeek.SATURDAY],
+    },
+    {
+      value: DayOfWeek.SUNDAY,
+      label: DayOfWeekLabels[DayOfWeek.SUNDAY],
+      shortLabel: DayOfWeekShort[DayOfWeek.SUNDAY],
+    },
   ];
-};
+}
 /**
  * Recurrence Type
  * Maps to Django: public.constants.RecurrenceType
@@ -440,7 +554,7 @@ export const RecurrenceTypeLabels: Record<RecurrenceTypeValue, string> = {
 // Reverse mapping: label → value (for form submissions)
 export const RecurrenceTypeValues: Record<string, RecurrenceTypeValue> = {
   "One-time": RecurrenceType.ONCE,
-  "Weekly": RecurrenceType.WEEKLY,
+  Weekly: RecurrenceType.WEEKLY,
   "Every other week": RecurrenceType.BI_WEEKLY,
   "Once a month": RecurrenceType.MONTHLY,
 };
@@ -784,8 +898,6 @@ export const NotificationType = {
   SYSTEM_UPDATE: 81,
 } as const;
 
-
-
 export type NotificationTypeValue =
   (typeof NotificationType)[keyof typeof NotificationType];
 
@@ -1010,7 +1122,9 @@ export const BadgeVariantSeverity: Record<BadgeVariant, number> = {
 /**
  * Get label for ClubType value
  */
-export function getClubTypeLabel(value: ClubTypeValue | null | undefined): string {
+export function getClubTypeLabel(
+  value: ClubTypeValue | null | undefined
+): string {
   if (value === null || value === undefined) return "Not specified";
   return ClubTypeLabels[value] || "Unknown";
 }
@@ -1019,10 +1133,7 @@ export function getClubTypeLabel(value: ClubTypeValue | null | undefined): strin
  * Usage: <FormField variant="select" options={getClubTypeOptions()} />
  */
 export function getClubTypeOptions(): string[] {
-  return [
-    ClubTypeLabels[ClubType.PERSONAL],
-    ClubTypeLabels[ClubType.OFFICIAL],
-  ];
+  return [ClubTypeLabels[ClubType.PERSONAL], ClubTypeLabels[ClubType.OFFICIAL]];
 }
 /**
  * Get label for gender value
@@ -1206,13 +1317,10 @@ export const MembershipStatusBadgeVariant: Record<
   [MembershipStatus.EXPIRED]: "error",
 };
 
-export const SkillLevelBadgeVariant: Record<
-  SkillLevelValue,
-  BadgeVariant
-> = {
+export const SkillLevelBadgeVariant: Record<SkillLevelValue, BadgeVariant> = {
   [SkillLevel.OPEN]: "default",
   [SkillLevel.INTERMEDIATE_PLUS]: "info",
-  [SkillLevel.ADVANCED_PLUS]: "tertiary"
+  [SkillLevel.ADVANCED_PLUS]: "tertiary",
 };
 
 /**

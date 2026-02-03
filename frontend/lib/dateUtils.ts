@@ -329,3 +329,9 @@ export function isWithinDays(
 
   return daysUntil >= 0 && daysUntil <= days;
 }
+
+export function getTodayISO(): string {
+  const today = new Date();
+  return today.toISOString().slice(0, 10);
+  // alt: today.toISOString().split('T')[0];
+}
