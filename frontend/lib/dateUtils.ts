@@ -7,18 +7,20 @@
 // Previous: All functions used new Date(dateString) - broke for users in timezones behind UTC
 // ========================
 
+import { toISODate } from "./calendarUtils";
+
 /**
  * 🔧 HELPER: Parse "YYYY-MM-DD" string in LOCAL timezone (not UTC!)
- * 
+ *
  * @param dateString - Date string in "YYYY-MM-DD" format
  * @returns Date object in local timezone
- * 
+ *
  * ⚠️ CRITICAL: new Date("2026-01-20") treats it as UTC midnight!
  *    - In EST (UTC-5): "2026-01-20" becomes 2026-01-19 at 7pm!
  *    - This helper parses it as 2026-01-20 midnight in YOUR timezone
  */
 function parseLocalDate(dateString: string): Date {
-  const [year, month, day] = dateString.split('-').map(Number);
+  const [year, month, day] = dateString.split("-").map(Number);
   // month is 0-indexed in JavaScript Date!
   return new Date(year, month - 1, day);
 }
@@ -41,17 +43,17 @@ export function formatTime(time: string | null | undefined): string {
 
   try {
     // Parse time string (HH:MM:SS or HH:MM)
-    const [hours, minutes] = time.split(':').map(Number);
-    
+    const [hours, minutes] = time.split(":").map(Number);
+
     // Create a date object with arbitrary date (we only care about time)
     const date = new Date();
     date.setHours(hours, minutes, 0, 0);
-    
+
     // Format to 12-hour time with AM/PM
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   } catch {
     return "Invalid Time";
@@ -72,7 +74,7 @@ export function formatTime(time: string | null | undefined): string {
  */
 export function formatTimeRange(
   startTime: string | null | undefined,
-  endTime: string | null | undefined
+  endTime: string | null | undefined,
 ): string {
   if (!startTime || !endTime) {
     return "N/A";
@@ -80,7 +82,7 @@ export function formatTimeRange(
 
   const start = formatTime(startTime);
   const end = formatTime(endTime);
-  
+
   if (start === "Invalid Time" || end === "Invalid Time") {
     return "Invalid Time";
   }
@@ -101,7 +103,7 @@ export function formatTimeRange(
  */
 export function formatDate(
   date: string | null | undefined,
-  format: "short" | "long" = "short"
+  format: "short" | "long" = "short",
 ): string {
   if (!date) {
     return "N/A";
@@ -138,7 +140,7 @@ export function formatDate(
  */
 export function isWithinDateRange(
   startDate: string | null | undefined,
-  endDate: string | null | undefined
+  endDate: string | null | undefined,
 ): boolean {
   // If either date is missing, range is invalid
   if (!startDate || !endDate) {
@@ -159,6 +161,22 @@ export function isWithinDateRange(
   return today >= start && today <= end;
 }
 
+export function isTodayWithinDateRange(
+  startDate: Date,
+  endDate: Date,
+): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  return today >= start && today <= end;
+}
+
 /**
  * Alias for isWithinDateRange - more semantic for registration periods
  *
@@ -169,7 +187,7 @@ export function isWithinDateRange(
  */
 export function isRegistrationOpen(
   openDate: string | null | undefined,
-  closeDate: string | null | undefined
+  closeDate: string | null | undefined,
 ): boolean {
   return isWithinDateRange(openDate, closeDate);
 }
@@ -203,14 +221,14 @@ export function isPastDate(date: string | null | undefined): boolean {
 
 /**
  * Check if dateToCheck is BEFORE dateToCheckAgainst
- * 
+ *
  * @param dateToCheck - First date
  * @param dateToCheckAgainst - Second date
  * @returns true if dateToCheck < dateToCheckAgainst
  */
 export function isPastDateCheck(
   dateToCheck: string | null | undefined,
-  dateToCheckAgainst: string | null | undefined
+  dateToCheckAgainst: string | null | undefined,
 ): boolean {
   if (!dateToCheck || !dateToCheckAgainst) {
     return false;
@@ -275,6 +293,17 @@ export function isDateToday(date: string | null | undefined): boolean {
 
   return checkDate.getTime() === today.getTime();
 }
+/**
+ * Check if two dates are the same
+ *
+ * @param date1 - first Date
+ * @param date2 - second Date
+ * @returns true if both dates are the same, false otherwise
+ *
+ */
+export function isSameDay(date1: Date, date2: Date): boolean {
+  return toISODate(date1) === toISODate(date2);
+}
 
 /**
  * Get number of days between today and a date
@@ -320,7 +349,7 @@ export function getDaysUntil(date: string | null | undefined): number | null {
  */
 export function isWithinDays(
   date: string | null | undefined,
-  days: number
+  days: number,
 ): boolean {
   const daysUntil = getDaysUntil(date);
   if (daysUntil === null) {
@@ -334,4 +363,29 @@ export function getTodayISO(): string {
   const today = new Date();
   return today.toISOString().slice(0, 10);
   // alt: today.toISOString().split('T')[0];
+}
+
+/**
+ * Convert Django DateField string to JavaScript Date object
+ *
+ * Django DateField sends: "2026-02-09" (date-only, no timezone)
+ * JavaScript interprets this as UTC midnight, causing timezone shifts!
+ *
+ * This function appends T00:00:00 to force LOCAL midnight interpretation.
+ *
+ * @param dateStr - Date string from Django DateField (format: "YYYY-MM-DD")
+ * @returns Date object at local midnight (not UTC!)
+ */
+export function dateFromDjango(dateStr: string): Date {
+  return new Date(dateStr + "T00:00:00");
+}
+
+/**
+ * Convert JavaScript Date back to Django DateField format
+ *
+ * @param date - JavaScript Date object
+ * @returns ISO date string (format: "YYYY-MM-DD")
+ */
+export function dateToDjango(date: Date): string {
+  return date.toISOString().split("T")[0];
 }
