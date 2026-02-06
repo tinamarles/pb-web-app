@@ -19,7 +19,7 @@ export default async function MyActivitiesPage({
   
   return (
     <Module type="default">
-      <div className="page__content">
+      <div className="page__content max-w-full w-full">
         <MyActivitiesClient activities={activities} /> 
       </div>
     </Module>
