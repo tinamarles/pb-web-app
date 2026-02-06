@@ -472,18 +472,22 @@ class LeagueActivitySerializer(CaptainInfoMixin, serializers.ModelSerializer):
     # User participation flags (computed in view via .annotate())
     user_is_captain = serializers.SerializerMethodField()
     user_is_participant = serializers.SerializerMethodField()
+
+    recurring_days = serializers.SerializerMethodField()
     
     class Meta:
         model = League
         fields = [
             'id',
             'name',
-            'is_event',
+            'fee',
             'club_info',
             'captain_info',
             'image_url',
             'user_is_captain',
             'user_is_participant',
+            'minimum_skill_level',
+            'recurring_days',
         ]
 
     def get_user_is_captain(self, obj):
@@ -500,7 +504,22 @@ class LeagueActivitySerializer(CaptainInfoMixin, serializers.ModelSerializer):
         from clubs.serializers import ClubInfoSerializer
         return ClubInfoSerializer(obj.club).data
     
-    
+    def get_recurring_days(self, obj: League) -> list[int]:
+        from public.constants import RecurrenceType
+        """
+        Get list of days this league/event occurs on.
+        
+        Returns: [0, 2, 4] for Mon, Wed, Fri
+        Uses DayOfWeek constants: MON=0, TUE=1, WED=2, THU=3, FRI=4, SAT=5, SUN=6
+        """
+        # Get days from RECURRING sessions only (exclude one-time sessions)
+        # ✅ CRITICAL: Filter by recurrence_type, NOT session count!
+        recurring_sessions = obj.sessions.exclude(recurrence_type=RecurrenceType.ONCE)
+        
+        # Get unique days from recurring sessions
+        # ✅ CRITICAL: Field is 'day_of_week' not 'day'!
+        days = recurring_sessions.values_list('day_of_week', flat=True).distinct().order_by('day_of_week')
+        return list(days)
     
 class SessionParticipantsSerializer(serializers.Serializer):
     """

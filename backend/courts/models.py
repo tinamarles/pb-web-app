@@ -211,6 +211,15 @@ class UserCourtBooking(models.Model):
         blank=True,
         help_text='Booking confirmation number from external site (if any)'
     )
+
+    # Full Fee - if a user has a subscription with a discount, the actual fee will be calculated based on that
+    booking_fee = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Total Booking Fee per session. NULL = free.'
+    )
     
     # Notes
     notes = models.TextField(

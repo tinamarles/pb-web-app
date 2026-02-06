@@ -81,6 +81,7 @@ class UserCourtBookingSerializer(serializers.ModelSerializer):
             'booking_type',  # Integer choice field
             'with_players',  # List of invited users
             'external_booking_reference',
+            'booking_fee',
             'notes',
             'send_reminder',
             'reminder_minutes_before',
