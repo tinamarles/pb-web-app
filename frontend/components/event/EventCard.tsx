@@ -4,6 +4,7 @@ import {
   Badge,
   BadgeVariant,
   Button,
+  ButtonProps,
   Avatar,
   Icon,
   DateDisplay,
@@ -34,7 +35,7 @@ export interface EventCardProps {
   onAction: (
     action: EventActionType,
     event: Event,
-    e?: React.MouseEvent
+    e?: React.MouseEvent,
   ) => void;
 }
 
@@ -72,10 +73,10 @@ export function EventCard({
   const spotsText = isFilled
     ? "all spots filled"
     : spotsLeft === null
-    ? null
-    : spotsLeft === 1
-    ? "1 spot available"
-    : `${spotsLeft} spots available`;
+      ? null
+      : spotsLeft === 1
+        ? "1 spot available"
+        : `${spotsLeft} spots available`;
 
   // Price to display
   const fee = toNumber(event.fee);
@@ -257,7 +258,7 @@ export function EventCard({
 
   function getAvailableActions(
     mode: EventCardModeType,
-    event: Event
+    event: Event,
   ): Array<{
     type: EventActionType;
     label: string;
@@ -383,9 +384,16 @@ export function EventCard({
     }
 
     // ========================================
-    // CLUB DETAILS - HOME TAB
+    // CLUB DETAILS - HOME TAB - only View
     // ========================================
     if (mode === EventCardModes.CLUB_HOME) {
+      return [];
+    }
+
+    // ========================================
+    // MY ACTIVITIES  - only View
+    // ========================================
+    if (mode === EventCardModes.ACTIVITY) {
       return [];
     }
 
