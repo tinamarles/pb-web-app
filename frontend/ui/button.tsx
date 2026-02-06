@@ -15,6 +15,7 @@ export type ButtonVariant =
   | "subtle"
   | "outlined"
   | "highlighted"
+  | "primary"
   | "dismiss"
   | "error"
   | "default";
@@ -29,6 +30,7 @@ export type BaseButtonProps = {
   iconPosition?: "left" | "right";
   iconOnly?: boolean;
   className?: string;
+  iconClassName?: string;
   children?: React.ReactNode;
   disabled?: boolean;
   active?: boolean;
@@ -54,6 +56,7 @@ export type ButtonProps = ButtonAsButtonProps | ButtonAsLinkProps;
 export function Button(props: ButtonProps) {
   const {
     className,
+    iconClassName,
     variant = "filled",
     size = "md",
     label,
@@ -71,8 +74,7 @@ export function Button(props: ButtonProps) {
   
   // Auto-apply icon="close" for dismiss variant if no icon provided
   const resolvedIcon = icon ?? (variant === "dismiss" ? "close" : undefined);
-
-  // Clean class combination using your CSS utilities
+ 
   const buttonClasses = cn(
     // Variant classes from your utilities.css
 
@@ -81,6 +83,7 @@ export function Button(props: ButtonProps) {
     variant === "subtle" && "btn-subtle",
     variant === "outlined" && "btn-outlined",
     variant === "highlighted" && "btn-highlighted",
+    variant === "primary" && "btn-primary",
     variant === "error" && "btn-destructive",
     variant === "dismiss" && "btn-dismiss",
     variant === "default" && "btn-default",
@@ -103,7 +106,7 @@ export function Button(props: ButtonProps) {
     if (iconOnly && resolvedIcon) {
       return (
         <>
-          <Icon name={resolvedIcon} />
+          <Icon name={resolvedIcon} className={iconClassName}/>
           {children}
         </>
       );
@@ -113,7 +116,7 @@ export function Button(props: ButtonProps) {
       const childElement = children as React.ReactElement<{ children?: React.ReactNode }>;
       return React.cloneElement(childElement, {}, 
         <>
-          <Icon name={resolvedIcon} />
+          <Icon name={resolvedIcon} className={iconClassName}/>
           {childElement.props.children}
         </>
       );
@@ -134,14 +137,14 @@ export function Button(props: ButtonProps) {
       return (
         <>
           {label}
-          {resolvedIcon && <Icon name={resolvedIcon} />}
+          {resolvedIcon && <Icon name={resolvedIcon} className={iconClassName} />}
         </>
       );
     }
 
     return (
       <>
-        {resolvedIcon && <Icon name={resolvedIcon} />}
+        {resolvedIcon && <Icon name={resolvedIcon} className={iconClassName} />}
         {label}
       </>
     );

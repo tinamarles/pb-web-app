@@ -508,12 +508,14 @@ export interface DjangoEventActivity {
   event: {
     id: number;
     name: string;
-    is_event: boolean;
+    fee: string | null;
     club_info: DjangoClubInfo;
     captain_info: DjangoUserInfo | null;
     image_url: string;
     user_is_captain: boolean;
     user_is_participant: boolean;
+    minimum_skill_level: C.SkillLevelValue | null;
+    recurring_days: number[];
   };
   session: DjangoSession;
 }
@@ -529,6 +531,7 @@ export interface DjangoBookingActivity {
     with_players: DjangoUserInfo[];
     external_booking_reference: string;
     notes: string;
+    fee: string | null;
   };
   session: DjangoSession;
 }

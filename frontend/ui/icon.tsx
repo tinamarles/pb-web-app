@@ -72,6 +72,9 @@ import {
   Clock4,
   ChartColumnIncreasing,
   ClipboardClock,
+  LayoutGridIcon,
+  List,
+  CalendarDays,
 
 } from "lucide-react";
 
@@ -150,6 +153,10 @@ const iconMap = {
   help: MessageCircleQuestionMark,
   register: UserCheck,
   sessionschedule: ClipboardClock,
+  grid: LayoutGridIcon,
+  list: List,
+  daily: List,
+  weekly: CalendarDays,
 
   // Form & Input Icons
   calendar: Calendar,
@@ -202,6 +209,8 @@ const iconMap = {
   chevronleft: ChevronLeft,
   arrowright: ArrowRight,
   arrowleft: ArrowLeft,
+  prev: ChevronLeft,
+  next: ChevronRight,
 
   // Media Controls
   play: Play,

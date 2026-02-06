@@ -51,7 +51,7 @@ export function BottomNav({ items = [], className = "" }: BottomNavProps) {
 
   // Quick Actions menu items (same as header dropdown)
   const quickActionsItems = [
-    { icon: "calendar", label: "View Your Schedule", href: "/schedule" },
+    { icon: "calendar", label: "View Your Schedule", href: "/event/my-activities" },
     { icon: "book-court", label: "Book a Court", href: "/book_court" },
     { icon: "matches", label: "Record a Result", href: "/add_result" },
     { icon: "send", label: "Contact a Member", href: "/contact_member" },

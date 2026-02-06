@@ -5,7 +5,7 @@ import * as C from "@/lib/constants";
 // Generic Type for dynamic route params
 export type PageProps<
   TParams = Record<string, string>,
-  TSearchParams = Record<string, string | string[]>
+  TSearchParams = Record<string, string | string[]>,
 > = {
   params: Promise<TParams>;
   searchParams?: Promise<TSearchParams>;
@@ -385,13 +385,15 @@ export interface EventActivity {
   event: {
     id: number;
     name: string;
-    isEvent: boolean;
+    fee: string | null; // decimal field in Django
     clubInfo: ClubInfo;
     captainInfo: UserInfo | null;
     imageUrl: string;
     tags?: Tag[]; // has to be optional because currently backend does not send tags!
     userIsCaptain: boolean;
     userIsParticipant: boolean;
+    minimumSkillLevel: C.SkillLevelValue | null;
+    recurringDays: C.DayOfWeekValue[];
   };
 
   // Session occurrence info
@@ -412,25 +414,42 @@ export interface BookingActivity {
     withPlayers: UserInfo[];
     externalBookingReference: string;
     notes: string;
+    fee: string | null;
   };
   session: Session;
 }
 
-/**
- * Calendar view modes
- */
-export type CalendarViewMode = 'grid' | 'daily' | 'weekly';
+export type EventCardSession = Session & {
+  courtNumber?: string;
+};
+
+export type EventCardType = {
+  type: C.ActivityTypeValue;
+  eventInfo: {
+    id: number;
+    name: string;
+    fee: string | null; // decimal field in Django
+    avatarUrl: string;
+    avatarName: string;
+    imageUrl: string;
+    tags?: Tag[]; // has to be optional because currently backend does not send tags!
+    userIsCaptain: boolean;
+    userIsParticipant: boolean;
+    recurringDays: C.DayOfWeekValue[];
+  };
+  sessionInfo?: EventCardSession;
+};
 
 /**
  * Week data structure for weekly view
  * NOTE: Uses ActivityItem directly (no conversion needed!)
  */
 export interface WeekData {
-  startDate: Date;  // Monday
-  endDate: Date;    // Sunday
+  startDate: Date; // Monday
+  endDate: Date; // Sunday
   days: Array<{
     date: Date;
-    dayOfWeek: C.DayOfWeekValue;  // ✅ Use constant type instead of number!
+    dayOfWeek: C.DayOfWeekValue; // ✅ Use constant type instead of number!
     activities: ActivityItem[];
     hasActivities: boolean;
   }>;
@@ -577,10 +596,10 @@ export type EventLight = League;
  * userStatus.joinReason -> needs to become a constant!?
  */
 export interface Tag {
-  id: number;
-  slug: string; // 'beginner', 'women-only'
+  id?: number;
+  slug?: string; // 'beginner', 'women-only'
   name: string; // 'Beginner', 'Women Only'
-  category: "SKILL" | "DEMOGRAPHIC" | "ACCESS" | "SPECIAL";
+  category?: "SKILL" | "DEMOGRAPHIC" | "ACCESS" | "SPECIAL";
   color: string;
 }
 

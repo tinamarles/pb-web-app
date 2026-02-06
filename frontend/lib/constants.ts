@@ -6,7 +6,7 @@
 // =====================================================
 
 // =====================================================
-// FILTERING
+// FILTERING 
 // =====================================================
 
 // NEW: Event/League filter constants
@@ -60,6 +60,17 @@ export const EventAction = {
 
 export type EventActionType = (typeof EventAction)[keyof typeof EventAction];
 
+/**
+ * Calendar view modes
+ */
+export const CalendarViewMode = {
+  GRID: "grid",
+  DAILY: "daily",
+  WEEKLY: "weekly",
+} as const;
+
+export type CalendarViewModeType = (typeof CalendarViewMode)[keyof typeof CalendarViewMode];
+
 export const SessionAction = {
   JOIN: "JOIN",
   PLAYERS: "PLAYERS",
@@ -84,6 +95,7 @@ export const EventCardModes = {
   ALL_EVENTS: "all-events",
   BROWSE: "browse",
   EVENT_DETAIL: "event-detail",
+  ACTIVITY: "activity",
 } as const;
 
 export type EventCardModeType =
