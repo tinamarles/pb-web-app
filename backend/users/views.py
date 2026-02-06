@@ -287,6 +287,7 @@ def user_activities_view(request):
                 'with_players': booking_data['with_players'],
                 'external_booking_reference': booking_data.get('external_booking_reference'),
                 'notes': booking_data.get('notes', ''), 
+                'fee': booking_data.get('booking_fee'),
             },
             'session': {
                 'id': booking_data['id'],
