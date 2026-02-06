@@ -3,6 +3,11 @@
 # -------------------------------
 # Virtual environment folder
 /backend/venv/
+/backend/.venv-picklehub/
+**/.venv-*/
+**/.venv-picklehub/
+**/venv/
+**/.venv/
 
 # Python bytecode - CORRECTED to catch ALL levels
 __pycache__/
@@ -66,3 +71,5 @@ Node package manager cache and dependencies
 
 # This line ignores any file that starts with an underscore inside the `frontend` directory.
 /frontend/*/_.turbo-cache/
+
+

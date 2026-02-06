@@ -39,5 +39,27 @@
 
   "css.validate": false,
   "less.validate": false,
-  "scss.validate": false
+  "scss.validate": false,
+  "search.exclude": {
+    "**/.venv": true,
+    "**/.venv-picklehub": true,
+    "**/venv": true,
+    "**/__pycache__": true,
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/build": true
+  },
+  "files.exclude": {
+    "**/.venv": true,
+    "**/.venv-picklehub": true,
+    "**/__pycache__": true
+  },
+  "files.watcherExclude": {
+    "**/.venv/**": true,
+    "**/.venv-picklehub/**": true,
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/__pycache__/**": true
+  }
 }

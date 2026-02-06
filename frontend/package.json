@@ -41,5 +41,11 @@
     "eslint-config-next": "15.5.0",
     "tailwindcss": "4.1.12",
     "typescript": "^5"
+  },
+  "engines": {
+    "npm": ">=10.9.0",
+    "node": ">=22.0.0",
+    "pnpm": "please-use-npm",
+    "yarn": "please-use-npm"
   }
 }

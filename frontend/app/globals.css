@@ -7,10 +7,10 @@
 
   /* Shadows */
   --elevation-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --elevation-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --elevation-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --elevation-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --elevation-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
   --tw-shadow-color: rgba(0, 0, 0, 0.8);
 
@@ -79,6 +79,7 @@
   --px-28: 1.75rem;
   --px-30: 1.875rem;
   --px-32: 2rem;
+  --px-34: 2.125rem;
   --px-36: 2.25rem;
   --px-40: 2.5rem;
   --px-44: 2.75rem;
@@ -87,6 +88,8 @@
   --px-56: 3.5rem;
   --px-60: 3.75rem;
   --px-64: 4rem;
+  --px-68: 4.25rem;
+  --px-74: 4.625rem;
   --px-80: 5rem;
   --px-96: 6rem;
   --px-104: 6.5rem;
@@ -552,81 +555,81 @@
 
 /* +++ SPACING UTILITIES +++ */
 @utility p-* {
-  padding: --value(--p- *);
+  padding: --value(--p-*);
 }
 @utility pt-* {
-  padding-top: --value(--p- *);
+  padding-top: --value(--p-*);
 }
 @utility pb-* {
-  padding-bottom: --value(--p- *);
+  padding-bottom: --value(--p-*);
 }
 @utility pl-* {
-  padding-left: --value(--p- *);
+  padding-left: --value(--p-*);
 }
 @utility pr-* {
-  padding-right: --value(--p- *);
+  padding-right: --value(--p-*);
 }
 @utility px-* {
-  padding-left: --value(--p- *);
-  padding-right: --value(--p- *);
+  padding-left: --value(--p-*);
+  padding-right: --value(--p-*);
 }
 @utility py-* {
-  padding-top: --value(--p- *);
-  padding-bottom: --value(--p- *);
+  padding-top: --value(--p-*);
+  padding-bottom: --value(--p-*);
 }
 @utility gap-* {
-  gap: --value(--p- *);
+  gap: --value(--p-*);
 }
 @utility m-* {
-  margin: --value(--p- *);
+  margin: --value(--p-*);
 }
 @utility mt-* {
-  margin-top: --value(--p- *);
+  margin-top: --value(--p-*);
 }
 @utility mb-* {
-  margin-bottom: --value(--p- *);
+  margin-bottom: --value(--p-*);
 }
 @utility ml-* {
-  margin-left: --value(--p- *);
+  margin-left: --value(--p-*);
 }
 @utility mr-* {
-  margin-right: --value(--p- *);
+  margin-right: --value(--p-*);
 }
 @utility mx-* {
-  margin-left: --value(--p- *);
-  margin-right: --value(--p- *);
+  margin-left: --value(--p-*);
+  margin-right: --value(--p-*);
 }
 @utility my-* {
-  margin-top: --value(--p- *);
-  margin-bottom: --value(--p- *);
+  margin-top: --value(--p-*);
+  margin-bottom: --value(--p-*);
 }
 
 @utility top-* {
-  top: --value(--p- *);
+  top: --value(--p-*);
 }
 @utility bottom-* {
-  bottom: --value(--p- *);
+  bottom: --value(--p-*);
 }
 @utility left-* {
-  left: --value(--p- *);
+  left: --value(--p-*);
 }
 @utility right-* {
-  right: --value(--p- *);
+  right: --value(--p-*);
 }
 
 /* +++ GENERAL UTILITIES +++ */
 @utility icon-* {
-  height: --value(--icon- *);
-  width: --value(--icon- *);
+  height: --value(--icon-*);
+  width: --value(--icon-*);
   flex-shrink: 0;
 }
 @utility icon-bordered-* {
-  height: --value(--icon-bordered- *);
-  width: --value(--icon-bordered- *);
+  height: --value(--icon-bordered-*);
+  width: --value(--icon-bordered-*);
 }
 @utility av-* {
-  height: --value(--avatar- *);
-  width: --value(--avatar- *);
+  height: --value(--avatar-*);
+  width: --value(--avatar-*);
 }
 @utility avatar-container {
   overflow: hidden;
@@ -641,7 +644,8 @@
   outline: none !important;
   outline: 2px solid transparent;
   outline-offset: 2px;
-  box-shadow: 0 0 0 2px var(--color-surface, var(--color-surface)),
+  box-shadow:
+    0 0 0 2px var(--color-surface, var(--color-surface)),
     0 0 0 4px var(--tw-ring-color);
 }
 @utility disabled-item {
@@ -731,21 +735,21 @@
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 1000;
-    
+
     /* Visual styling */
     background-color: var(--color-surface-container-high);
     border: 1px solid var(--color-outline-variant);
     border-radius: var(--radius-lg);
     box-shadow: var(--elevation-3);
-    
+
     /* Size & spacing */
     width: 90%;
     max-width: 500px; /* Default variant */
     max-height: 90vh;
-    
+
     /* Layout */
     @apply flex flex-col;
-    
+
     /* Animation */
     animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -1190,9 +1194,7 @@
     overflow: hidden;
     white-space: nowrap;
     max-width: 24ch;
-
   }
-
 }
 /* CSS for Club Details Tabs Component */
 @layer components {
@@ -1280,7 +1282,7 @@
 
   .sessions-carousel .event-card.grid-sidebar {
     scroll-snap-align: start;
-    width: 320px !important;      /* ← FORCE width, don't just limit! */
+    width: 320px !important; /* ← FORCE width, don't just limit! */
     max-width: var(--px-320);
     flex-shrink: 0; /* Prevent cards from shrinking */
   }
@@ -1303,7 +1305,6 @@
   .sessions-carousel::-webkit-scrollbar-thumb:hover {
     background: var(--color-outline);
   }
-
 }
 /* === PROGRESS BAR === */
 /* Purpose: Show capacity/completion status (e.g., event capacity) */
@@ -1315,7 +1316,7 @@
     border-radius: var(--radius-full);
     overflow: hidden;
   }
-  
+
   .progress-bar-fill {
     height: 100%;
     border-radius: var(--radius-full);
@@ -1344,6 +1345,7 @@
     @apply border border-transparent;
     @apply rounded-lg;
     @apply bg-surface;
+    @apply w-full;
   }
 
   /* Tablet and Desktop: Larger gap */
@@ -1567,7 +1569,7 @@
 /* +++ PAGE Layout +++ */
 @layer components {
   .page {
-    @apply block w-full flex-1;
+    @apply block w-full h-full flex-1;
     padding-bottom: var(
       --h-bottomNav
     ); /* Account for bottom nav: 96px or 6rem */
@@ -1645,6 +1647,64 @@
     .page__form__button {
       @apply block;
       @apply mt-lg;
+    }
+  }
+
+  /* For pages with a sandwich layout: fixed top, scrollable middle, fixed bottom */
+  .page-sandwich {
+    @apply flex flex-col flex-1;
+    @apply overflow-hidden;
+    @apply h-full w-full;
+  }
+  @media (max-width: 639px) {
+    .page-sandwich {
+      min-height: calc(100vh - var(--h-bottomNav) - var(--h-header-mobile) - var(--px-34));
+    }
+  }
+  .page-sandwich-header {
+    position: sticky;
+    /* top: var(--h-header-mobile); */
+    top: 0;
+    z-index: 20;
+    flex-shrink: 0;
+  }
+  
+  .page-sandwich-footer {
+    position: sticky;
+    /* bottom: var(--h-bottomNav); */
+    bottom: 0;
+    z-index: 20;
+    flex-shrink: 0;
+  }
+  @media (min-width: 768px) {
+    .page-sandwich-footer {
+      @apply hidden;
+    }
+  }
+  .page-sandwich-filling {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+}
+/* View Selector component */
+@layer components {
+  .vs-mobile {
+    @apply hidden;
+  }
+  @media (max-width: 767px) {
+    .vs-mobile {
+      @apply flex flex-col;
+    }
+  }
+  .vs-desktop {
+    @apply hidden;
+  }
+  @media (min-width: 768px) {
+    .vs-desktop {
+      @apply flex flex-col gap-md;
+      @apply items-center;
+
     }
   }
 }
@@ -2336,8 +2396,12 @@
     height: var(--px-20);
     border-radius: 9999px;
     top: 2px;
-    transition: left 200ms ease, background-color 200ms ease;
-    box-shadow: 0 3px 8px 0 rgba(0, 0, 0, 0.15), 0 3px 1px 0 rgba(0, 0, 0, 0.06);
+    transition:
+      left 200ms ease,
+      background-color 200ms ease;
+    box-shadow:
+      0 3px 8px 0 rgba(0, 0, 0, 0.15),
+      0 3px 1px 0 rgba(0, 0, 0, 0.06);
   }
 }
 /* === Custom ComboBox (Select) === */
@@ -2989,6 +3053,30 @@
       @apply emphasized;
     }
   }
+  .btn-primary {
+    /* base-style */
+    @apply btn-base;
+    @apply bg-transparent text-primary;
+    &:disabled {
+      @apply disabled-item;
+    }
+    &:hover {
+      @apply strong;
+      @apply bg-primary/10;
+    }
+    &:focus-visible {
+      --tw-ring-offset-color: var(--color-primary);
+      --tw-ring-color: color-mix(
+        in srgb,
+        var(--color-primary),
+        transparent 80%
+      );
+      @apply focus-ring-base;
+    }
+    &:active {
+      @apply emphasized;
+    }
+  }
 
   .btn-outlined {
     /* base-style */
@@ -3024,6 +3112,12 @@
       --tw-ring-color: color-mix(in srgb, var(--color-error), transparent 80%);
       @apply focus-ring-base;
     }
+  }
+  /* Button Group */
+  .btn-group {
+    @apply flex border border-primary rounded-sm;
+    @apply overflow-hidden;
+    @apply w-fit h-fit;
   }
 
   /* Size */
