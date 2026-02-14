@@ -7,7 +7,8 @@ import {
   BookUser,
   Users,
   Trophy,
-  Bell, BellPlus,
+  Bell,
+  BellPlus,
   Search,
   Menu,
   X,
@@ -19,7 +20,8 @@ import {
   Eye,
   EyeOff,
   Check,
-  AlertCircle, AlertTriangle,
+  AlertCircle,
+  AlertTriangle,
   Info,
   LogOut,
   LogIn,
@@ -27,7 +29,8 @@ import {
   ChevronUp,
   ChevronRight,
   ChevronLeft,
-  ArrowRight, ArrowLeft,
+  ArrowRight,
+  ArrowLeft,
   Star,
   Calendar,
   MapPin,
@@ -75,23 +78,24 @@ import {
   LayoutGridIcon,
   List,
   CalendarDays,
-
+  CircleX,
+  CircleCheck,
 } from "lucide-react";
 
-import { 
+import {
   SlSocialFacebook,
   SlSocialTwitter,
   SlSocialInstagram,
-  SlSocialLinkedin
- } from "react-icons/sl";
+  SlSocialLinkedin,
+} from "react-icons/sl";
 
- import { 
+import {
   IoIosMail,
   IoIosLock,
   IoMdPerson,
   IoMdRadioButtonOn,
-  IoMdRadioButtonOff
- } from "react-icons/io";
+  IoMdRadioButtonOff,
+} from "react-icons/io";
 
 /**
  * Central Icon System - Maps unified business names to Lucide components
@@ -130,12 +134,12 @@ const iconMap = {
   event: Ticket,
   events: Tickets,
   skill: ChartColumnIncreasing,
-  'account-settings': UserLock,
-  'add-notification': BellPlus,
+  "account-settings": UserLock,
+  "add-notification": BellPlus,
 
   // Form Controls - Radio Buttons
-  'radio-checked': IoMdRadioButtonOn,
-  'radio-unchecked': IoMdRadioButtonOff,
+  "radio-checked": IoMdRadioButtonOn,
+  "radio-unchecked": IoMdRadioButtonOff,
 
   // Actions & Interface
   notifications: Bell,
@@ -157,6 +161,9 @@ const iconMap = {
   list: List,
   daily: List,
   weekly: CalendarDays,
+  cancel: CircleX,
+  confirm: CircleCheck,
+  activate: CircleCheck,
 
   // Form & Input Icons
   calendar: Calendar,
@@ -188,7 +195,7 @@ const iconMap = {
 
   // Quick Actions
   bookcourt: CalendarClock,
-  'court-schedule': CalendarCog,
+  "court-schedule": CalendarCog,
   matches: Swords,
 
   // Visibility & State
@@ -225,7 +232,6 @@ const iconMap = {
   sun: Sun,
   moon: Moon,
   palette: Palette,
-
 } as const;
 
 /**
@@ -291,9 +297,9 @@ export function Icon({
   const iconClasses = [sizeClass, className].filter(Boolean).join(" ");
 
   // Check if this is a Material Design icon (from react-icons/md)
-  const isMaterialDesignIcon = normalizedName.startsWith('radio-');
-  
-  const iconStrokeWidth = size === '5xl' ? 1 : 1.5;
+  const isMaterialDesignIcon = normalizedName.startsWith("radio-");
+
+  const iconStrokeWidth = size === "5xl" ? 1 : 1.5;
 
   // Extract icon size from className for Material Design icons
   // MD icons need numeric size prop, Lucide icons use CSS classes
@@ -301,48 +307,61 @@ export function Icon({
   if (isMaterialDesignIcon) {
     // Check size prop first, then className
     const sizeToCheck = size || iconClasses;
-    if (sizeToCheck.includes('icon-5xl')) numericSize = 80;
-    else if (sizeToCheck.includes('icon-2xl')) numericSize = 32;
-    else if (sizeToCheck.includes('icon-xl')) numericSize = 24;
-    else if (sizeToCheck.includes('icon-lg')) numericSize = 20;
-    else if (sizeToCheck.includes('icon-md')) numericSize = 18;
-    else if (sizeToCheck.includes('icon-sm')) numericSize = 16;
+    if (sizeToCheck.includes("icon-5xl")) numericSize = 80;
+    else if (sizeToCheck.includes("icon-2xl")) numericSize = 32;
+    else if (sizeToCheck.includes("icon-xl")) numericSize = 24;
+    else if (sizeToCheck.includes("icon-lg")) numericSize = 20;
+    else if (sizeToCheck.includes("icon-md")) numericSize = 18;
+    else if (sizeToCheck.includes("icon-sm")) numericSize = 16;
   }
-  
+
   // Radio icons from react-icons have ~20x20 paths in 24x24 viewBox, so scale them up
   // to fill the space and make focus rings tight (scale 1.2x: 20px → 24px)
-  const radioScaleClass = normalizedName.startsWith('radio-') ? 'scale-[1.2]' : '';
-  const finalIconClasses = [iconClasses, radioScaleClass].filter(Boolean).join(' ');
-  
+  const radioScaleClass = normalizedName.startsWith("radio-")
+    ? "scale-[1.2]"
+    : "";
+  const finalIconClasses = [iconClasses, radioScaleClass]
+    .filter(Boolean)
+    .join(" ");
+
   // Material Design icons need size prop (number), Lucide icons use strokeWidth
-  const iconProps = isMaterialDesignIcon 
+  const iconProps = isMaterialDesignIcon
     ? { size: numericSize, className: finalIconClasses }
     : { strokeWidth: iconStrokeWidth, className: iconClasses };
   // Helper function at the top of the component (or outside it)
   const getBorderedClasses = (size?: IconSize): string => {
-    if (!size) return 'icon-bordered';
-    
+    if (!size) return "icon-bordered";
+
     switch (size) {
-      case 'sm': return 'icon-bordered icon-bordered-sm';
-      case 'md': return 'icon-bordered icon-bordered-md';
-      case 'lg': return 'icon-bordered icon-bordered-lg';
-      case 'xl': return 'icon-bordered icon-bordered-xl';
-      case '2xl': return 'icon-bordered icon-bordered-2xl';
-      case '5xl': return 'icon-bordered icon-bordered-5xl';
-      default: return 'icon-bordered';
+      case "sm":
+        return "icon-bordered icon-bordered-sm";
+      case "md":
+        return "icon-bordered icon-bordered-md";
+      case "lg":
+        return "icon-bordered icon-bordered-lg";
+      case "xl":
+        return "icon-bordered icon-bordered-xl";
+      case "2xl":
+        return "icon-bordered icon-bordered-2xl";
+      case "5xl":
+        return "icon-bordered icon-bordered-5xl";
+      default:
+        return "icon-bordered";
     }
   };
   // Safety check - fallback to a default icon if the component is undefined
   if (!IconComponent) {
     console.warn(
-      `Icon "${name}" (normalized: "${normalizedName}") not found in iconMap. Using Star as fallback.`
+      `Icon "${name}" (normalized: "${normalizedName}") not found in iconMap. Using Star as fallback.`,
     );
     const FallbackIcon = iconMap["default"];
 
     if (bordered) {
       // const borderedClass = size ? `icon-bordered icon-bordered-${size}` : 'icon-bordered';
       const borderedClass = getBorderedClasses(size);
-      const finalBorderedClass = [borderedClass, className].filter(Boolean).join(' ');
+      const finalBorderedClass = [borderedClass, className]
+        .filter(Boolean)
+        .join(" ");
       return (
         <div className={finalBorderedClass} onClick={onClick}>
           <FallbackIcon strokeWidth={1.5} className={iconClasses} />
@@ -352,10 +371,12 @@ export function Icon({
     // If onClick provided, wrap in clickable container
     if (onClick) {
       return (
-        <span onClick={onClick} 
-            className="inline-flex items-center cursor-pointer" 
-            role="button" 
-            tabIndex={tabIndex ?? -1}>
+        <span
+          onClick={onClick}
+          className="inline-flex items-center cursor-pointer"
+          role="button"
+          tabIndex={tabIndex ?? -1}
+        >
           <FallbackIcon strokeWidth={1.5} className={iconClasses} />
         </span>
       );
@@ -368,9 +389,9 @@ export function Icon({
   if (bordered) {
     // Apply size-specific border frame class if size prop provided
     const borderedClass = getBorderedClasses(size);
-    const finalBorderedClass = [borderedClass, className].filter(Boolean).join(' ');
-    
-  
+    const finalBorderedClass = [borderedClass, className]
+      .filter(Boolean)
+      .join(" ");
 
     return (
       <div className={finalBorderedClass} onClick={onClick}>
@@ -382,10 +403,12 @@ export function Icon({
   // If onClick provided, wrap in clickable container for better click handling
   if (onClick) {
     return (
-      <span onClick={onClick} 
-          className="inline-flex items-center cursor-pointer" 
-          role="button" 
-          tabIndex={tabIndex ?? -1}>
+      <span
+        onClick={onClick}
+        className="inline-flex items-center cursor-pointer"
+        role="button"
+        tabIndex={tabIndex ?? -1}
+      >
         <IconComponent {...iconProps} />
       </span>
     );

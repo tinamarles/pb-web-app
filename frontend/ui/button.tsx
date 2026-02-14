@@ -12,12 +12,19 @@ import type { LinkProps } from "next/link";
 export type ButtonVariant =
   | "filled"
   | "tonal"
+  | "secondary"
+  | "accent1"
+  | "accent2"
+  | "info"
   | "subtle"
   | "outlined"
   | "highlighted"
   | "primary"
-  | "dismiss"
   | "error"
+  | "warning"
+  | "success"
+  | "dismiss"
+  | "tertiary"
   | "default";
 export type ButtonSize = "sm" | "md" | "lg" | "cta";
 
@@ -80,11 +87,17 @@ export function Button(props: ButtonProps) {
 
     variant === "filled" && "btn-filled",
     variant === "tonal" && "btn-tonal",
+    variant === "secondary" && "btn-tonal",
+    variant === "accent1" && "btn-accent1",
+    variant === "accent2" && "btn-accent2",
+    variant === "info" && "btn-info",
     variant === "subtle" && "btn-subtle",
     variant === "outlined" && "btn-outlined",
     variant === "highlighted" && "btn-highlighted",
     variant === "primary" && "btn-primary",
     variant === "error" && "btn-destructive",
+    variant === "warning" && "btn-warning",
+    variant === "success" && "btn-success",
     variant === "dismiss" && "btn-dismiss",
     variant === "default" && "btn-default",
 

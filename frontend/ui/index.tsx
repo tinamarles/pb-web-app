@@ -10,7 +10,9 @@ export {
 } from "./button";
 export { Icon, type IconProps, type IconName, type IconSize } from "./icon";
 export { Logo, type LogoProps } from "./logo";
+export { Checkbox, type CheckboxProps } from "./checkbox";
 export { Badge, type BadgeProps, type BadgeVariant } from "./badge";
+export { DataTable, type DataTableProps } from "./dataTable";
 export { Sidebar, type SidebarProps } from "./sidebar";
 export { CustomSelect, type CustomSelectProps } from "./customSelect";
 export { DateDisplay, type DateDisplayProps } from "./dateDisplay";
@@ -28,6 +30,7 @@ export {
 export { RadioButton } from "./radioButton";
 export { ResponsiveButton, type ResponsiveButtonProps, type ResponsiveButtonConfig} from "./responsiveButton"; 
 export { Modal, type ModalProps } from './modal';
+export { ProgressBar, type ProgressBarProps } from './progressBar';
 
 //export { UploadImageButton, type UploadImageButtonProps } from './uploadImageButton';
 //export { AvatarWithUpload, type AvatarWithUploadProps } from './avatarWithUpload';

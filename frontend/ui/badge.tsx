@@ -87,7 +87,7 @@ export function Badge({
     return (
       <>
         {icon && <Icon name={icon} size="sm"/>}
-        {label}
+        {label && <span className='truncate'>{label}</span>}
       </>
     );
   };

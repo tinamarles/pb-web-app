@@ -9,6 +9,12 @@ import { Button } from './button';
 // Purpose: Centered modal overlay for confirmations, alerts, simple forms
 // Architecture: Pure React + CSS-driven design (follows Sheet component pattern)
 // Variants: 'alert' (small, confirmation), 'default' (standard), 'large' (forms)
+//
+// Date: 2026-02-06 UTC
+// Modified by: Assistant
+// Changes: Added className prop for custom modal sizing
+// Why: Allows custom sizing (e.g., .modal-datepicker for smaller datepicker modal)
+// Usage: <Modal className="modal-datepicker" /> applies custom width constraints
 // ========================
 
 export interface ModalProps {
@@ -19,6 +25,7 @@ export interface ModalProps {
   description?: string;
   variant?: 'alert' | 'default' | 'large'; // Size/style variant
   showCloseButton?: boolean; // Show X button (default: true for 'default'/'large', false for 'alert')
+  className?: string; // Custom class for modal content (for sizing, etc.)
 }
 
 export const Modal = ({ 
@@ -28,7 +35,8 @@ export const Modal = ({
   title, 
   description,
   variant = 'default',
-  showCloseButton = variant !== 'alert' // Alert modals typically don't have X button
+  showCloseButton = variant !== 'alert', // Alert modals typically don't have X button
+  className = '' // Custom class for modal sizing
 }: ModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -147,7 +155,7 @@ export const Modal = ({
       
       {/* Modal Content - centered overlay */}
       <div 
-        className="modal-content" 
+        className={`modal-content ${className}`} 
         ref={modalRef}
         data-variant={variant}
         role="dialog"

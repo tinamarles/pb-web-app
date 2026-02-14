@@ -18,7 +18,9 @@ export interface DateDisplayProps {
     | "numeric"
     | "weekday-short"
     | "weekday-short-noYear"
-    | "weekday-long";
+    | "weekday-long"
+    | "weekday-only"
+    | "day-only";
   nullText?: string;
   className?: string;
 }
@@ -105,6 +107,11 @@ function formatDate(
         day: "2-digit",
       });
 
+    case "day-only":
+      return date.toLocaleDateString("en-US", {
+        day: "2-digit",
+      });
+
     case "weekday-short":
       // Wed, Dec 25, 2024
       return date.toLocaleDateString("en-US", {
@@ -120,6 +127,12 @@ function formatDate(
         weekday: "short",
         day: "numeric",
         month: "short",
+      });
+    
+    case "weekday-only":
+      // Wed, Dec 25, 2024
+      return date.toLocaleDateString("en-US", {
+        weekday: "short",
       });
 
     case "weekday-long":

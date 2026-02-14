@@ -13,7 +13,7 @@
  * - Smooth animations
  */
 
-interface ProgressBarProps {
+export interface ProgressBarProps {
   /**
    * Current value (e.g., number of participants)
    */
@@ -41,6 +41,7 @@ interface ProgressBarProps {
    * Custom CSS class for the fill bar
    */
   fillClassName?: string;
+  reverse?: boolean;
 }
 
 export function ProgressBar({
@@ -49,13 +50,23 @@ export function ProgressBar({
   colorByPercentage = false,
   className = "",
   fillClassName = "",
+  reverse = false,
 }: ProgressBarProps) {
   // Calculate percentage
-  const percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0;
+  
+  let percentage = 0;
+
+  if (reverse) {
+    // Show spots LEFT (remaining capacity)
+    percentage = max > 0 ? Math.min(((max - value) / max) * 100, 100) : 0;
+  } else {
+    // Show spots FILLED (current capacity)
+    percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0;
+  }
 
   // Determine color class if colorByPercentage is enabled
-  let colorClass = "bg-primary";
-  if (colorByPercentage) {
+  let colorClass = "bg-success";
+  if (colorByPercentage && !reverse) {
     if (percentage >= 90) {
       colorClass = "bg-error";
     } else if (percentage >= 70) {
@@ -63,6 +74,10 @@ export function ProgressBar({
     } else {
       colorClass = "bg-success";
     }
+  }
+
+  if(fillClassName) {
+    colorClass = `bg-${fillClassName}`;
   }
 
   return (
