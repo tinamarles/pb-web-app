@@ -117,5 +117,6 @@ export const config = {
     "/feed/:path*",
     "/profile/:path*",
     "/profile/setup",
+    "/admin/:path*",
   ],
 };

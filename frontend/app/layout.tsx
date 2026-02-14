@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { inter, outfit, shadowsIntoLightTwo } from "@/ui/fonts";
+import "react-day-picker/style.css";
 import "@/app/globals.css";
 import { Providers } from "@/providers/Providers";
 import { Toaster } from "sonner";

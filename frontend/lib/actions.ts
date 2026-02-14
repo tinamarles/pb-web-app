@@ -4,6 +4,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import { createApiError, ApiError } from "./apiErrors";
 import { snakeToCamel, camelToSnake } from "./utils";
 import {
   MemberClub,
@@ -142,6 +143,7 @@ export async function getPublic<T>(endpoint: string): Promise<T> {
  * @param endpoint - Django API endpoint (without /api/ prefix)
  * @returns Promise with typed response data
  * @example await get<Club[]>('clubs')
+ * @throws {ApiError} - Throws ApiError with status code, detail, and endpoint
  */
 export async function get<T>(endpoint: string): Promise<T> {
   if (!API_BASE_URL) {
@@ -162,10 +164,16 @@ export async function get<T>(endpoint: string): Promise<T> {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      `Failed to fetch data from endpoint: /${endpoint}. ${JSON.stringify(
-        errorData
-      )}`
+    // ✅ Extract detail message from Django error response
+    const detail = errorData.detail || 
+                   errorData.message || 
+                   response.statusText || 
+                   'An error occurred';
+    // ✅ Throw ApiError with status code, detail, and endpoint
+    throw createApiError(
+      response.status,
+      detail,
+      endpoint
     );
   }
 
@@ -362,7 +370,8 @@ export const getClubEvents = cache(
   async (
     clubId: string,
     filters?: EventListFilters,
-    requireAuth: boolean = true
+    requireAuth: boolean = true,
+    requireAdmin: boolean = false
   ) => {
     const params = new URLSearchParams();
 
@@ -373,6 +382,10 @@ export const getClubEvents = cache(
     // ← NEW: Add include_user_participation if true
     if (filters?.includeUserParticipation) {
       params.set("include_user_participation", "true");
+    }
+    // ✅ NEW: Add require_admin if true
+    if (requireAdmin) {
+      params.set("require_admin", "true");
     }
 
     const queryString = params.toString(); // ← CRITICAL! Convert params to string!
@@ -556,6 +569,7 @@ export const getEvents = cache(
     if (filters?.status) params.set("status", filters.status);
     if (filters?.page) params.set("page", filters.page);
     if (filters?.pageSize) params.set("page_size", filters.pageSize); // ← Converts to snake_case!
+  
     // ← NEW: Add include_user_participation if true
     if (filters?.includeUserParticipation) {
       params.set("include_user_participation", "true");

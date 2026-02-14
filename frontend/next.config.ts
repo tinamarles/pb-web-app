@@ -26,6 +26,15 @@ const nextConfig: NextConfig = {
    turbopack: {
     // ...
    },
+
+   // Suppress performance warning during development
+   webpack: (config, { dev }) => {
+    if (dev) {
+      config.ignoreWarnings = [ 
+        /Failed to execute 'measure' on 'Performance'/,
+      ];
+    }
+   },
 };
 
 export default nextConfig;

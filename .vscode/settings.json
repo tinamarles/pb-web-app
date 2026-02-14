@@ -61,5 +61,7 @@
     "**/node_modules/**": true,
     "**/.next/**": true,
     "**/__pycache__/**": true
-  }
+  },
+  "python.defaultInterpreterPath": "/Users/tinamarles/Desktop/web-projects/pb-web-app/backend/.venv-picklehub/bin/python",
+  "python.terminal.activateEnvironment": true
 }
