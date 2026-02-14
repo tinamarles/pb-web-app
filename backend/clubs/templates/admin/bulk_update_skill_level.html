@@ -1,0 +1,79 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div id="content-main">
+    <h1>{{ title }}</h1>
+    
+    <p>You have selected <strong>{{ memberships|length }}</strong> membership(s) to update.</p>
+    
+    <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff;">
+        <h3 style="margin-top: 0;">Selected Memberships:</h3>
+        <ul>
+            {% for membership in memberships %}
+                <li>
+                    <strong>{{ membership.member.get_full_name|default:membership.member.username }}</strong> 
+                    - {{ membership.club.name }}
+                    {% if membership.levels.exists %}
+                        <br><small style="color: #666;">Current level(s): 
+                        {% for level in membership.levels.all %}
+                            {{ level }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                        </small>
+                    {% else %}
+                        <br><small style="color: #999;">No level assigned</small>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <form action="" method="post">
+        {% csrf_token %}
+        
+        {# Pass the action name so Django knows what we're doing #}
+        <input type="hidden" name="action" value="bulk_update_skill_level">
+        
+        {# Hidden fields to pass selected membership IDs #}
+        {% for membership in queryset %}
+            <input type="hidden" name="{{ action_checkbox_name }}" value="{{ membership.pk }}">
+        {% endfor %}
+        
+        <fieldset class="module aligned">
+            {% for field in form %}
+                <div class="form-row">
+                    {{ field.errors }}
+                    <div>
+                        <label for="{{ field.id_for_label }}">{{ field.label }}:</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <p class="help">{{ field.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </fieldset>
+        
+        <div class="submit-row">
+            <input type="submit" name="apply" value="Apply" class="default" />
+            <a href="{% url 'admin:clubs_clubmembership_changelist' %}" class="button cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .cancel-link {
+        display: inline-block;
+        margin-left: 10px;
+        padding: 10px 15px;
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+    .cancel-link:hover {
+        background-color: #5a6268;
+        color: white;
+    }
+</style>
+{% endblock %}
