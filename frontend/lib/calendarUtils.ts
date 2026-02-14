@@ -10,7 +10,7 @@
  *            Only frontend display adjusts based on user preference!
  */
 
-import type { ActivityItem, WeekData } from '@/lib/definitions';
+import type { ActivityItem, EventCardType, WeekData } from '@/lib/definitions';
 import { 
     DayOfWeek, 
     jsDateToDayOfWeek, 
@@ -172,24 +172,57 @@ export function navigateByDays(currentDate: Date, days: number): Date {
 // ========================================
 
 /**
- * Group activities by date
+ * Generic function to group items by date
+ * Works with ANY type - just tell it how to extract the date!
+ * 
+ * @param items - Array of any type
+ * @param getDate - Function that extracts the date string from each item
+ * @returns Map of date string (YYYY-MM-DD) to items
+ * 
+ * Example usage:
+ *   // For ActivityItem:
+ *   groupByDate(activities, (a) => a.session.date)
+ * 
+ *   // For EventCardType:
+ *   groupByDate(transformedActivities, (a) => a.sessionInfo!.date)
+ */
+export function groupByDate<T>(
+  items: T[],
+  getDate: (item: T) => string
+): Map<string, T[]> {
+  const grouped = new Map<string, T[]>();
+  
+  for (const item of items) {
+    const dateKey = getDate(item);
+    if (!grouped.has(dateKey)) {
+      grouped.set(dateKey, []);
+    }
+    grouped.get(dateKey)!.push(item);
+  }
+  
+  return grouped;
+}
+
+/**
+ * Group ActivityItem by date (convenience wrapper)
  * @param activities - List of ActivityItem (from API)
  * @returns Map of date string (YYYY-MM-DD) to activities
  */
 export function groupActivitiesByDate(
   activities: ActivityItem[]
 ): Map<string, ActivityItem[]> {
-  const grouped = new Map<string, ActivityItem[]>();
-  
-  for (const activity of activities) {
-    const dateKey = activity.session.date
-    if (!grouped.has(dateKey)) {
-      grouped.set(dateKey, []);
-    }
-    grouped.get(dateKey)!.push(activity);
-  }
-  
-  return grouped;
+  return groupByDate(activities, (a) => a.session.date);
+}
+
+/**
+ * Group EventCardType by date (convenience wrapper)
+ * @param activities - List of EventCardType (transformed)
+ * @returns Map of date string (YYYY-MM-DD) to activities
+ */
+export function groupTransformedActivitiesByDate(
+  activities: EventCardType[]
+): Map<string, EventCardType[]> {
+  return groupByDate(activities, (a) => a.sessionInfo!.date);
 }
 
 /**
@@ -251,8 +284,21 @@ export function getActivitiesForWeek(
 
 /**
  * Calculate duration in minutes
+ * export function formatTimeRange(
+  startTime: string | null | undefined,
+  endTime: string | null | undefined,
+): string {
+  if (!startTime || !endTime) {
+    return "N/A";
+  }
  */
-export function calculateDuration(startTime: string, endTime: string): number {
+export function calculateDuration(
+  startTime: string | null | undefined, 
+  endTime: string | null | undefined,
+): number {
+  if (!startTime || !endTime) {
+    return 0;
+  }
   const [startHours, startMinutes] = startTime.split(':').map(Number);
   const [endHours, endMinutes] = endTime.split(':').map(Number);
   

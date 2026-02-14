@@ -23,9 +23,11 @@ import {
   EventCardModes,
   EventCardModeType,
   getSkillLevelBadgeVariant,
+  getSkillLevelLabel,
   SkillLevel,
   DayOfWeekValue
 } from '@/lib/constants';
+import { is } from 'date-fns/locale';
 
 /**
  * Type guard: Check if activity is a SessionActivity (event)
@@ -65,13 +67,11 @@ export function transformEventToEventCard(event: Event, cardMode: EventCardModeT
           : event.captainInfo.fullName || '';
           
   const skillTag: Tag = {
-    name: event.minimumSkillLevel
-      ? SkillLevelLabels[event.minimumSkillLevel]
-      : "All Levels",
+    name: getSkillLevelLabel(event.minimumSkillLevel ?? SkillLevel.OPEN),
     color: getSkillLevelBadgeVariant(
       event.minimumSkillLevel ?? SkillLevel.OPEN
     ),
-  };
+  }; 
   
   // Session data
   const eventSession = event.nextSession ? event.nextSession : event.oneTimeSessionInfo;
@@ -89,6 +89,7 @@ export function transformEventToEventCard(event: Event, cardMode: EventCardModeT
       userIsCaptain: event.userIsCaptain || false,
       userIsParticipant: event.userIsParticipant || false,
       recurringDays: event.recurringDays,
+      isEvent: event.isEvent
     },
     sessionInfo: eventSession || undefined,
   };
@@ -119,6 +120,7 @@ export function transformActivityToEventCard(activity: ActivityItem, cardMode: E
   let recurringDays: DayOfWeekValue[];
   let imageUrl: string;
   let tags: Tag[];
+  let isEvent: boolean;
 
   if (isEventActivity(activity)) {
     const { event, session } = activity;
@@ -129,7 +131,7 @@ export function transformActivityToEventCard(activity: ActivityItem, cardMode: E
    
     // EVENT: Use event name
     eventName = event.name;
-    
+
     // EVENT: Use skill level from tags (if available)
     tags = event.tags || [];
     tag = {
@@ -144,6 +146,7 @@ export function transformActivityToEventCard(activity: ActivityItem, cardMode: E
     userIsParticipant = event.userIsParticipant;
     recurringDays = event.recurringDays;
     imageUrl = event.imageUrl;
+    isEvent = event.isEvent
     
   } else {
     // BOOKING
@@ -168,6 +171,7 @@ export function transformActivityToEventCard(activity: ActivityItem, cardMode: E
     userIsCaptain = event.userIsOrganizer;
     userIsParticipant = true;
     recurringDays = [];
+    isEvent = false;
     imageUrl = '';
     
   }
@@ -185,6 +189,7 @@ export function transformActivityToEventCard(activity: ActivityItem, cardMode: E
       userIsCaptain: userIsCaptain,
       userIsParticipant: userIsParticipant,
       recurringDays: recurringDays,
+      isEvent: isEvent
     },
     sessionInfo: activitySession,
   };
