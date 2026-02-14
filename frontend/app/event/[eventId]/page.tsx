@@ -6,19 +6,25 @@ import { EventDetailsClientPage } from "@/components/event/EventDetailsClientPag
 import { notFound } from "next/navigation";
 
 type Params = { eventId: string };
-type SearchParams = EmptyObject;
+type SearchParams = { sessionId?: string };
 
 export const metadata: Metadata = {
   title: "League & Event Details | Club | PickleHub",
   description: "View the details of the selected league or event.",
 };
 
-export default async function EventDetailsPage({ params }: PageProps<Params>) {
+export default async function EventDetailsPage({
+  params,
+  searchParams,
+}: PageProps<Params, SearchParams>) {
   const { eventId } = await params;
+  // await the searchParams (a Promise) and extract sessionId
+  const resolvedSearchParams = await searchParams;
+  const sessionId = resolvedSearchParams?.sessionId;
 
   // build filters:
   const filters = {
-      includeUserParticipation: true,
+    includeUserParticipation: true,
   };
   const requireAuth = true;
 
@@ -32,9 +38,8 @@ export default async function EventDetailsPage({ params }: PageProps<Params>) {
   return (
     <Module type="default">
       <div className="page__content">
-            <EventDetailsClientPage event={event} />
+        <EventDetailsClientPage event={event} />
       </div>
     </Module>
-    
   );
 }

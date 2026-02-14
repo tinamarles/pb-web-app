@@ -6,7 +6,7 @@ import { ExpiryDate, PeriodDate, Button, DateDisplay } from "@/ui";
 import { isDateToday, isRegistrationOpen } from "@/lib/dateUtils";
 import { useDashboard } from "@/providers/DashboardProvider";
 import { useAuth } from "@/providers/AuthUserProvider";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   NotificationType,
   EventCardModes,
@@ -14,7 +14,7 @@ import {
   EventActionType,
 } from "@/lib/constants";
 import { PendingInvitations } from "./PendingInvitations";
-import { Notification, Announcement, Event } from "@/lib/definitions";
+import { Notification, Announcement, Event, EventCardType } from "@/lib/definitions";
 import { getClubEventsClient } from "@/lib/clientActions";
 import { EventListFilters } from "@/lib/definitions";
 import {
@@ -29,6 +29,7 @@ import { getTodayISO } from "@/lib/dateUtils";
 
 import Image from "next/image";
 import { EventCard } from "../event/EventCard";
+import { transformEventsForEventCard } from "@/lib/activityUtils";
 
 export function OverviewPage() {
   // ========================================
@@ -137,15 +138,15 @@ export function OverviewPage() {
     console.log("Register Button clicked");
   };
 
-  const handleEventAction = (action: EventActionType, event: Event) => {
+  const handleEventAction = (action: EventActionType, event: EventCardType) => {
     switch (action) {
       case EventAction.VIEW_DETAILS:
-        router.push(`/event/${event.id}`);
+        router.push(`/event/${event.eventInfo.id}`);
         break;
       case EventAction.MANAGE_ATTENDEES:
         // for captains: to go deal with this session's attendees
         alert(
-          `User wants to manage attendees for: ${event.name} and date: ${event.nextSession?.date}`
+          `User wants to manage attendees for: ${event.eventInfo.name} and date: ${event.sessionInfo?.date}`
         );
       // router.push(`admin/events/${event.id}/${event.nextSession?.id}/attendees`)
     }
@@ -235,9 +236,13 @@ export function OverviewPage() {
     });
   };
 
-  const RenderUpcomingEventCards = () => (
-    <EventCarousel events={events} onAction={handleEventAction} />
-  );
+  const RenderUpcomingEventCards = () => {
+    // transform events to EventCardType
+    const transformedEvents = useMemo(() =>
+            transformEventsForEventCard(events, EventCardModes.DASHBOARD_UPCOMING)
+          , [events]);
+    return <EventCarousel events={transformedEvents} onAction={handleEventAction} />
+  };
 
   // ========================================
   // RENDER

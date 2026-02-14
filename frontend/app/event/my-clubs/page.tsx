@@ -39,7 +39,7 @@ export default async function MyClubsEventListPage({
   const ShowHeader = () => {
     const imageUrl = "https://res.cloudinary.com/dvjri35p2/image/upload/v1768917298/default_Event_g0c5xy.jpg"
     return (
-        <div className="container relative p-0 ">
+        <div className="container mx-auto relative p-0 ">
           <div
             className="clubList-Header"
             style={{

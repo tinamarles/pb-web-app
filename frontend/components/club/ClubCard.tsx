@@ -188,7 +188,7 @@ export function ClubCard({
           desktop={{ size: "md", label: "Admin Dashboard", icon: "dashboard" }}
           variant="filled"
           onClick={handleAdminClick}
-          href="/admin/settings"
+          href={`/admin/${club.id}/settings`}
         />
       )}
       {/* Show Contact Club Button */}

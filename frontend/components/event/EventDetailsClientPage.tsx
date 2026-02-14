@@ -1,6 +1,6 @@
 "use client";
 import { PlaceholderPage } from "../PlaceholderPage";
-import { Event } from "@/lib/definitions";
+import { Event, EventCardType } from "@/lib/definitions";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthUserProvider";
@@ -26,6 +26,7 @@ import {
   SkillLevelLabels,
 } from "@/lib/constants";
 import { SessionCard } from "./SessionCard";
+import { transformEventToEventCard } from "@/lib/activityUtils";
 
 type EventDetailsClientPageProps = {
   event: Event;
@@ -54,7 +55,7 @@ export function EventDetailsClientPage({ event }: EventDetailsClientPageProps) {
 
   const handleEventCardAction = (
     action: EventActionType,
-    event: Event,
+    event: EventCardType,
     e?: React.MouseEvent // ✅ Accept but don't need to use!
   ) => {
     console.log("Nothing to do here");
@@ -108,7 +109,7 @@ export function EventDetailsClientPage({ event }: EventDetailsClientPageProps) {
     <div className="event-details">
       <div className="event-details-topSection">
         <EventCard
-          event={event}
+          event={transformEventToEventCard(event, EventCardModes.EVENT_DETAIL)}
           mode={EventCardModes.EVENT_DETAIL}
           onAction={handleEventCardAction}
           variant="detail"

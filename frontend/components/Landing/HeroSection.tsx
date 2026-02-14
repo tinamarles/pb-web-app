@@ -27,7 +27,7 @@ export function HeroSection() {
                 className="inline-flex items-center gap-sm p-md bg-primary text-on-primary 
                               rounded-full border border-primary/20"
               >
-                <Icon name="default" className="icon-sm fill-current" />
+                <Icon name="star" className="icon-sm fill-current" />
                 <span className="label-lg text-on-primary">
                   #1 Pickleball App
                 </span>

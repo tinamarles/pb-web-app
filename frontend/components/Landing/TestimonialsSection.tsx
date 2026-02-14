@@ -101,7 +101,7 @@ function TestimonialCard({
 
       {/* Quote */}
       <p className="body-lg text-on-surface relative z-10 leading-relaxed">
-        &quot{quote}&quot
+        {quote}
       </p>
 
       {/* Author Section */}

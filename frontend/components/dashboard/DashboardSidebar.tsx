@@ -8,16 +8,27 @@ import { Sidebar, type SidebarItem, type SidebarSection } from "@/ui";
 import { DASHBOARD_NAV_ITEMS, DASHBOARD_ADMIN_ITEMS } from "@/data/navigation";
 import { ClubDropdown } from "../ClubDropdown";
 import { calculateBadge } from "@/lib/badgeUtils";
+import { Announcement, Notification } from "@/lib/definitions";
 
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { notifications } = useAuth();
   const { currentMembership } = useDashboard();
 
+  const notificationsList = notifications.filter(
+        (item): item is Notification & { feedType: "notification" } =>
+          item.feedType === "notification"
+  );
+    
+  const announcementsList = notifications.filter(
+    (item): item is Announcement & { feedType: "announcement" } =>
+      item.feedType === "announcement"
+  );
+
   // ✅ Pre-filter notifications by club (Dashboard-specific logic)
   // Smart filtering: club-specific vs user-level notifications
   const clubFilteredNotifications = useMemo(() => {
-    return notifications.filter(n => {
+    return notificationsList.filter(n => {
       // If notification has club.id, it's club-specific → filter by current club
       if (n.club?.id) {
         return n.club.id === currentMembership?.club.id;
@@ -60,15 +71,15 @@ export function DashboardSidebar() {
     // ✅ Add "Admin Dashboard" if user has ANY admin permissions
     if (currentMembership && hasAnyAdminPermission(currentMembership)) {
       const item = DASHBOARD_ADMIN_ITEMS.find(
-        (i) => i.href === "/admin/settings"
+        (i) => i.href === "/admin/[clubId]/settings"
       ); // ← ONE admin item!
       if (item) {
         const badge = calculateBadge(item.badgeCount, clubFilteredNotifications);
         adminItems.push({
           icon: item.icon,
           label: item.label,
-          href: item.href || "#",
-          active: pathname === item.href,
+          href: item.href?.replace("[clubId]", String(currentMembership?.club.id)) || "#",
+          active: pathname === item.href?.replace("[clubId]", String(currentMembership?.club.id)) ,
           badgeCount: badge?.count,
           badgeVariant: badge?.variant,
         });

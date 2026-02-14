@@ -3,15 +3,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Event } from "@/lib/definitions";
+import { Event, EventCardType } from "@/lib/definitions";
 import { EventCard } from "./EventCard";
 import { EventAction, EventActionType, EventCardModes } from "@/lib/constants";
 
 export interface EventCarouselProps {
-  events: Event[]; // Array of upcoming sessions
+  events: EventCardType[]; // Array of upcoming sessions
   onAction: (
     action: EventActionType,
-    event: Event,
+    event: EventCardType,
     e?: React.MouseEvent,
   ) => void;
 }
@@ -39,7 +39,7 @@ export function EventCarousel({ events, onAction }: EventCarouselProps) {
   const router = useRouter();
 
   // Handle event actions just pass through
-  const handleEventAction = (action: EventActionType, event: Event) => {
+  const handleEventAction = (action: EventActionType, event: EventCardType) => {
     onAction(action, event);
   };
 
@@ -57,7 +57,7 @@ export function EventCarousel({ events, onAction }: EventCarouselProps) {
         <div className="sessions-carousel">
           {events.map((event) => (
             <EventCard
-              key={event.id}
+              key={event.eventInfo.id}
               event={event}
               variant="grid-sidebar"
               mode={EventCardModes.DASHBOARD_UPCOMING}

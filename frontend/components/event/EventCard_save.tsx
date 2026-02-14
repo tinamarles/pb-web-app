@@ -12,12 +12,11 @@ import {
   RecurringDayIndicator,
 } from "@/ui";
 import Image from "next/image";
-import { Event, EventCardType, Tag, isRecurring } from "@/lib/definitions";
+import { Event, Tag, isRecurring } from "@/lib/definitions";
 import { useAuth } from "@/providers/AuthUserProvider";
 import { formatTimeRange, getTodayISO } from "@/lib/dateUtils";
 import { toNumber } from "@/lib/utils";
 import {
-  ActivityType,
   EventAction,
   EventActionType,
   EventCardModes,
@@ -29,13 +28,13 @@ import {
 export type EventCardVariant = "grid-display" | "grid-sidebar" | "detail";
 
 export interface EventCardProps {
-  event: EventCardType;
+  event: Event;
   mode: EventCardModeType; // whether to show action buttons
   variant?: EventCardVariant;
   // Actions (optional - passed from parent )
   onAction: (
     action: EventActionType,
-    event: EventCardType,
+    event: Event,
     e?: React.MouseEvent,
   ) => void;
 }
@@ -65,8 +64,8 @@ export function EventCard({
   const { user } = useAuth();
 
   // Calculate Display values
-  const spotsLeft = event.sessionInfo?.maxParticipants
-    ? event.sessionInfo.maxParticipants - event.sessionInfo.participantsCount
+  const spotsLeft = event.maxParticipants
+    ? event.maxParticipants - event.participantsCount
     : null;
 
   const isFilled = spotsLeft === 0;
@@ -80,32 +79,33 @@ export function EventCard({
         : `${spotsLeft} spots available`;
 
   // Price to display
-  const fee = toNumber(event.eventInfo.fee);
-  // const displayPrice = event.userStatus?.calculatedPrice ?? fee;
-  // const isFree = displayPrice === 0 || displayPrice === null;
-  const displayPrice = fee;
-  const isFree = fee === 0;
-  const borderStyle = event.type === ActivityType.BOOKING ? "border-l-4 border-l-info" : event.eventInfo?.userIsCaptain ? "border-l-4 border-l-tertiary" : "";
-  // const eventIsRecurring = isRecurring(event);
-  const eventIsRecurring = event.eventInfo.recurringDays && event.eventInfo.recurringDays.length > 0;
+  const fee = toNumber(event.fee);
+  const displayPrice = event.userStatus?.calculatedPrice ?? fee;
+  const isFree = displayPrice === 0 || displayPrice === null;
+
+  const borderStyle = event.userIsCaptain ? "border-l-4 border-l-tertiary" : "";
+
+  const eventIsRecurring = isRecurring(event);
 
   // Determine which Session Info to display:
   // If recurring session -> event.nextSession
   // If one time event -> event.oneTimeSessionInfo
 
-  const sessionInfo = event.sessionInfo;
+  const sessionInfo = eventIsRecurring
+    ? event.nextSession
+    : event.oneTimeSessionInfo;
 
   const userIsAttending =
     sessionInfo?.userAttendanceStatus === LeagueAttendanceStatus.ATTENDING;
   
     // Determine image URL with appropriate default
   const imageUrl =
-    event.eventInfo.imageUrl && event.eventInfo.imageUrl.trim() !== ""
-      ? event.eventInfo.imageUrl
-      : (event.type === ActivityType.EVENT && event.eventInfo.isEvent) ? "https://res.cloudinary.com/dvjri35p2/image/upload/v1768917298/default_Event_g0c5xy.jpg"
-      : (event.type === ActivityType.EVENT && !event.eventInfo.isEvent) ? "https://res.cloudinary.com/dvjri35p2/image/upload/v1770577813/EventBanner4_ftqjw0.jpg"
-      : (event.type === ActivityType.BOOKING) ? "https://res.cloudinary.com/dvjri35p2/image/upload/v1770667053/default_Booking_j4t4ky.jpg" : "https://res.cloudinary.com/dvjri35p2/image/upload/v1770667053/default_Booking_j4t4ky.jpg"
-      
+    event.imageUrl && event.imageUrl.trim() !== ""
+      ? event.imageUrl
+      : event.isEvent
+      ? "https://res.cloudinary.com/dvjri35p2/image/upload/v1768917298/default_Event_g0c5xy.jpg"
+      : "https://res.cloudinary.com/dvjri35p2/image/upload/v1770577813/EventBanner4_ftqjw0.jpg";
+
   // ========================================
   // EVENT HANDLERS
   // ========================================
@@ -119,8 +119,17 @@ export function EventCard({
       return;
     }
 
-    const avatar = event.eventInfo.avatarUrl
-    const name = event.eventInfo.avatarName;
+    const avatar =
+      mode === EventCardModes.ALL_EVENTS ||
+      mode === EventCardModes.MY_CLUB_EVENTS
+        ? event.clubInfo.logoUrl
+        : event.captainInfo.profilePictureUrl;
+
+    const name =
+      mode === EventCardModes.ALL_EVENTS ||
+      mode === EventCardModes.MY_CLUB_EVENTS
+        ? event.clubInfo.name
+        : event.captainInfo.fullName;
 
     return (
       <div className="flex gap-md p-md items-center">
@@ -138,7 +147,7 @@ export function EventCard({
         <div className={`banner-container min-w-0 ${variant}`}>
           <Image
             src={imageUrl}
-            alt={event.eventInfo.name}
+            alt={event.name}
             fill
             sizes={getImageSizes(variant)}
             className="object-cover"
@@ -174,23 +183,19 @@ export function EventCard({
     if (!tags || tags.length === 0) {
       return null; // No tags? Show nothing!
     }
-    if (mode === EventCardModes.EVENT_DETAIL) {
-      return;
-    }
 
     // Only show 2-3 tags to avoid clutter
     const displayTags = tags.slice(0, 3);
 
     // Badge needs to be able to show the tag.color somehow!
     return (
-      <div className="flex gap-xs p-md pb-0 pt-sm flex-wrap">
-        {displayTags.map((tag, index) => (
+      <div className="flex gap-xs p-md flex-wrap">
+        {displayTags.map((tag) => (
           <Badge
-            key={index}
-            variant={tag.color}
+            key={tag.id}
+            variant="default"
             size="default"
             label={tag.name}
-            className='rounded-sm label-sm h-auto w-fit max-w-full'
           />
         ))}
       </div>
@@ -207,12 +212,12 @@ export function EventCard({
     }
 
     return (
-      <div className="flex flex-col p-md pt-sm gap-sm">
+      <div className="flex flex-col p-md gap-sm">
         {/* Event Title */}
-        <p className="event-header title-md emphasized">{event.eventInfo.name}</p>
+        <p className="event-header title-md emphasized">{event.name}</p>
         {/* Recurring Days Bar */}
         {eventIsRecurring && (
-          <RecurringDayIndicator days={event.eventInfo.recurringDays} />
+          <RecurringDayIndicator days={event.recurringDays} />
         )}
         {/* Event Date and time */}
         <div className="flex flex-col gap-sm text-on-surface-variant">
@@ -240,7 +245,7 @@ export function EventCard({
         <div className="flex gap-sm items-center text-on-surface-variant">
           <Icon name="members" size="md" />
           <p className="body-sm">
-            {event.sessionInfo?.participantsCount} going
+            {event.participantsCount} going
             {spotsText && ` · ${spotsText}`}
           </p>
         </div>
@@ -259,7 +264,7 @@ export function EventCard({
 
   function getAvailableActions(
     mode: EventCardModeType,
-    event: EventCardType,
+    event: Event,
   ): Array<{
     type: EventActionType;
     label: string;
@@ -273,7 +278,7 @@ export function EventCard({
     // ========================================
     if (mode === EventCardModes.DASHBOARD_TODAY) {
       // Captain sees different buttons than participants!
-      if (event.eventInfo.userIsCaptain) {
+      if (event.userIsCaptain) {
         return [
           {
             type: EventAction.CHECK_IN,
@@ -291,7 +296,7 @@ export function EventCard({
         // Returns ARRAY with 2 buttons! 👆
       }
 
-      if (event.eventInfo.userIsParticipant && userIsAttending) {
+      if (event.userIsParticipant && userIsAttending) {
         return [
           {
             type: EventAction.MY_MATCHES,
@@ -316,8 +321,8 @@ export function EventCard({
     // ========================================
     if (mode === EventCardModes.DASHBOARD_UPCOMING) {
       // Captain sees different buttons than participants!
-      if (event.eventInfo.userIsCaptain) {
-        if (event.sessionInfo?.date === getTodayISO()) {
+      if (event.userIsCaptain) {
+        if (event.nextSession?.date === getTodayISO()) {
           return [
             {
               type: EventAction.CHECK_IN,
@@ -351,7 +356,7 @@ export function EventCard({
         }
       }
 
-      if (event.eventInfo.userIsParticipant && userIsAttending) {
+      if (event.userIsParticipant && userIsAttending) {
         return [
           {
             type: EventAction.CANCEL,
@@ -418,8 +423,8 @@ export function EventCard({
       }
 
       // Captain sees different buttons than participants!
-      if (event.eventInfo.userIsCaptain) {
-        if (event.sessionInfo?.date === getTodayISO()) {
+      if (event.userIsCaptain) {
+        if (event.nextSession?.date === getTodayISO()) {
           return [
             {
               type: EventAction.CHECK_IN,
@@ -455,7 +460,7 @@ export function EventCard({
         }
       }
 
-      if (event.eventInfo.userIsParticipant && userIsAttending) {
+      if (event.userIsParticipant && userIsAttending) {
         return [
           {
             type: EventAction.CANCEL,
@@ -495,7 +500,7 @@ export function EventCard({
   function EventCardActions({ mode, event, onAction }: EventCardProps) {
     // Determine if to show ACTION/MANAGE EVENT TITLE to display
     const title = isDashboardMode(mode)
-      ? event.eventInfo.userIsCaptain
+      ? event.userIsCaptain
         ? "MANAGE EVENT"
         : "ACTIONS"
       : null;
@@ -511,7 +516,7 @@ export function EventCard({
     }
 
     return (
-      <div className="flex flex-col gap-sm p-md pt-0">
+      <div className="flex flex-col gap-sm p-md">
         {title && <p className="single-line-small">{title}</p>}
         {/* Show the Buttons */}
         <div className="flex justify-between items-center py-sm">
@@ -545,7 +550,7 @@ export function EventCard({
     >
       {renderHeader()}
       {renderEventBanner()}
-      <RenderTags tags={event.eventInfo.tags} />
+      <RenderTags tags={event.tags} />
       {renderEventInfo()}
       <EventCardActions mode={mode} event={event} onAction={onAction} />
     </div>
