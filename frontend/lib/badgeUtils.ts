@@ -217,3 +217,41 @@ export function getMembershipNotificationInfo(
   
   return criticalNotifications.map(n => ({ variant, content: n.content }));
 }
+
+export function getBooleanBadge(config: {
+  value: boolean;
+  trueLabel: string;
+  falseLabel: string;
+  trueVariant?: BadgeVariant;
+  falseVariant?: BadgeVariant;
+}) {
+  return {
+    variant: config.value 
+      ? (config.trueVariant ?? 'success') 
+      : (config.falseVariant ?? 'default'),
+    label: config.value ? config.trueLabel : config.falseLabel,
+  };
+}
+
+/**
+ * Helper for League.isActive / Event.isActive
+ */
+export function getIsActiveBadge(isActive: boolean) {
+  return getBooleanBadge({
+    value: isActive,
+    trueLabel: 'Active',
+    falseLabel: 'Inactive',
+    trueVariant: 'success',
+    falseVariant: 'warning',
+  });
+}
+
+export function getIsCancelledBadge(isCancelled: boolean) {
+  return getBooleanBadge({
+    value: isCancelled,
+    trueLabel: 'Cancelled',
+    falseLabel: 'Active',
+    trueVariant: 'warning',
+    falseVariant: 'success',
+  });
+}

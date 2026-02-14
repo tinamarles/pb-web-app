@@ -389,3 +389,23 @@ export function dateFromDjango(dateStr: string): Date {
 export function dateToDjango(date: Date): string {
   return date.toISOString().split("T")[0];
 }
+
+/**
+ * Check if a Date object represents today
+ *
+ * @param date - JavaScript Date object to check
+ * @returns true if date is today, false otherwise
+ *
+ * @example
+ * const day = new Date(2026, 1, 6); // Feb 6, 2026
+ * const isToday = isToday(day); // true if today is Feb 6
+ *
+ * // Use in weekDay buttons:
+ * weekDays.map(day => {
+ *   const isToday = isToday(day);
+ *   return <Button variant={isToday ? "outlined" : "subtle"} />;
+ * })
+ */
+export function isToday(date: Date): boolean {
+  return isSameDay(date, new Date());
+}

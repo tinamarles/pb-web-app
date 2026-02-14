@@ -360,6 +360,7 @@ export interface DjangoLeague {
   image_url: string;
   league_type: C.LeagueTypeValue;
   recurring_days: number[];
+  is_active: boolean;
   is_recurring: boolean;
   upcoming_sessions?: DjangoSession[];
   user_has_upcoming_sessions?: boolean;
@@ -516,6 +517,7 @@ export interface DjangoEventActivity {
     user_is_participant: boolean;
     minimum_skill_level: C.SkillLevelValue | null;
     recurring_days: number[];
+    is_event: boolean;
   };
   session: DjangoSession;
 }

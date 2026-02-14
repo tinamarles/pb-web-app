@@ -5,6 +5,14 @@
 // Last synced: 2025-12-07
 // =====================================================
 
+export const ActivityCardVariant = {
+    DEFAULT: 'default',
+    CALENDAR: 'calendar',
+ } as const;
+
+ export type ActivityCardVariantValue =
+  (typeof ActivityCardVariant)[keyof typeof ActivityCardVariant];
+
 // =====================================================
 // FILTERING 
 // =====================================================
@@ -214,6 +222,9 @@ export const SkillLevel = {
   OPEN: 1,
   INTERMEDIATE_PLUS: 2,
   ADVANCED_PLUS: 3,
+  INTER_1: 4, //'2.8-3.1 (Light Intermediate)'
+  INTER_2: 5, // '3.2-3.4 (Intermediate)'
+  BEGINNER: 6, //'2.0-2.7 (Beginner)'
 } as const;
 
 export type SkillLevelValue = (typeof SkillLevel)[keyof typeof SkillLevel];
@@ -222,13 +233,19 @@ export const SkillLevelLabels: Record<SkillLevelValue, string> = {
   [SkillLevel.OPEN]: "All Levels",
   [SkillLevel.INTERMEDIATE_PLUS]: "3.5+ (Advanced Intermediate)",
   [SkillLevel.ADVANCED_PLUS]: "4.0+ (Advanced)",
+  [SkillLevel.INTER_1]: "2.8-3.1 (Light Intermediate)",
+  [SkillLevel.INTER_2]: "3.2-3.4 (Intermediate)",
+  [SkillLevel.BEGINNER]: "2.0-2.7 (Beginner)",
 };
 
 // Reverse mapping: label → value (for form submissions)
 export const SkillLevelValues: Record<string, SkillLevelValue> = {
-  "Open (Not Assessed)": SkillLevel.OPEN,
+  "All Levels": SkillLevel.OPEN,
   "3.5+ (Advanced Intermediate)": SkillLevel.INTERMEDIATE_PLUS,
   "4.0+ (Advanced)": SkillLevel.ADVANCED_PLUS,
+  "2.8-3.1 (Light Intermediate)": SkillLevel.INTER_1,
+  "3.2-3.4 (Intermediate)": SkillLevel.INTER_2,
+  "2.0-2.7 (Beginner)": SkillLevel.BEGINNER,
 };
 
 /**
@@ -363,7 +380,7 @@ export const LeagueParticipationStatus = {
   RESERVE: 2,
   INJURED: 3,
   HOLIDAY: 4,
-  DROPPED: 5,
+  CANCELLED: 5,
 } as const;
 
 export type LeagueParticipationStatusValue =
@@ -377,7 +394,7 @@ export const LeagueParticipationStatusLabels: Record<
   [LeagueParticipationStatus.RESERVE]: "Reserve - Waiting for spot",
   [LeagueParticipationStatus.INJURED]: "Injured - Temporarily out",
   [LeagueParticipationStatus.HOLIDAY]: "On Holiday - Temporarily out",
-  [LeagueParticipationStatus.DROPPED]: "Dropped Out",
+  [LeagueParticipationStatus.CANCELLED]: "Dropped Out",
 };
 
 // Reverse mapping: label → value (for form submissions)
@@ -389,7 +406,7 @@ export const LeagueParticipationStatusValues: Record<
   "Reserve - Waiting for spot": LeagueParticipationStatus.RESERVE,
   "Injured - Temporarily out": LeagueParticipationStatus.INJURED,
   "On Holiday - Temporarily out": LeagueParticipationStatus.HOLIDAY,
-  "Dropped Out": LeagueParticipationStatus.DROPPED,
+  "Dropped Out": LeagueParticipationStatus.CANCELLED,
 };
 
 /**
@@ -1333,6 +1350,9 @@ export const SkillLevelBadgeVariant: Record<SkillLevelValue, BadgeVariant> = {
   [SkillLevel.OPEN]: "default",
   [SkillLevel.INTERMEDIATE_PLUS]: "info",
   [SkillLevel.ADVANCED_PLUS]: "tertiary",
+  [SkillLevel.INTER_1]: "primary",
+  [SkillLevel.INTER_2]: "secondary",
+  [SkillLevel.BEGINNER]: "success",
 };
 
 /**
@@ -1368,7 +1388,7 @@ export const LeagueParticipationStatusBadgeVariant: Record<
   [LeagueParticipationStatus.RESERVE]: "warning",
   [LeagueParticipationStatus.INJURED]: "error",
   [LeagueParticipationStatus.HOLIDAY]: "info",
-  [LeagueParticipationStatus.DROPPED]: "default",
+  [LeagueParticipationStatus.CANCELLED]: "default",
 };
 
 /**

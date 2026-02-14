@@ -1,6 +1,7 @@
 // frontend/lib/definitions.ts
 
 import * as C from "@/lib/constants";
+import { BadgeVariant } from "@/ui";
 
 // Generic Type for dynamic route params
 export type PageProps<
@@ -394,6 +395,7 @@ export interface EventActivity {
     userIsParticipant: boolean;
     minimumSkillLevel: C.SkillLevelValue | null;
     recurringDays: C.DayOfWeekValue[];
+    isEvent: boolean;
   };
 
   // Session occurrence info
@@ -436,6 +438,7 @@ export type EventCardType = {
     userIsCaptain: boolean;
     userIsParticipant: boolean;
     recurringDays: C.DayOfWeekValue[];
+    isEvent: boolean;
   };
   sessionInfo?: EventCardSession;
 };
@@ -571,6 +574,7 @@ export interface League {
   leagueType: C.LeagueTypeValue;
   recurringDays: C.DayOfWeekValue[];
   isRecurring: boolean;
+  isActive: boolean; // ✅ Added based on is_active property in Django model
   upcomingSessions?: Session[];
   userHasUpcomingSessions?: boolean;
   userNextSessionId?: number | null;
@@ -600,7 +604,7 @@ export interface Tag {
   slug?: string; // 'beginner', 'women-only'
   name: string; // 'Beginner', 'Women Only'
   category?: "SKILL" | "DEMOGRAPHIC" | "ACCESS" | "SPECIAL";
-  color: string;
+  color: BadgeVariant;
 }
 
 export type Event = League & {
