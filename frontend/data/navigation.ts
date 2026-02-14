@@ -24,7 +24,7 @@ export interface NavSection {
   title: string; // Section title (e.g., "Settings", "Features")
   id: string; // Unique ID for the section
   items: NavItem[]; // Items in this section
-  separator?: boolean;  // ✅ NEW! Show separator before this section
+  separator?: boolean; // ✅ NEW! Show separator before this section
 }
 
 /**
@@ -163,19 +163,30 @@ export const DASHBOARD_NAV_ITEMS: NavItem[] = [
 ];
 // ✅ ADD: Admin navigation items (conditionally rendered in sidebar)
 export const DASHBOARD_ADMIN_ITEMS: NavItem[] = [
-  { label: "Admin Dashboard", href: "/admin/settings", icon: "dashboard" },
+  {
+    label: "Admin Dashboard",
+    href: "/admin/[clubId]/settings",
+    icon: "dashboard",
+  },
 ];
 
 // ✅ ADD: Admin navigation items
 export const ADMIN_NAV_ITEMS: NavItem[] = [
-  
-  { label: "Reports", href: "/admin/reports", icon: "chart" },
-  { label: "Calendar", href: "/admin/schedule", icon: "calendar" },
-  { label: "Events", href: "/admin/events", icon: "events" },
-  { label: "Memberships", href: "/admin/memberships", icon: "memberships" },
-  { label: "Members", href: "/admin/members", icon: "members" },
-  { label: "Announcements", href: "/admin/announcements", icon: "announcements" },
-  { label: "Settings", href: "/admin/settings", icon: "settings" },
+  { label: "Reports", href: "/admin/[clubId]/reports", icon: "chart" },
+  { label: "Calendar", href: "/admin/[clubId]/schedule", icon: "calendar" },
+  { label: "Events", href: "/admin/[clubId]/events/list", icon: "events" },
+  {
+    label: "Memberships",
+    href: "/admin/[clubId]/memberships",
+    icon: "memberships",
+  },
+  { label: "Members", href: "/admin/[clubId]/members", icon: "members" },
+  {
+    label: "Announcements",
+    href: "/admin/[clubId]/announcements",
+    icon: "announcements",
+  },
+  { label: "Settings", href: "/admin/[clubId]/settings", icon: "settings" },
 ];
 
 // ✅ ADD: Feed navigation items (public users)
@@ -280,10 +291,10 @@ export const MORE_MENU_FOOTER_LINKS: FooterLink[] = [
 // No icon, disabled, onClick and badgeCount required
 
 export const CLUB_TAB_ITEMS: NavItem[] = [
-	{ label: "Home", icon:'', href: "/club/[clubId]/home" },
-	{ label: "Events", icon:'', href: "/club/[clubId]/events" },
-	{ label: "Members", icon:'', href: "/club/[clubId]/members" },
-	{ label: "Subscriptions", icon:'', href: "/club/[clubId]/subscriptions" },
+  { label: "Home", icon: "", href: "/club/[clubId]/home" },
+  { label: "Events", icon: "", href: "/club/[clubId]/events" },
+  { label: "Members", icon: "", href: "/club/[clubId]/members" },
+  { label: "Subscriptions", icon: "", href: "/club/[clubId]/subscriptions" },
 ];
 // ============================================
 // FULL NAVIGATION CONFIG (Optional Export)
@@ -300,4 +311,3 @@ export const navigation: NavigationConfig = {
   feed: FEED_NAV_ITEMS,
   club: CLUB_TAB_ITEMS,
 };
-

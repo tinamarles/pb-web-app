@@ -9,6 +9,7 @@ import { ADMIN_NAV_ITEMS } from "@/data/navigation";
 import { ClubDropdown } from "../ClubDropdown";
 import { getWorstBadgeVariantForNotifications } from "@/lib/constants";
 import { NotificationTypeValue } from "@/lib/constants";
+import { Announcement, Notification } from "@/lib/definitions";
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -19,27 +20,36 @@ export function AdminSidebar() {
   // This is elegant because it automatically includes ALL current and future permissions!
   // The actual permission gating happens in AdminSidebar - this just shows the nav item
   const hasAnyAdminPermission = (
-    membership: typeof currentMembership
+    membership: typeof currentMembership,
   ): boolean => {
     if (!membership) return false;
 
     // Check if ANY property starting with 'can' is true
     return Object.entries(membership).some(
-      ([key, value]) => key.startsWith("can") && value === true
+      ([key, value]) => key.startsWith("can") && value === true,
     );
   };
+  const notificationsList = notifications.filter(
+    (item): item is Notification & { feedType: "notification" } =>
+      item.feedType === "notification",
+  );
+
+  const announcementsList = notifications.filter(
+    (item): item is Announcement & { feedType: "announcement" } =>
+      item.feedType === "announcement",
+  );
 
   // ✅ GENERIC helper with CLUB FILTERING - counts unread notifications for given type(s)
   // NO HARD-CODING! Just compares navItem.badgeCount to notification.notificationType
   // CLUB-AWARE: Filters by currentMembership.clubId for club-specific notifications
   const getUnreadCount = (
-    badgeCount?: NotificationTypeValue | NotificationTypeValue[]
+    badgeCount?: NotificationTypeValue | NotificationTypeValue[],
   ): number => {
     if (!badgeCount) return 0;
 
     const types = Array.isArray(badgeCount) ? badgeCount : [badgeCount];
 
-    return notifications.filter((n) => {
+    return notificationsList.filter((n) => {
       // Basic checks: type match + unread
       if (!types.includes(n.notificationType) || n.isRead) return false;
 
@@ -60,19 +70,21 @@ export function AdminSidebar() {
     const baseItems: SidebarItem[] = ADMIN_NAV_ITEMS.map((item) => ({
       label: item.label,
       icon: item.icon,
-      href: item.href || "#",
-      active: pathname === item.href,
+      href:
+        item.href?.replace("[clubId]", String(currentMembership?.club.id)) ||
+        "#",
+      active:
+        pathname ===
+        item.href?.replace("[clubId]", String(currentMembership?.club.id)), // ✅ Active state based on pathname
       badgeCount: getUnreadCount(item.badgeCount), // ✅ Club-filtered count!
       badgeVariant: getWorstBadgeVariantForNotifications(
-        notifications,
-        item.badgeCount
+        notificationsList,
+        item.badgeCount,
       ), // ✅ Color!
     }));
 
     // Build sections array
-    const sectionArray: SidebarSection[] = [
-      { items: baseItems },
-    ];
+    const sectionArray: SidebarSection[] = [{ items: baseItems }];
 
     return sectionArray;
   }, [pathname, currentMembership, notifications]); // ✅ Re-compute when club/notifications change!
