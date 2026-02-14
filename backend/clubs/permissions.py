@@ -1,6 +1,30 @@
 # pickleball/permissions.py
 from rest_framework import permissions
 from .models import ClubMembership
+from public.constants import MembershipStatus
+
+class IsClubMember(permissions.BasePermission):
+    """
+    Permission to check if user is an ACTIVE member of the club.
+    
+    Usage:
+    - Requires club object to be available (detail endpoints)
+    - Checks if user has an ACTIVE membership to the club
+    
+    ADDED: 2026-02-12
+    """
+    
+    def has_object_permission(self, request, view, obj):
+        # obj is the Club instance
+        if not request.user.is_authenticated:
+            return False
+        
+        # Check if user has an active membership to this club
+        return ClubMembership.objects.filter(
+            member=request.user,
+            club=obj,
+            status=MembershipStatus.ACTIVE
+        ).exists()
 
 class IsClubAdmin(permissions.BasePermission):
     """

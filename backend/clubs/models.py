@@ -240,8 +240,10 @@ class ClubMembershipSkillLevel(models.Model):
         unique=True,
         help_text='Skill level designation'
         )
+    short_name = models.CharField(max_length=20, blank=True)
     description = models.TextField(blank=True)
-    
+    min_level = models.DecimalField(max_digits=2, decimal_places=1,default=2.0, null=True)
+    max_level = models.DecimalField(max_digits=2, decimal_places=1,default=6.0, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

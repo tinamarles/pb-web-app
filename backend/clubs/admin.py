@@ -7,6 +7,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django import forms
 from django.db import models
+from django.contrib import messages
 
 from .models import (
     Club,
@@ -15,6 +16,29 @@ from .models import (
     ClubMembershipSkillLevel,
     Role
 )
+
+# ==========================================
+# ADMIN FORMS
+# ==========================================
+
+class BulkUpdateLevelForm(forms.Form):
+    """Form for bulk updating skill levels on ClubMemberships"""
+    skill_level = forms.ModelChoiceField(
+        queryset=ClubMembershipSkillLevel.objects.all().order_by('level'),
+        required=True,
+        label='Skill Level',
+        help_text='Select the skill level to assign to selected memberships'
+    )
+    action_type = forms.ChoiceField(
+        choices=[
+            ('replace', 'Replace all existing levels'),
+            ('add', 'Add to existing levels (keep current levels)'),
+        ],
+        initial='replace',
+        required=True,
+        widget=forms.RadioSelect,
+        label='Action Type'
+    )
 
 # ==========================================
 # INLINES
@@ -177,12 +201,73 @@ class ClubAdmin(admin.ModelAdmin):
 # CLUB MEMBERSHIP ADMIN
 # ==========================================
 
+class RoleFilter(admin.SimpleListFilter):
+    """Custom filter to filter ClubMemberships by Role"""
+    title = 'role'  # Display name in filter sidebar
+    parameter_name = 'role'  # URL parameter name
+    
+    def lookups(self, request, model_admin):
+        """Return list of roles to filter by"""
+        from public.constants import RoleType
+        
+        # Get all roles that exist in database
+        roles = Role.objects.all().order_by('name')
+        return [(role.id, role.get_name_display()) for role in roles]
+    
+    def queryset(self, request, queryset):
+        """Filter queryset based on selected role"""
+        if self.value():
+            # Filter memberships that have this role
+            return queryset.filter(roles__id=self.value())
+        return queryset
+    
+class LevelFilter(admin.SimpleListFilter):
+    """Custom filter to filter ClubMemberships by Skill Level"""
+    title = 'skill level'  # Display name in filter sidebar
+    parameter_name = 'skill_level'  # URL parameter name
+    
+    def lookups(self, request, model_admin):
+        """Return list of skill levels to filter by"""
+        levels = ClubMembershipSkillLevel.objects.all().order_by('level')
+        options = [(l.id, f"{l.level} - {l.short_name}") for l in levels]
+        # Add option to filter by empty/no level
+        options.append(('none', 'No Level Assigned'))
+        return options
+    
+    def queryset(self, request, queryset):
+        """Filter queryset based on selected skill level"""
+        if self.value() == 'none':
+            # Filter memberships with NO skill level assigned
+            return queryset.filter(levels__isnull=True)
+        elif self.value():
+            # Filter memberships that have this skill level
+            return queryset.filter(levels__id=self.value())
+        return queryset
+
+class MembershipTypeFilter(admin.SimpleListFilter):
+    """Custom filter to filter ClubMemberships by Type"""
+    title = 'membership type'  # Display name in filter sidebar
+    parameter_name = 'membership_type'  # URL parameter name
+    
+    def lookups(self, request, model_admin):
+        """Return list of membership types to filter by"""
+        # Get all membership types, grouped by club for clarity
+        types = ClubMembershipType.objects.all().select_related('club').order_by('club__name', 'name')
+        return [(t.id, f"{t.club.short_name or t.club.name} - {t.name}") for t in types]
+    
+    def queryset(self, request, queryset):
+        """Filter queryset based on selected membership type"""
+        if self.value():
+            # Filter memberships that have this type
+            return queryset.filter(type__id=self.value())
+        return queryset
+
 @admin.register(ClubMembership)
 class ClubMembershipAdmin(admin.ModelAdmin):
     list_display = (
         'member_display',
         'club',
-        'type',
+        'type_name',
         'status_display',
         'role_list',
         'level_list',
@@ -192,8 +277,10 @@ class ClubMembershipAdmin(admin.ModelAdmin):
     list_filter = (
         'status',
         'is_preferred_club',
-        'type',
+        MembershipTypeFilter,  # ← ADD THIS!
         'club',
+        RoleFilter,  # ← Already there!
+        LevelFilter,  # ← Already there!
         'created_at'
     )
     search_fields = (
@@ -204,10 +291,12 @@ class ClubMembershipAdmin(admin.ModelAdmin):
         'club__name',
         'membership_number'
     )
-    ordering = ('-created_at',)
+    #ordering = ('-created_at',)
+    ordering = ('member__last_name', 'member__first_name', 'club__name')  # More intuitive default ordering
     readonly_fields = ('created_at', 'updated_at')
     raw_id_fields = ('member',)
     filter_horizontal = ('roles', 'levels')
+    actions = ['bulk_update_skill_level']  # ← Register the action!
     
     fieldsets = (
         ('Member Details', {
@@ -229,11 +318,79 @@ class ClubMembershipAdmin(admin.ModelAdmin):
         }),
     )
     
+    def bulk_update_skill_level(self, request, queryset):
+        """
+        Admin action to bulk update skill levels for selected memberships.
+        Shows an intermediate form to select the skill level and action type.
+        """
+        from django.shortcuts import render
+        from django.http import HttpResponseRedirect
+        
+        # If form has been submitted from the intermediate page
+        if 'apply' in request.POST:
+            form = BulkUpdateLevelForm(request.POST)
+            
+            if form.is_valid():
+                skill_level = form.cleaned_data['skill_level']
+                action_type = form.cleaned_data['action_type']
+                
+                # Get the membership IDs from the hidden fields
+                membership_ids = request.POST.getlist('_selected_action')
+                
+                if not membership_ids:
+                    self.message_user(
+                        request,
+                        'No memberships were selected.',
+                        messages.ERROR
+                    )
+                    return HttpResponseRedirect(request.get_full_path())
+                
+                # Fetch the memberships
+                memberships = self.model.objects.filter(pk__in=membership_ids)
+                
+                updated_count = 0
+                for membership in memberships:
+                    if action_type == 'replace':
+                        # Clear all existing levels and set new one
+                        membership.levels.clear()
+                        membership.levels.add(skill_level)
+                    else:  # 'add'
+                        # Add to existing levels (if not already present)
+                        membership.levels.add(skill_level)
+                    updated_count += 1
+                
+                # Success message
+                self.message_user(
+                    request,
+                    f'Successfully updated skill level for {updated_count} membership(s) to "{skill_level}".',
+                    messages.SUCCESS
+                )
+                
+                # Return None to return to the changelist
+                return None
+        
+        # Show the intermediate form (first time)
+        form = BulkUpdateLevelForm()
+        
+        context = {
+            'form': form,
+            'memberships': queryset,
+            'action_name': 'bulk_update_skill_level',  # ← Important!
+            'opts': self.model._meta,
+            'title': 'Bulk Update Skill Level',
+            'queryset': queryset,
+            'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
+        }
+        
+        return render(request, 'admin/bulk_update_skill_level.html', context)
+    
+    bulk_update_skill_level.short_description = 'Update skill level for selected memberships'
+    
     def member_display(self, obj):
         """Display member with full name"""
         full_name = obj.member.get_full_name()
         if full_name:
-            return f"{obj.member.username} ({full_name})"
+            return f"{full_name}"
         return obj.member.username
     member_display.short_description = 'Member'
     
@@ -270,7 +427,10 @@ class ClubMembershipAdmin(admin.ModelAdmin):
         return '-'
     level_list.short_description = 'Skill Levels'
 
-
+    def type_name(self, obj):
+        """Display the name of the membership type"""
+        return obj.type.name if obj.type else '-'
+    type_name.short_description = 'Type'
 # ==========================================
 # CLUB MEMBERSHIP TYPE ADMIN
 # ==========================================
@@ -373,6 +533,9 @@ class ClubMembershipSkillLevelAdmin(admin.ModelAdmin):
     list_display = (
         'level',
         'description_short',
+        'short_name',
+        'min_level',
+        'max_level',
         'member_count',
         'created_at'
     )
@@ -385,7 +548,7 @@ class ClubMembershipSkillLevelAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Skill Level', {
-            'fields': ('level', 'description')
+            'fields': ('level', 'short_name', 'description', 'min_level', 'max_level')
         }),
         ('Statistics', {
             'fields': ('member_count',),
