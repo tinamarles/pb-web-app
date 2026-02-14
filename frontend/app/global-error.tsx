@@ -17,7 +17,7 @@ export default function GlobalError({
         <div className="flex min-h-screen items-center justify-center bg-background p-container">
           <div className="flex max-w-2xl flex-col items-center gap-2xl text-center">
             {/* Warning Icon */}
-            <div className="flex items-center justify-center rounded-full bg-error-container p-hero">
+            <div className="flex items-center justify-center rounded-full bg-error/20 p-hero">
               <Icon name="error" className="text-error" size="5xl" />
             </div>
 
