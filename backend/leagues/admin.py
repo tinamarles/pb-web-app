@@ -18,6 +18,7 @@
 # 14. ✅ FIXED: Custom FORM clean() method auto-populates club_membership + makes it not required! (2026-01-19)
 # 15. ✅ NEW: Added ClubFilterForSessionOccurrence - filter by club FIRST, then league! (2026-01-19)
 # 16. ✅ NEW: Added LeagueFilterForSessionOccurrence - DYNAMIC league filter that respects club selection! (2026-01-19)
+# 17. ✅ NEW: Added LeagueFilterForParticipation - Custom filter to filter LeagueParticipation by League (2026-01-19)
 # =====================================
 
 from django.contrib import admin
@@ -292,6 +293,28 @@ class LeagueFilterForSessionOccurrence(admin.SimpleListFilter):
         return queryset
 
 
+class LeagueFilterForParticipation(admin.SimpleListFilter):
+    """Custom filter to filter LeagueParticipation by League"""
+    title = 'league/event'  # Display name in filter sidebar
+    parameter_name = 'league_filter'  # URL parameter name (different from 'league' field!)
+    
+    def lookups(self, request, model_admin):
+        """Return list of leagues to filter by"""
+        # Get all leagues that have participants, grouped by club for clarity
+        leagues = League.objects.filter(
+            league_participants__isnull=False
+        ).select_related('club').distinct().order_by('club__name', 'name')
+        
+        return [(league.id, f"{league.club.short_name or league.club.name} - {league.name}") for league in leagues]
+    
+    def queryset(self, request, queryset):
+        """Filter queryset based on selected league"""
+        if self.value():
+            # Filter participations for this league
+            return queryset.filter(league__id=self.value())
+        return queryset
+
+
 # ========================================
 # INLINES
 # ========================================
@@ -434,6 +457,53 @@ class LeagueSessionInline(admin.TabularInline):
     # ✅ Add helpful message
     verbose_name = "Session Schedule"
     verbose_name_plural = "Session Schedules (At least 1 required! Auto-creates SessionOccurrences on save!)"
+    
+    def save_formset(self, request, form, formset, change):
+        """
+        Override save_formset to regenerate SessionOccurrence records
+        when LeagueSession is edited via League admin inline.
+        
+        This ensures occurrences regenerate whether you edit:
+        1. Directly in LeagueSession admin (uses save_model)
+        2. Via inline in League admin (uses THIS method)
+        """
+        # Save the formset normally
+        instances = formset.save(commit=False)
+        
+        # Track sessions that need regeneration
+        sessions_to_regenerate = []
+        
+        # Save instances and track which ones were modified
+        for instance in instances:
+            # Check if this is an update (not a new record)
+            is_update = instance.pk is not None
+            
+            instance.save()
+            
+            # If updating existing session, mark for regeneration
+            if is_update:
+                sessions_to_regenerate.append(instance)
+        
+        # Handle deletions
+        for obj in formset.deleted_objects:
+            obj.delete()
+        
+        # Save many-to-many relationships
+        formset.save_m2m()
+        
+        # Now regenerate occurrences for updated sessions
+        total_occurrences = 0
+        for session in sessions_to_regenerate:
+            session.generate_occurrences()
+            count = session.occurrences.count()
+            total_occurrences += count
+        
+        # Show success message if any were regenerated
+        if total_occurrences > 0:
+            messages.success(
+                request,
+                f'✅ Regenerated {total_occurrences} SessionOccurrence records for {len(sessions_to_regenerate)} session(s).'
+            )
 
 
 class LeagueAttendanceInline(admin.TabularInline):
@@ -608,7 +678,8 @@ class LeagueParticipationAdmin(admin.ModelAdmin):
     Used by LeagueAttendanceInline to search for enrolled members.
     """
     list_display = (
-        'member', 
+        'member__first_name', 
+        'member__last_name',
         'league', 
         'club_membership',
         'status_display',
@@ -619,7 +690,8 @@ class LeagueParticipationAdmin(admin.ModelAdmin):
     list_filter = (
         'status', 
         'exclude_from_rankings',
-        'joined_at'
+        'joined_at',
+        LeagueFilterForParticipation  # ✅ Add custom filter for league
     )
     search_fields = (
         'member__username', 
@@ -628,7 +700,8 @@ class LeagueParticipationAdmin(admin.ModelAdmin):
         'member__last_name',
         'league__name'
     )
-    ordering = ('-joined_at',)
+    # ordering = ('-joined_at',)
+    ordering = ('member__first_name', 'member__last_name', '-joined_at')  # ✅ Order by member name, then joined date
     readonly_fields = ('joined_at', 'created_at', 'updated_at')
     autocomplete_fields = ['league', 'member', 'club_membership']  # ✅ Make this searchable too!
     
@@ -702,6 +775,33 @@ class LeagueSessionAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    
+    def save_model(self, request, obj, form, change):
+        """
+        Override save_model to ALWAYS regenerate SessionOccurrence records
+        when LeagueSession is saved from Django Admin.
+        
+        This fixes the issue where editing a session doesn't update occurrences!
+        
+        How it works:
+        1. Save the LeagueSession normally
+        2. If editing (change=True), regenerate all SessionOccurrence records
+        3. Admin sees success message with count of occurrences created
+        """
+        super().save_model(request, obj, form, change)
+        
+        # If editing existing session, regenerate occurrences
+        if change:
+            obj.generate_occurrences()
+            
+            # Count how many were created
+            occurrence_count = obj.occurrences.count()
+            
+            # Show success message
+            messages.success(
+                request,
+                f'✅ Regenerated {occurrence_count} SessionOccurrence records for this session.'
+            )
     
     def day_of_week_display(self, obj):
         """Display day of week as readable string"""

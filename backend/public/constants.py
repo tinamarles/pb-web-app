@@ -25,6 +25,9 @@ class SkillLevel(models.IntegerChoices):
     OPEN = 1, 'Open (Not Assessed)'
     INTERMEDIATE_PLUS = 2, '3.5+ (Advanced Intermediate)'
     ADVANCED_PLUS = 3, '4.0+ (Advanced)'
+    INTER_1 = 4, '2.8-3.1 (Light Intermediate)'
+    INTER_2 = 5, '3.2-3.4 (Intermediate)'
+    BEGINNER = 6,'2.0-2.7 (Beginner)'
 
 class RegistrationStatus(models.IntegerChoices):
     OPEN = 1, 'Open'
@@ -58,7 +61,7 @@ class LeagueParticipationStatus(models.IntegerChoices):
     RESERVE = 2, 'Reserve - Waiting for spot'
     INJURED = 3, 'Injured - Temporarily out'
     HOLIDAY = 4, 'On Holiday - Temporarily out'
-    DROPPED = 5, 'Dropped Out'
+    CANCELLED = 5, 'Dropped Out'
 
 class DayOfWeek(models.IntegerChoices):
     """Shared between League and Courts modules"""

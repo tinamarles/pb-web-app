@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from functools import cached_property
 from clubs.models import Club, ClubMembership, ClubMembershipSkillLevel
 from courts.models import CourtLocation
-from public.constants import LeagueType, GenerationFormat, LeagueParticipationStatus, DayOfWeek, RecurrenceType, LeagueAttendanceStatus, MatchStatus
+from public.constants import LeagueType, GenerationFormat, LeagueParticipationStatus, DayOfWeek, RecurrenceType, LeagueAttendanceStatus, MatchStatus, SkillLevel
 from datetime import date, timedelta, datetime
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -136,7 +136,7 @@ class League(models.Model):
         null=True,
         blank=True,
         related_name='leagues_with_min_skill',
-        help_text='Minimum skill level required (e.g., 3.5+ means 3.5, 4.0, 4.5, 5.0 allowed)'
+        help_text='Required skill Level (e.g., 3.5+ means only 3.5+ players can join. 4.0+ or Inter 1 can not join).)'
     )
     
     # Captain (creator/manager)
@@ -367,22 +367,25 @@ class League(models.Model):
         # CHECK: Skill requirement
         # ========================================
         if self.minimum_skill_level:
-            user_skill_levels = club_membership.levels.all()
-            
-            # Check if any of user's skills meet requirement
-            # Since ClubMembershipSkillLevel uses integer IDs (higher ID = higher skill),
-            # we just compare IDs directly!
-            skill_met = any(
-                level.id >= self.minimum_skill_level.id
-                for level in user_skill_levels
-            )
-            
-            if not skill_met:
-                return (
-                    False,
-                    None,
-                    f"Requires skill level {self.minimum_skill_level.level} or higher"
-                )
+            # Special case: OPEN leagues accept anyone
+            if self.minimum_skill_level.level == SkillLevel.OPEN:
+                # Anyone can join OPEN leagues!
+                pass  # Continue to next check
+            else:
+                # User MUST have this exact level in their ClubMembership.levels[]
+                user_skill_levels = club_membership.levels.all()
+                
+                # Check if user has the required level
+                has_required_level = user_skill_levels.filter(
+                    id=self.minimum_skill_level.id
+                ).exists()
+                
+                if not has_required_level:
+                    return (
+                        False,
+                        None,
+                        f"Requires skill level: {self.minimum_skill_level.short_name}"
+                    )
         
         # ========================================
         # CHECK: Capacity (same field, different meaning!)
@@ -758,43 +761,59 @@ class LeagueSession(models.Model):
         current_date = start
         occurrences = []
         
-        while current_date <= end:
-            # Check if this date matches our day_of_week
-            if current_date.weekday() == self.day_of_week:
-                # Combine date + time
-                start_dt = timezone.make_aware(
-                    datetime.combine(current_date, self.start_time)
-                )
-                end_dt = timezone.make_aware(
-                    datetime.combine(current_date, self.end_time)
-                )
-                
-                # Create occurrence
-                occurrence = SessionOccurrence(
-                    league_session=self,
-                    league=self.league,
-                    session_date=current_date,
-                    start_datetime=start_dt,
-                    end_datetime=end_dt
-                )
-                
-                # Calculate registration windows for events
-                if self.league.is_event:
-                    occurrence.registration_opens_at = start_dt - timedelta(
-                        hours=self.league.registration_opens_hours_before
-                    )
-                    occurrence.registration_closes_at = start_dt - timedelta(
-                        hours=self.league.registration_closes_hours_before
-                    )
-                
-                occurrences.append(occurrence)
-            
-            # Move to next day
+        # Find the first occurrence (first matching day_of_week)
+        while current_date <= end and current_date.weekday() != self.day_of_week:
             current_date += timedelta(days=1)
+        
+        # Now generate occurrences based on recurrence_type and interval
+        while current_date <= end:
+            # Combine date + time
+            start_dt = timezone.make_aware(
+                datetime.combine(current_date, self.start_time)
+            )
+            end_dt = timezone.make_aware(
+                datetime.combine(current_date, self.end_time)
+            )
+            
+            # Create occurrence
+            occurrence = SessionOccurrence(
+                league_session=self,
+                league=self.league,
+                session_date=current_date,
+                start_datetime=start_dt,
+                end_datetime=end_dt
+            )
+            
+            # Calculate registration windows for events
+            if self.league.is_event:
+                occurrence.registration_opens_at = start_dt - timedelta(
+                    hours=self.league.registration_opens_hours_before
+                )
+                occurrence.registration_closes_at = start_dt - timedelta(
+                    hours=self.league.registration_closes_hours_before
+                )
+            
+            occurrences.append(occurrence)
+            
+            # Move to next occurrence based on recurrence_type
+            if self.recurrence_type == RecurrenceType.WEEKLY:
+                # Every week: interval * 7 days
+                current_date += timedelta(weeks=self.recurrence_interval)
+            elif self.recurrence_type == RecurrenceType.BI_WEEKLY:
+                # Every other week: 2 weeks * interval
+                current_date += timedelta(weeks=2 * self.recurrence_interval)
+            elif self.recurrence_type == RecurrenceType.MONTHLY:
+                # Monthly: Move to next month, find same day_of_week
+                # This is tricky - need to handle varying month lengths
+                # Simple approach: add ~4 weeks, then find next matching day
+                current_date += timedelta(weeks=4 * self.recurrence_interval)
+                # Adjust to correct day_of_week if needed
+                while current_date.weekday() != self.day_of_week:
+                    current_date += timedelta(days=1)
         
         # Bulk create all occurrences
         SessionOccurrence.objects.bulk_create(occurrences)
-     
+    
     def get_next_occurrence(self, from_date=None):
         """Get next occurrence of this session."""
         
@@ -1520,7 +1539,6 @@ class RoundRobinPattern(models.Model):
     def num_rounds(self):
         """Get total number of rounds in this pattern."""
         return len(self.pattern_data.get('rounds', []))
-
 
 # ========================================
 # SIGNALS

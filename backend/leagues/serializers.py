@@ -143,6 +143,7 @@ class LeagueSerializer(CaptainInfoMixin, serializers.ModelSerializer):
             'league_type',
             'recurring_days',
             'is_recurring',
+            'is_active',
            #   'upcoming_occurrences',
             'user_has_upcoming_sessions',
             
@@ -474,6 +475,11 @@ class LeagueActivitySerializer(CaptainInfoMixin, serializers.ModelSerializer):
     user_is_participant = serializers.SerializerMethodField()
 
     recurring_days = serializers.SerializerMethodField()
+    minimum_skill_level = serializers.IntegerField(
+                  source='minimum_skill_level.level',
+                  allow_null=True,
+                  read_only=True
+            )
     
     class Meta:
         model = League
@@ -488,6 +494,7 @@ class LeagueActivitySerializer(CaptainInfoMixin, serializers.ModelSerializer):
             'user_is_participant',
             'minimum_skill_level',
             'recurring_days',
+            'is_event',
         ]
 
     def get_user_is_captain(self, obj):
