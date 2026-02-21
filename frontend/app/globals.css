@@ -99,6 +99,7 @@
   --px-136: 8.5rem;
   --px-160: 10rem;
   --px-192: 12rem;
+  --px-196: 12.25rem;
   --px-240: 15rem;
   --px-256: 16rem;
   --px-320: 20rem;
@@ -120,7 +121,6 @@
   --spacing-relaxed: 0.015em;
   --spacing-wide: 0.025em;
   --spacing-wider: 0.05em;
-  
 }
 
 /* ===== COLOR DESIGN TOKENS ===== */
@@ -303,6 +303,7 @@
   --h-header: var(--px-64);
   --h-header-mobile: var(--px-56);
   --h-bottomNav: var(--px-64);
+  --h-footer: var(--px-196);
 }
 
 /* ===================================================================== */
@@ -672,6 +673,7 @@
   gap: var(--px-8);
   /* whitespace-nowrap */
   white-space: nowrap;
+  cursor: pointer;
   /* transition-all duration-200 */
   transition-property: all;
   transition-duration: var(--transition-duration-200);
@@ -732,7 +734,75 @@
     @apply disabled-item;
   }
 }
+/* Accordion component */
+@layer components {
+  .accordion {
+    @apply flex flex-col gap-sm;
+  }
 
+  .accordion-item {
+    @apply border border-outline-variant rounded-md;
+    @apply bg-surface-container-low;
+    @apply overflow-hidden;
+  }
+
+  .accordion-header {
+    @apply w-full flex justify-between items-center;
+    @apply py-md px-md;
+    @apply bg-transparent border-none cursor-pointer;
+    @apply text-on-surface text-left;
+    transition: background-color var(--transition-duration-200);
+  }
+
+  .accordion-header:hover {
+    @apply bg-surface-container;
+  }
+
+  .accordion-header:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+
+  .accordion-header-disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .accordion-header-disabled:hover {
+    @apply bg-transparent;
+  }
+
+  .accordion-title {
+    flex: 1;
+  }
+
+  .accordion-chevron {
+    transition: transform var(--transition-duration-200);
+    color: var(--color-on-surface-variant);
+  }
+
+  .accordion-chevron-open {
+    transform: rotate(180deg);
+  }
+
+  .accordion-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--transition-duration-200);
+  }
+
+  .accordion-content-open {
+    grid-template-rows: 1fr;
+  }
+
+  .accordion-content-inner {
+    @apply overflow-hidden py-0 px-md;
+  }
+
+  .accordion-content-open .accordion-content-inner {
+    @apply pt-0 pb-md px-md;
+  }
+}
 /* Data Table component */
 @layer components {
   /* Header Section responsive */
@@ -794,7 +864,7 @@
   /* Table Cell */
   .dt-td {
     @apply px-md py-xs;
-    @apply single-line-base;
+    @apply label-lg;
     color: var(--color-on-surface);
   }
 
@@ -962,7 +1032,7 @@
   .modal-datepicker {
     max-width: 400px; /* Constrain width on desktop */
   }
-  
+
   @media (max-width: 639px) {
     .modal-datepicker {
       max-width: 340px; /* Smaller on mobile */
@@ -1431,14 +1501,14 @@
 
 /* === ACTIVITY CARD === */
 @layer components {
-	.activity-card {
-		@apply flex flex-col;
-		@apply gap-sm p-md;
-		@apply rounded-lg;
-		@apply border border-transparent;
+  .activity-card {
+    @apply flex flex-col;
+    @apply gap-sm p-md;
+    @apply rounded-lg;
+    @apply border border-transparent;
     @apply bg-surface-container-lowest;
     @apply cursor-pointer;
-	}
+  }
   .activity-card:hover {
     @apply transition-colors duration-200;
     @apply shadow-md shadow-primary/20;
@@ -1446,53 +1516,54 @@
     @apply transition-shadow duration-200;
     @apply min-w-0;
   }
-	@media (min-width: 992px) {
-		.activity-card:not(.calendar) {
-			@apply flex-row;
+  @media (min-width: 992px) {
+    .activity-card:not(.calendar) {
+      @apply flex-row;
       @apply gap-xl;
-		}
+    }
     .activity-card.calendar {
       @apply flex-col;
       @apply gap-sm p-sm;
-      @apply border-outline-variant bg-surface-container-low rounded-md
+      @apply border-outline-variant bg-surface-container-low rounded-md;
     }
     .activity-card.calendar:hover {
       @apply shadow-md shadow-primary/20;
       @apply border-primary;
       @apply transition-shadow duration-200;
     }
-	}
-	.activity-card-time {
-		@apply flex items-center justify-between w-full mt-xxs;
-	}
+  }
+  .activity-card-time {
+    @apply flex items-center justify-between w-full mt-xxs;
+  }
   .activity-card-duration {
     @apply label-sm;
     @apply text-on-surface-variant;
   }
 
-	@media (min-width: 992px) {
-		.activity-card-time {
-			@apply flex-col gap-sm justify-start items-start;
+  @media (min-width: 992px) {
+    .activity-card-time {
+      @apply flex-col gap-sm justify-start items-start;
       @apply title-md emphasized;
       min-width: var(--px-192);
-		}
+    }
     .activity-card-duration {
       @apply label-lg;
     }
-	}
-	.activity-card-avatar-mobile, .activity-card-avatar-desktop {
-		@apply hidden;
-	}
-	@media (max-width: 991px) {
-		.activity-card-avatar-mobile {
-			@apply block;
-		}
-	}
-	@media (min-width: 992px) {
-		.activity-card-avatar-desktop {
-			@apply block;
-		}
-	}
+  }
+  .activity-card-avatar-mobile,
+  .activity-card-avatar-desktop {
+    @apply hidden;
+  }
+  @media (max-width: 991px) {
+    .activity-card-avatar-mobile {
+      @apply block;
+    }
+  }
+  @media (min-width: 992px) {
+    .activity-card-avatar-desktop {
+      @apply block;
+    }
+  }
 
   .activityList-mobile {
     @apply hidden;
@@ -1502,16 +1573,15 @@
     @apply hidden;
   }
   @media (max-width: 991px) {
-		.activityList-mobile {
-			@apply flex flex-col;
-		}
-	}
+    .activityList-mobile {
+      @apply flex flex-col;
+    }
+  }
   @media (min-width: 992px) {
-		.activityList-desktop {
-			@apply flex flex-col;
-		}
-	}
-
+    .activityList-desktop {
+      @apply flex flex-col;
+    }
+  }
 }
 
 /* === LAYOUT CONTAINER CLASSES === */
@@ -1551,7 +1621,7 @@
     @apply bg-surface;
     @apply w-full mx-auto;
   }
-  
+
   /* +++ PANEL component +++ */
   /* Left side:   List 
      Right side: Details 
@@ -1878,10 +1948,10 @@
       @apply bg-background w-full p-md max-w-full;
     }
   }
-  
+
   .page-sandwich-footer {
     position: fixed;
-    bottom: var(--h-bottomNav); 
+    bottom: var(--h-bottomNav);
     z-index: 20;
     flex-shrink: 0;
     @apply bg-background w-full max-w-full pt-sm pr-lg;
@@ -1903,7 +1973,6 @@
       padding-bottom: 0;
     }
   }
-
 }
 /* View Selector component */
 @layer components {
@@ -1940,12 +2009,46 @@
       @apply border-r border-outline-variant;
       padding-top: var(--px-12); /* alternatively: @apply py-md */
       padding-bottom: var(--px-12);
+      /* TEST to have a sticky sidebar */
+      /* position: sticky;
+      top: 0; */
+      /* for fixed: then you have to add .sidebar-margin to all 
+         pages that use a sidebar className='page__content sidebar-margin'
+      */
+      position: fixed;
+      top: var(--h-header);
+      height: 100%;
+      align-self: flex-start;
+      overflow-y: auto;
     }
   }
   /* desktop */
   @media (min-width: 1024px) {
     .sidebar {
       width: var(--w-sidebar);
+    }
+  }
+
+  .sidebar__header {
+    position: sticky;
+    left: 0;
+    margin-top: -(var(--h-header));
+    z-index: 1;
+    @apply bg-surface-container px-lg pb-lg;
+  }
+
+  /* new class to be added to page__content in (sidebarLayout)/layout.tsx */
+  .sidebar-margin {
+    margin-left: 0;
+  }
+  @media (min-width: 640px) {
+    .sidebar-margin {
+      margin-left: var(--w-sidebar-tablet);
+    }
+  }
+  @media (min-width: 1014px) {
+    .sidebar-margin {
+      margin-left: var(--w-sidebar);
     }
   }
 
@@ -3770,7 +3873,7 @@
   .badge {
     @apply inline-flex items-center justify-center gap-1 shrink-0;
     @apply rounded-full px-2 overflow-hidden whitespace-nowrap;
-    
+
     width: 16px;
     height: 16px;
     border: 1px transparent;

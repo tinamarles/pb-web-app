@@ -24,7 +24,8 @@ export function Sidebar({ items, sections, header, className = "" }: SidebarProp
     <aside className={`sidebar ${className}`}>
       {/* Optional header (e.g., club dropdown) */}
       {header && (
-        <div className="px-4 pb-4">
+        // <div className="px-4 pb-4">
+        <div className="sidebar__header">
           {header}
         </div>
       )}

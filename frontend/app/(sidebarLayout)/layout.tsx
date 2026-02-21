@@ -15,7 +15,7 @@ export default function SidebarLayout({
       <Module type="profile">
         <>
           {sidebar}
-          <div className="page__content">
+          <div className="page__content sidebar-margin">
             {children}
           </div>
         </>
