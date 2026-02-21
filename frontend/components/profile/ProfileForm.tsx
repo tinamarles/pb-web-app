@@ -30,7 +30,7 @@ export interface ProfileFormData {
 // Ensures consistency across all forms - firstName always looks the same everywhere
 // Mode-specific overrides: hideChevronOnMobile only in 'view' mode, show chevron in 'setup'
 const getFieldConfigs = (
-  mode: "view" | "setup"
+  mode: "view" | "setup",
 ): Record<keyof ProfileFormData, FormFieldConfig> => ({
   firstName: FORM_FIELDS.firstName,
   lastName: FORM_FIELDS.lastName,
@@ -98,7 +98,7 @@ export function ProfileForm({
   // Handle form field changes
   const handleChange = (
     field: keyof ProfileFormData,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };

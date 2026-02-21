@@ -27,10 +27,11 @@ import {
   getMembershipNotificationInfo,
 } from "@/lib/badgeUtils";
 import {
-  formatDate,
   isWithinDateRange,
   isPastDateCheck,
 } from "@/lib/dateUtils";
+
+import { formatDate } from '@/ui/dateDisplay';
 
 interface Subscription {
   id: number;
@@ -223,6 +224,7 @@ export function MembershipsPage() {
       membership.type.registrationOpenDate,
       membership.type.registrationCloseDate
     );
+    const hasRegistrationDate = membership.type.registrationOpenDate;
 
     const registrationStatusBadge = isRegistrationOpen ? "info" : "default";
     const registrationStatusLabel = isRegistrationOpen ? "Open" : "Closed";
@@ -339,11 +341,13 @@ export function MembershipsPage() {
                     className="w-fit label-sm"
                   />
                 </div>
+                {hasRegistrationDate && (
                 <span className="label-md">
                   {formatDate(membership.type.registrationOpenDate)}
                   {" to "}
                   {formatDate(membership.type.registrationCloseDate)}
                 </span>
+                )}
               </div>
 
               {/* Action Button */}

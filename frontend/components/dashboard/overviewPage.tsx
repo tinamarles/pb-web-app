@@ -117,6 +117,7 @@ export function OverviewPage() {
 
   const hasUpcomingEvents = events.length > 0;
 
+  console.log('Current Membership registration open date: ', currentMembership.type.registrationOpenDate);
   // TODO:
   // - get club statistics for user
 
