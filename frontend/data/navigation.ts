@@ -297,6 +297,18 @@ export const CLUB_TAB_ITEMS: NavItem[] = [
   { label: "Subscriptions", icon: "", href: "/club/[clubId]/subscriptions" },
 ];
 // ============================================
+// ADMIN EVENT TABS NAVIGATION
+// ============================================
+// Definition for Tabs on Admin Event Details page
+// No icon, disabled, onClick and badgeCount required
+
+export const ADMIN_EVENT_TAB_ITEMS: NavItem[] = [
+  { label: "Participants", icon: "", href: "/admin/[clubId]/events/[eventId]/members/list" },
+  { label: "Sessions", icon: "", href: "/admin/[clubId]/events/[eventId]/sessions" },
+  { label: "Schedule", icon: "", href: "/admin/[clubId]/events/[eventId]/schedule" },
+  { label: "Announcements", icon: "", href: "/admin/[clubId]/events/[eventId]/announcements" },
+];
+// ============================================
 // FULL NAVIGATION CONFIG (Optional Export)
 // ============================================
 
