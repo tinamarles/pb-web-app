@@ -2,6 +2,7 @@
 // Type definitions for DataTable component system
 
 import type { ReactNode } from 'react';
+import { ButtonVariant } from '@/ui';
 
 /**
  * Column definition for DataTable
@@ -15,7 +16,7 @@ export interface ColumnDef<T> {
   label: string;
   
   /** Key in data object to access value (can be nested like 'user.name') */
-  accessor?: keyof T | string;
+  accessor?: string;
   
   /** Whether this column is sortable */
   sortable?: boolean;
@@ -53,7 +54,13 @@ export interface RowAction<T> {
   show?: (row: T) => boolean;
   
   /** Visual variant */
-  variant?: 'default' | 'error' | 'success' | 'info' | 'warning' | 'primary' | 'secondary' | 'tertiary' | 'accent1' | 'accent2';
+  variant?: ButtonVariant; //'default' | 'error' | 'success' | 'info' | 'warning' | 'primary' | 'secondary' | 'tertiary' | 'accent1' | 'accent2';
+
+  /** Whether this action is disabled (grayed out but visible) */
+  disabled?: (row: T) => boolean;
+
+  /** Action handler */
+  handler?: string;
 }
 
 /**
@@ -70,13 +77,38 @@ export interface BulkAction<T> {
   icon?: string;
   
   /** Action handler receives array of selected rows */
-  onClick: (rows: T[]) => void;
+  onClick?: (rows: T[]) => void;
   
   /** Visual variant */
-  variant?: 'default' | 'error' | 'success' | 'info' | 'warning' | 'primary' | 'secondary' | 'tertiary' | 'accent1' | 'accent2';
+  variant?: ButtonVariant; // 'default' | 'error' | 'success' | 'info' | 'warning' | 'primary' | 'secondary' | 'tertiary' | 'accent1' | 'accent2';
+
+  /** Action handler */
+  handler?: string;
 
 }
-
+/**
+ * Table-level action configuration (not dependent on row selection)
+ * Examples: Add New, Import, Export All, Settings
+ */
+export interface TableAction {
+  /** Unique identifier */
+  id: string;
+  
+  /** Action label */
+  label: string;
+  
+  /** Icon name from Icon component */
+  icon?: string;
+  
+  /** Link href (for navigation actions) */
+  href?: string;
+  
+  /** Action handler */
+  onClick?: string | (() => void);
+  
+  /** Visual variant */
+  variant?: ButtonVariant; // 'default' | 'primary' | 'success';
+}
 /**
  * Sort configuration
  */
@@ -87,7 +119,17 @@ export interface SortConfig {
   /** Sort direction */
   direction: 'asc' | 'desc';
 }
-
+/**
+ * Row styling configuration
+ * Allows conditional row classes based on row data
+ */
+export interface RowClassifier<T> {
+  /** 
+   * Function that returns CSS class(es) to apply to the row 
+   * Example: (row) => row.userIsCaptain ? 'bg-primary/10' : ''
+   */
+  getRowClassName?: (row: T) => string;
+}
 /**
  * Complete table configuration
  */
@@ -106,6 +148,9 @@ export interface TableConfig<T> {
   
   /** Bulk actions (shown when rows selected) */
   bulkActions?: BulkAction<T>[];
+
+  /** Table-level actions (Add New, Import, etc.) */
+  tableActions?: TableAction[];
   
   /** Enable row selection checkboxes */
   selectable?: boolean;
@@ -118,4 +163,7 @@ export interface TableConfig<T> {
   
   /** Function to extract unique ID from row */
   getRowId: (row: T) => string | number;
+
+  /** Row styling configuration (NEW) */
+  rowClassifier?: RowClassifier<T>;
 }

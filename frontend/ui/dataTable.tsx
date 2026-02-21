@@ -6,6 +6,21 @@ import Link from "next/link";
 import type { TableConfig, SortConfig } from "@/lib/tableTypes";
 import { Icon, Button, Checkbox } from "./index";
 
+// ============================================================================
+// Helper: Get nested value from object using dot notation
+// ============================================================================
+
+/**
+ * Gets a nested value from an object using dot notation.
+ *
+ * @example
+ * getNestedValue({ user: { name: "John" } }, "user.name") // "John"
+ * getNestedValue({ id: 5 }, "id") // 5
+ */
+function getNestedValue(obj: any, path: string): any {
+  return path.split(".").reduce((current, key) => current?.[key], obj);
+}
+
 export interface DataTableProps<T> {
   /** Table configuration (from tableConfig.ts) */
   config: TableConfig<T>;
@@ -18,6 +33,9 @@ export interface DataTableProps<T> {
 
   /** Empty state message */
   emptyMessage?: string;
+
+  /** Handler registry (maps string names to functions, like Icon component) */
+  handlers?: Record<string, (...args: any[]) => void>;
 }
 
 export function DataTable<T>({
@@ -25,6 +43,7 @@ export function DataTable<T>({
   data,
   loading = false,
   emptyMessage = "No data to display",
+  handlers = {}, // ✅ Default to empty object
 }: DataTableProps<T>) {
   const [selectedRows, setSelectedRows] = useState<Set<string | number>>(
     new Set(),
@@ -89,7 +108,7 @@ export function DataTable<T>({
       // Search across all string/number fields
       return config.columns.some((col) => {
         if (!col.accessor) return false;
-        const value = (row as any)[col.accessor];
+        const value = getNestedValue(row, col.accessor);
         if (value == null) return false;
         return String(value).toLowerCase().includes(searchQuery.toLowerCase());
       });
@@ -109,8 +128,8 @@ export function DataTable<T>({
       );
       if (!column?.accessor) return 0;
 
-      const aValue = (a as any)[column.accessor];
-      const bValue = (b as any)[column.accessor];
+      const aValue = getNestedValue(a, column.accessor);
+      const bValue = getNestedValue(b, column.accessor);
 
       if (aValue == null) return 1;
       if (bValue == null) return -1;
@@ -132,14 +151,32 @@ export function DataTable<T>({
   }, [sortedData, selectedRows, config]);
 
   // ============================================================================
-  // Bulk Action Handler
+  // Bulk Action Handler 
   // ============================================================================
 
   const handleBulkAction = (actionId: string) => {
     const action = config.bulkActions?.find((a) => a.id === actionId);
     if (!action) return;
 
-    action.onClick(selectedRowData);
+    // ✅ Support BOTH handler registry (handler) AND direct function (onClick)
+    let handleClick: ((rows: T[]) => void) | undefined;
+
+    if (action.handler) {
+      // ✅ Handler registry pattern (string reference)
+      handleClick = handlers[action.handler];
+      if (!handleClick) {
+        console.error(`Bulk action handler not found: ${action.handler}`);
+        return;
+      }
+    } else if (action.onClick) {
+      // ✅ Direct function
+      handleClick = action.onClick;
+    } else {
+      console.error(`Bulk action has no handler or onClick: ${action.id}`);
+      return;
+    }
+
+    handleClick(selectedRowData);
     clearSelection();
   };
 
@@ -149,9 +186,29 @@ export function DataTable<T>({
 
   const handleRowAction = (actionId: string, row: T) => {
     const action = config.rowActions?.find((a) => a.id === actionId);
-    if (!action?.onClick) return;
+    //if (!action?.onClick) return;
+    if (!action) return;
 
-    action.onClick(row);
+    // ✅ Support BOTH handler registry (handler) AND direct function (onClick)
+    let handleClick: ((row: T) => void) | undefined;
+   
+    if (action.handler) {
+      // ✅ Handler registry pattern (string reference)
+      handleClick = handlers[action.handler];
+      if (!handleClick) {
+        console.error(`Row action handler not found: ${action.handler}`);
+        return;
+      }
+    } else if (action.onClick) {
+      // ✅ Direct function
+      handleClick = action.onClick;
+    } else {
+      console.error(`Row action has no handler or onClick: ${action.id}`);
+      return;
+    }
+
+    handleClick(row);
+    
   };
 
   // ============================================================================
@@ -211,6 +268,46 @@ export function DataTable<T>({
         </div>
       )}
 
+      {/* Table Actions Bar (shown when no rows selected) */}
+      {selectedRows.size === 0 &&
+        config.tableActions &&
+        config.tableActions.length > 0 && (
+          <div className="dt-bulk-actions">
+            <div className="flex items-center gap-md">
+              {/* Empty space to maintain layout */}
+            </div>
+
+            <div className="flex items-center gap-md flex-wrap">
+              {config.tableActions.map((action) => {
+                // ✅ Resolve onClick: string lookup OR direct function
+                const handleClick =
+                  typeof action.onClick === "string"
+                    ? handlers[action.onClick] // ✅ Look up handler by name (like Icon!)
+                    : action.onClick;
+
+                return action.href ? (
+                  <Button
+                    variant={action.variant || "default"}
+                    size="sm"
+                    href={action.href}
+                    label={action.label}
+                    icon={action.icon}
+                  />
+                ) : (
+                  <Button
+                    key={action.id}
+                    variant={action.variant || "default"}
+                    size="sm"
+                    icon={action.icon}
+                    label={action.label}
+                    onClick={handleClick} // ✅ Call resolved handler!
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
       {/* Table */}
       <div className="overflow-x-auto border border-outline-variant rounded-sm">
         <table className="w-full border-collapse bg-surface">
@@ -238,18 +335,6 @@ export function DataTable<T>({
                   style={column.width ? { width: column.width } : undefined}
                 >
                   {column.sortable ? (
-                    // <button
-                    //   className="data-table-sort-button"
-                    //   onClick={() => handleSort(column.id)}
-                    // >
-                    //   <span>{column.label}</span>
-                    //   {sortConfig?.columnId === column.id && (
-                    //     <Icon
-                    //       name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'}
-                    //       className="data-table-sort-icon"
-                    //     />
-                    //   )}
-                    // </button>
                     <Button
                       variant="subtle"
                       size="sm"
@@ -314,10 +399,14 @@ export function DataTable<T>({
                 const rowId = config.getRowId(row);
                 const isSelected = selectedRows.has(rowId);
 
+                // Get custom row className from config (for highlighting captain rows, etc.)
+                const customRowClass =
+                  config.rowClassifier?.getRowClassName?.(row) || "";
+
                 return (
                   <tr
                     key={String(rowId)}
-                    className={`dt-tr ${isSelected ? "bg-primary/20 hover:bg-primary/30" : ""}`}
+                    className={`dt-tr ${customRowClass} ${isSelected ? "bg-primary/20 hover:bg-primary/30" : ""}`}
                   >
                     {/* Selection Cell */}
                     {config.selectable && (
@@ -325,6 +414,7 @@ export function DataTable<T>({
                         <Checkbox
                           checked={isSelected}
                           onChange={() => toggleRow(rowId)}
+                          className="w-5 h-5"
                         />
                       </td>
                     )}
@@ -350,6 +440,9 @@ export function DataTable<T>({
                           {config.rowActions.map((action) => {
                             if (action.show && !action.show(row)) return null;
 
+                            // Check if action is disabled
+                            const isDisabled = action.disabled?.(row) ?? false;
+
                             // Get href if it's a function or static string
                             const href =
                               typeof action.href === "function"
@@ -358,14 +451,27 @@ export function DataTable<T>({
 
                             // If href exists, render as Link
                             if (href) {
-
                               return (
-                                
-                                <Link key={action.id} href={href}>
-                                  {action.icon && <Icon name={action.icon} className={`text-${action.variant}`}/>}
+                                <Link
+                                  key={action.id}
+                                  href={isDisabled ? "#" : href}
+                                  className={
+                                    isDisabled
+                                      ? "pointer-events-none opacity-50"
+                                      : ""
+                                  }
+                                  onClick={(e) =>
+                                    isDisabled && e.preventDefault()
+                                  }
+                                >
+                                  {action.icon && (
+                                    <Icon
+                                      name={action.icon}
+                                      className={`text-${action.variant}`}
+                                    />
+                                  )}
                                   {/* {action.label} */}
                                 </Link>
-                                
                               );
                             }
 
@@ -373,12 +479,20 @@ export function DataTable<T>({
                             return (
                               <Button
                                 key={action.id}
-                                variant='subtle'
+                                variant="subtle"
                                 size="md"
-                                onClick={() => handleRowAction(action.id, row)}
-                                className="px-0"
+                                onClick={() =>
+                                  !isDisabled && handleRowAction(action.id, row)
+                                }
+                                className={`px-0 ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                                disabled={isDisabled}
                               >
-                                {action.icon && <Icon name={action.icon} className={`text-${action.variant}`}/>}
+                                {action.icon && (
+                                  <Icon
+                                    name={action.icon}
+                                    className={`text-${action.variant}`}
+                                  />
+                                )}
                                 {/* {action.label} */}
                               </Button>
                             );
