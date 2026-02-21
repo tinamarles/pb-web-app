@@ -3,12 +3,8 @@
 
 import { Badge, Button, ButtonVariant, Icon, DateDisplay } from "@/ui";
 import { Session } from "@/lib/definitions";
-import {
-  formatDate,
-  formatTimeRange,
-  isDateToday,
-  isPastDate,
-} from "@/lib/dateUtils";
+import { formatTimeRange, isDateToday, isPastDate } from "@/lib/dateUtils";
+import { formatDate } from "@/ui/dateDisplay";
 import {
   LeagueAttendanceStatus,
   SessionActionType,
@@ -65,10 +61,10 @@ export function SessionCard({
   const spotsText = isFilled
     ? "all spots filled"
     : spotsLeft === null
-    ? null
-    : spotsLeft === 1
-    ? "1 spot available"
-    : `${spotsLeft} spots available`;
+      ? null
+      : spotsLeft === 1
+        ? "1 spot available"
+        : `${spotsLeft} spots available`;
 
   // Attendance status (integer from backend)
   const userIsAttending =
@@ -78,7 +74,7 @@ export function SessionCard({
 
   const sessionCardClasses = cn(
     variant === "today" && "session-card-today",
-    variant === "default" && "session-card-default"
+    variant === "default" && "session-card-default",
   );
 
   function getAvailableActions(): Array<{
@@ -206,72 +202,74 @@ export function SessionCard({
   }
 
   return (
-    <div className={`session-card @sm/card:flex-row ${sessionCardClasses} ${borderStyle}`}>
-      
-        {/* Session Info */}
-        <div className="flex flex-col flex-1 gap-xs p-md bg-secondary/20 text-on-surface justify-between">
-          {/* Date  */}
-          <div className="flex gap-sm items-center">
-            <Icon name="calendar" size="md" />
-            <DateDisplay
-              date={session.date}
-              format="weekday-short-noYear"
-              className="title-md emphasized"
-            />
-          </div>
-          {/* Time */}
-          <div className="flex gap-sm items-center">
-            <Icon name="clock" size="md" />
-            <span className="single-line-base">
-              {formatTimeRange(session.startTime, session.endTime)}
-            </span>
-          </div>
-
-          {/* Location */}
-          <div className="flex gap-sm items-center">
-            <Icon name="location" size="md" />
-            <span className="single-line-base">{session.courtInfo.name}</span>
-          </div>
+    <div
+      className={`session-card @sm/card:flex-row ${sessionCardClasses} ${borderStyle}`}
+    >
+      {/* Session Info */}
+      <div className="flex flex-col flex-1 gap-xs p-md bg-secondary/20 text-on-surface justify-between">
+        {/* Date  */}
+        <div className="flex gap-sm items-center">
+          <Icon name="calendar" size="md" />
+          <DateDisplay
+            date={session.date}
+            format="weekday-short-noYear"
+            className="title-md emphasized"
+          />
         </div>
-        <div className="flex flex-col shrink-0">
-          {variant === "today" && (
-            <p className="px-sm pt-sm title-sm emphasized text-primary">{eventName}</p>
-          )}
-          {/* Session Participation */}
-          <div className="flex flex-col gap-xs p-md">
-            {/* Registration Status (EVENTS only) */}
-            {isEvent && variant === "default" && (
-              <div className="flex gap-sm items-center text-on-surface-variant">
-                <Icon name="register" size="md" />
-                {session.registrationOpen ? (
-                  <Badge
-                    variant="success"
-                    label="Registration Open"
-                    className="single-line-base w-fit"
-                  />
-                ) : (
-                  <Badge
-                    variant="default"
-                    label="Registration Closed"
-                    className="single-line-base w-fit"
-                  />
-                )}
-              </div>
-            )}
+        {/* Time */}
+        <div className="flex gap-sm items-center">
+          <Icon name="clock" size="md" />
+          <span className="single-line-base">
+            {formatTimeRange(session.startTime, session.endTime)}
+          </span>
+        </div>
 
-            {/* Spots Info */}
+        {/* Location */}
+        <div className="flex gap-sm items-center">
+          <Icon name="location" size="md" />
+          <span className="single-line-base">{session.courtInfo.name}</span>
+        </div>
+      </div>
+      <div className="flex flex-col shrink-0">
+        {variant === "today" && (
+          <p className="px-sm pt-sm title-sm emphasized text-primary">
+            {eventName}
+          </p>
+        )}
+        {/* Session Participation */}
+        <div className="flex flex-col gap-xs p-md">
+          {/* Registration Status (EVENTS only) */}
+          {isEvent && variant === "default" && (
             <div className="flex gap-sm items-center text-on-surface-variant">
-              <Icon name="members" size="md" />
-              <p className="body-sm">
-                {session.participantsCount} going
-                {spotsText && ` · ${spotsText}`}
-              </p>
+              <Icon name="register" size="md" />
+              {session.registrationOpen ? (
+                <Badge
+                  variant="success"
+                  label="Registration Open"
+                  className="single-line-base w-fit"
+                />
+              ) : (
+                <Badge
+                  variant="default"
+                  label="Registration Closed"
+                  className="single-line-base w-fit"
+                />
+              )}
             </div>
+          )}
+
+          {/* Spots Info */}
+          <div className="flex gap-sm items-center text-on-surface-variant">
+            <Icon name="members" size="md" />
+            <p className="body-sm">
+              {session.participantsCount} going
+              {spotsText && ` · ${spotsText}`}
+            </p>
           </div>
-          {/* Actions */}
-          <SessionCardActions onAction={onAction} />
         </div>
-      
+        {/* Actions */}
+        <SessionCardActions onAction={onAction} />
+      </div>
     </div>
   );
 }

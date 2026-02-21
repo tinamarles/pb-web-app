@@ -118,11 +118,16 @@ export function EventDetailsClientPage({ event }: EventDetailsClientPageProps) {
         <div className="flex mt-md gap-sm px-lg justify-between">
           <h2 className="headline-md text-secondary">About {event.name}</h2>
           {event.userIsCaptain && (
+            
             <ResponsiveButton
-              mobile={{ size: "sm", label: "Manage League", icon: "leagues" }}
-              desktop={{ size: "sm", label: "Manage League", icon: "leagues" }}
+              mobile={event.isEvent ? 
+                  { size: "sm", label: "Manage Event", icon: "event" }
+                : { size: "sm", label: "Manage League", icon: "leagues" }}
+              desktop={event.isEvent ? 
+                  { size: "sm", label: "Manage Event", icon: "event" }
+                : { size: "sm", label: "Manage League", icon: "leagues" }}
               variant="default"
-              href={`/admin/events/${event.id}`}
+              href={event.isEvent ? `/admin/${event.clubInfo.id}/events/${event.id}/sessions` : `/admin/${event.clubInfo.id}/events/${event.id}/members/list`}
             />
           )}
         </div>
