@@ -19,6 +19,7 @@
 # 15. ✅ NEW: Added ClubFilterForSessionOccurrence - filter by club FIRST, then league! (2026-01-19)
 # 16. ✅ NEW: Added LeagueFilterForSessionOccurrence - DYNAMIC league filter that respects club selection! (2026-01-19)
 # 17. ✅ NEW: Added LeagueFilterForParticipation - Custom filter to filter LeagueParticipation by League (2026-01-19)
+# 18. ✅ NEW: Added LeagueFilterForAttendance - Custom filter to filter LeagueAttendance by League/Event (2026-02-20)
 # =====================================
 
 from django.contrib import admin
@@ -312,6 +313,47 @@ class LeagueFilterForParticipation(admin.SimpleListFilter):
         if self.value():
             # Filter participations for this league
             return queryset.filter(league__id=self.value())
+        return queryset
+
+
+class LeagueFilterForAttendance(admin.SimpleListFilter):
+    """
+    Custom filter to filter LeagueAttendance by League/Event.
+    
+    🎯 NEW FILTER (2026-02-20):
+    - Shows all leagues/events that have attendance records
+    - Groups by club for easier navigation
+    - Works with member search and date filter!
+    
+    Workflow:
+    1. User selects a league/event
+    2. Attendance list filtered to ONLY show records for that league
+    3. Can then filter by member name or date
+    """
+    title = 'league/event'  # Display name in filter sidebar
+    parameter_name = 'league_filter'  # URL parameter name
+    
+    def lookups(self, request, model_admin):
+        """Return list of leagues that have attendance records"""
+        # ✅ FIX: Get unique league IDs from attendance records
+        # Can't use __isnull on reverse relations, so we get IDs first
+        league_ids = LeagueAttendance.objects.values_list(
+            'league_participation__league', 
+            flat=True
+        ).distinct()
+        
+        # Then get those leagues with club info
+        leagues = League.objects.filter(
+            id__in=league_ids
+        ).select_related('club').order_by('club__name', 'name')
+        
+        return [(league.id, f"{league.club.short_name or league.club.name} - {league.name}") for league in leagues]
+    
+    def queryset(self, request, queryset):
+        """Filter attendance records by league"""
+        if self.value():
+            # Filter attendance for this league
+            return queryset.filter(league_participation__league__id=self.value())
         return queryset
 
 
@@ -678,6 +720,7 @@ class LeagueParticipationAdmin(admin.ModelAdmin):
     Used by LeagueAttendanceInline to search for enrolled members.
     """
     list_display = (
+        'id',
         'member__first_name', 
         'member__last_name',
         'league', 
@@ -818,6 +861,7 @@ class LeagueSessionAdmin(admin.ModelAdmin):
 @admin.register(LeagueAttendance)
 class LeagueAttendanceAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'get_member',
         'get_league',
         'get_session_date',
@@ -828,7 +872,8 @@ class LeagueAttendanceAdmin(admin.ModelAdmin):
     list_filter = (
         'status',
         'checked_in',
-        'session_occurrence__session_date'
+        'session_occurrence__session_date',
+        LeagueFilterForAttendance  # ✅ Add custom filter for league
     )
     search_fields = (
         'league_participation__member__username',
@@ -839,6 +884,9 @@ class LeagueAttendanceAdmin(admin.ModelAdmin):
     ordering = ('-session_occurrence__session_date',)
     readonly_fields = ('created_at', 'updated_at', 'cancelled_at')
     autocomplete_fields = ['league_participation', 'session_occurrence', 'checked_in_by']  # ✅ SEARCHABLE!
+    
+    # ✅ NEW: Add date hierarchy for easy date navigation!
+    date_hierarchy = 'session_occurrence__session_date'
     
     fieldsets = (
         ('Attendance Info', {

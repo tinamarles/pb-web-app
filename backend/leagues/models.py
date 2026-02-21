@@ -343,7 +343,7 @@ class League(models.Model):
                 session_date=session_date,
                 status__in=[
                     LeagueAttendanceStatus.ATTENDING,
-                    LeagueAttendanceStatus.WAITLIST
+                    LeagueAttendanceStatus.WAITLIST,
                 ]
             ).exists()
             
@@ -356,7 +356,10 @@ class League(models.Model):
                 member=user,
                 status__in=[
                     LeagueParticipationStatus.ACTIVE,
-                    LeagueParticipationStatus.RESERVE
+                    LeagueParticipationStatus.RESERVE,
+                    LeagueParticipationStatus.HOLIDAY,
+                    LeagueParticipationStatus.INJURED,
+                    LeagueParticipationStatus.PENDING
                 ]
             ).exists()
             
@@ -639,8 +642,14 @@ class LeagueSession(models.Model):
     day_of_week = models.IntegerField(
         choices=DayOfWeek
     )
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    start_time = models.TimeField(
+        blank=True,
+        null=True,
+    )
+    end_time = models.TimeField(
+        blank=True,
+        null=True,
+    )
     
     recurrence_type = models.IntegerField(
         choices=RecurrenceType,
@@ -1560,6 +1569,20 @@ def create_attendance_records_on_enrollment(sender, instance, created, **kwargs)
     - Only runs when LeagueParticipation is CREATED (not updated)
     - Creates LeagueAttendance with status=ATTENDING for all FUTURE SessionOccurrences
     - Users can then cancel if they can't make a specific session
+    - Only runs when LeagueParticipation status=ACTIVE
+        WHY:
+        - PENDING status means member hasn't confirmed participation yet
+        - CANCELLED status means member isn't participating
+        - RESERVE status means they're on waitlist (no guaranteed sessions)
+        - Only ACTIVE members get attendance records
+        
+        WHEN ATTENDANCE IS CREATED:
+        1. New member added directly as ACTIVE → Creates attendance
+        2. Member status changed PENDING → ACTIVE → Service creates attendance (not signal)
+        
+    NOTE:
+    For status changes (PENDING → ACTIVE), the status_change service
+    handles attendance creation, not this signal!
     
     LOGICAL FLOW:
     1. Organizer creates LeagueSession → SessionOccurrences created
@@ -1571,8 +1594,23 @@ def create_attendance_records_on_enrollment(sender, instance, created, **kwargs)
     NOTE: For EVENTS, attendance is created when user registers for a specific session!
           No signal needed - it's an explicit action!
     """
-    # Only for newly created participations
+    from leagues.services.status_change import create_attendance_records
+    # ========================================
+    # CHECK 1: Only for NEW participations
+    # ========================================
     if not created:
+        return
+    # ========================================
+    # CHECK 2: Only if status is ACTIVE
+    # ========================================
+    # WHY: PENDING members haven't confirmed yet!
+    # This is the KEY FIX! ✅
+    
+    if instance.status != LeagueParticipationStatus.ACTIVE:
+        # Don't create attendance for:
+        # - PENDING (not confirmed)
+        # - CANCELLED (not participating)
+        # - RESERVE (waitlist, no guaranteed sessions)
         return
     
     # Only for LEAGUES (not events!)
@@ -1580,8 +1618,13 @@ def create_attendance_records_on_enrollment(sender, instance, created, **kwargs)
     if league.is_event:
         return  # Events handle attendance differently!
     
+    # Use the service 
+    create_attendance_records(instance)
+    
+    '''
     # Get all FUTURE SessionOccurrences for this league
     # (Don't create attendance for past sessions!)
+   
     from django.utils import timezone
     today = timezone.localtime().date()
     
@@ -1607,3 +1650,4 @@ def create_attendance_records_on_enrollment(sender, instance, created, **kwargs)
             attendance_records,
             ignore_conflicts=True  # In case records already exist
         )
+    '''

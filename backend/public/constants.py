@@ -62,6 +62,7 @@ class LeagueParticipationStatus(models.IntegerChoices):
     INJURED = 3, 'Injured - Temporarily out'
     HOLIDAY = 4, 'On Holiday - Temporarily out'
     CANCELLED = 5, 'Dropped Out'
+    PENDING = 6, 'Pending'
 
 class DayOfWeek(models.IntegerChoices):
     """Shared between League and Courts modules"""
@@ -83,6 +84,7 @@ class LeagueAttendanceStatus(models.IntegerChoices):
     ATTENDING = 1, 'Attending'
     CANCELLED = 2, 'Cancelled'
     ABSENT = 3, 'Absent (no-show)'
+    WAITLIST = 4, 'Waitlisted'
     
 # ==============================================
 # ACTIVITY TYPE (for API response)
