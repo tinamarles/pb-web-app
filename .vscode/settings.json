@@ -16,6 +16,7 @@
     "colour",
     "darkgrey",
     "emailfilled",
+    "filterset",
     "hrefs",
     "Jerôme",
     "nowrap",
@@ -26,7 +27,8 @@
     "srgb",
     "staticfiles",
     "sublabel",
-    "venv"
+    "venv",
+    "viewsets"
   ],
   "workbench.colorCustomizations": {
     "editorBracketHighlight.foreground1": "#FFD700",

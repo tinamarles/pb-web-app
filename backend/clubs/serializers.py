@@ -71,7 +71,7 @@ class ClubInfoSerializer(serializers.Serializer):
 class NestedClubSerializer(serializers.ModelSerializer):
     '''
     A lightweight serializer for Club details without having all the 
-    member-id's 
+    member-id's  
 
     USED FOR:
     - GET /api/clubs/{id}/ (layout.tsx - basic club data)
@@ -171,6 +171,7 @@ class ClubMemberSerializer(serializers.Serializer):
         
         # Add additional ClubMembership fields
         data['membership_id'] = instance.id
+        data['club_info'] = ClubInfoSerializer(instance.club).data
         data['roles'] = RoleSerializer(instance.roles.all(), many=True).data
         data['levels'] = ClubMembershipSkillLevelSerializer(instance.levels.all(), many=True).data
         data['type'] = instance.type_id
@@ -180,7 +181,7 @@ class ClubMemberSerializer(serializers.Serializer):
         # Note: created_at is already in data as 'joined_date' from TopMemberSerializer
         
         return data
-    
+
 # ========================================
 # HOME TAB SERIALIZER
 # ========================================

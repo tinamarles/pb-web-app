@@ -9,7 +9,7 @@ from rest_framework.routers import DefaultRouter
 # Import the ViewSets from different apps
 from users.views import CustomTokenObtainPairView, LogoutAndBlacklistRefreshToken, UserDetailsView
 from clubs.views import ClubViewSet, ClubMembershipViewSet
-from leagues.views import LeagueViewSet, MyClubsEventsViewSet
+from leagues.views import LeagueViewSet, MyClubsEventsViewSet, AdminEventsViewSet, AdminLeagueParticipantsViewSet
 from notifications.views import AnnouncementViewSet, notification_feed    
 
 # Create a single router instance
@@ -22,6 +22,12 @@ router.register(r'leagues', LeagueViewSet, basename='leagues')
 router.register(r'my-clubs-events', MyClubsEventsViewSet, basename='my-clubs-events')
 router.register(r'memberships', ClubMembershipViewSet, basename='club-membership')
 router.register(r'announcements', AnnouncementViewSet, basename='announcements')
+router.register(r'admin-events/(?P<club_id>[0-9]+)', AdminEventsViewSet, basename='admin-events')
+router.register(
+    r'admin-leagues/(?P<league_id>[0-9]+)/participants',
+    AdminLeagueParticipantsViewSet,
+    basename='admin-league-participants'
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),

@@ -224,7 +224,7 @@ class ClubViewSet(viewsets.ModelViewSet):
         
         Query Params:
         - type: 'league' | 'event' | 'all' (default: 'all')
-        - status: 'upcoming' | 'past' | 'all' (default: 'upcoming')
+        - status: 'upcoming' | 'past' | 'all' | 'next' (default: 'upcoming')
         - include_user_participation: 'true' | 'false' (default: 'false')
         - require_admin: 'true' | 'false' (default: 'false')
           If true, checks if user is admin of this club before returning data
@@ -236,30 +236,28 @@ class ClubViewSet(viewsets.ModelViewSet):
         # ========================================
         require_admin = request.query_params.get('require_admin', 'false').lower() == 'true'
         # 🐛 DEBUG: Print to console
-        print(f"🐛 DEBUG: require_admin={require_admin}")
-        print(f"🐛 DEBUG: user={request.user}")
-        print(f"🐛 DEBUG: club={club.id} - {club.name}")
+        
         if require_admin:
             # Check if user is authenticated
-            print(f"🐛 DEBUG: Checking authentication...")
+            
             if not request.user.is_authenticated:
-                print(f"🐛 DEBUG: ❌ User not authenticated!")
+                
                 return Response(
                     {'detail': 'Authentication required.'},
                     status=status.HTTP_401_UNAUTHORIZED
                 )
-            print(f"🐛 DEBUG: ✅ User is authenticated: {request.user}")
+            
             # Check if user is member of this club
-            print(f"🐛 DEBUG: Checking membership for club {club.id}...")
+            
             try:
                 membership = ClubMembership.objects.get(
                     member=request.user,
                     club=club,
                     status=MembershipStatus.ACTIVE
                 )
-                print(f"🐛 DEBUG: ✅ Found membership: {membership.id}")
+               
             except ClubMembership.DoesNotExist:
-                print(f"🐛 DEBUG: ❌ No membership found!")
+               
                 return Response(
                     {'detail': 'You are not a member of this club.'},
                     status=status.HTTP_403_FORBIDDEN
@@ -267,7 +265,7 @@ class ClubViewSet(viewsets.ModelViewSet):
             
             # Check if user has ANY admin permission for this club
             # These properties exist on ClubMembership and check the user's roles
-            print(f"🐛 DEBUG: Checking admin permissions...")
+           
             admin_properties = [
                 'can_manage_club',
                 'can_manage_members',
@@ -277,24 +275,16 @@ class ClubViewSet(viewsets.ModelViewSet):
                 'can_cancel_league_sessions',
                 'can_manage_courts',
             ]
-            # 🐛 DEBUG: Check each property individually
-            for prop in admin_properties:
-                has_perm = getattr(membership, prop, False)
-                print(f"🐛 DEBUG: {prop} = {has_perm}")
 
             has_admin_permission = any(
                 getattr(membership, prop, False) for prop in admin_properties
             )
-            
-            print(f"🐛 DEBUG: has_admin_permission = {has_admin_permission}")
 
             if not has_admin_permission:
-                print(f"🐛 DEBUG: ❌ User does not have admin permissions!")
                 return Response(
                     {'detail': 'You do not have admin permissions for this club.'},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            print(f"🐛 DEBUG: ✅ User has admin permissions! Proceeding to fetch data...")
         # ========================================
         # FETCH DATA (authorization passed)
         # ========================================
