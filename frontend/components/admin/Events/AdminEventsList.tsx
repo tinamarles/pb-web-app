@@ -1,12 +1,9 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { Event } from "@/lib/definitions";
-import { Button, DataTable, DataTableProps } from "@/ui";
+import { AdminEventBase } from "@/lib/definitions";
+import { DataTable } from "@/ui";
 import { EmptyState } from "@/components/EmptyState";
-import { useAuth } from "@/providers/AuthUserProvider";
 import { useDashboard } from "@/providers/DashboardProvider";
 import { eventsTableConfig } from "@/data/tableConfig";
-import { toast } from "sonner";
 import { useMemo } from "react";
 
 /**
@@ -17,7 +14,7 @@ import { useMemo } from "react";
  * - Resources > Events & Leagues: app/event/list
  */
 interface AdminEventsListProps {
-  events: Event[];
+  events: AdminEventBase[];
 }
 
 export function AdminEventsList({
@@ -27,11 +24,35 @@ export function AdminEventsList({
   // ========================================
   // STATE & DATA
   // ========================================
-  const router = useRouter();
-  const { user } = useAuth();
+  
   const { currentMembership } = useDashboard();
   const eventsAvailable = events.length > 0;
 
+  // ========================================
+  // DATA FILTERING BASED ON USER ROLE
+  // ========================================
+  
+  const tableData = useMemo(() => {
+    // Check if user has admin/organizer permissions
+    // These permission fields come from ClubMembership backend
+    const canManageAllEvents = 
+      currentMembership?.canManageLeagues || 
+      currentMembership?.canManageClub;
+    
+    if (canManageAllEvents) {
+      // ✅ Admin/Organizer: Show ALL events
+      // - Row highlighting helps identify their own events (via rowClassifier)
+      // - Actions disabled for events they don't captain (via action.disabled)
+      return events;
+    } else {
+      // ✅ Captain: Show ONLY their events
+      // - All actions enabled (all rows are theirs)
+      // - No highlighting needed (all rows are theirs anyway)
+      // - Cleaner UX (don't show events they can't manage)
+      return events.filter(event => event.userIsCaptain);
+    }
+  }, [events, currentMembership]);
+  
   // ========================================
   // FUNCTIONS & COMPONENTS
   // ========================================
@@ -41,7 +62,7 @@ export function AdminEventsList({
       
         <DataTable
           config={eventsTableConfig}
-          data={events}
+          data={tableData}
         />
       
     );
