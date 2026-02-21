@@ -31,6 +31,7 @@ export const EventFilterStatus = {
   ALL: "all",
   UPCOMING: "upcoming",
   PAST: "past",
+  NEXT: "next",
 } as const;
 
 export type EventFilterStatusValue =
@@ -46,6 +47,7 @@ export function getEventFilterStatusOptions(): EventFilterStatusValue[] {
     EventFilterStatus.ALL,
     EventFilterStatus.UPCOMING,
     EventFilterStatus.PAST,
+    EventFilterStatus.NEXT,
   ];
 }
 
@@ -381,6 +383,7 @@ export const LeagueParticipationStatus = {
   INJURED: 3,
   HOLIDAY: 4,
   CANCELLED: 5,
+  PENDING: 6,
 } as const;
 
 export type LeagueParticipationStatusValue =
@@ -391,10 +394,11 @@ export const LeagueParticipationStatusLabels: Record<
   string
 > = {
   [LeagueParticipationStatus.ACTIVE]: "Active",
-  [LeagueParticipationStatus.RESERVE]: "Reserve - Waiting for spot",
-  [LeagueParticipationStatus.INJURED]: "Injured - Temporarily out",
-  [LeagueParticipationStatus.HOLIDAY]: "On Holiday - Temporarily out",
+  [LeagueParticipationStatus.RESERVE]: "Reserve",
+  [LeagueParticipationStatus.INJURED]: "Injured",
+  [LeagueParticipationStatus.HOLIDAY]: "Temporarily out",
   [LeagueParticipationStatus.CANCELLED]: "Dropped Out",
+  [LeagueParticipationStatus.PENDING]: "Pending",
 };
 
 // Reverse mapping: label → value (for form submissions)
@@ -403,11 +407,86 @@ export const LeagueParticipationStatusValues: Record<
   LeagueParticipationStatusValue
 > = {
   Active: LeagueParticipationStatus.ACTIVE,
-  "Reserve - Waiting for spot": LeagueParticipationStatus.RESERVE,
-  "Injured - Temporarily out": LeagueParticipationStatus.INJURED,
-  "On Holiday - Temporarily out": LeagueParticipationStatus.HOLIDAY,
+  "Reserve": LeagueParticipationStatus.RESERVE,
+  "Injured": LeagueParticipationStatus.INJURED,
+  "Temporarily out": LeagueParticipationStatus.HOLIDAY,
   "Dropped Out": LeagueParticipationStatus.CANCELLED,
+  "Pending": LeagueParticipationStatus.PENDING,
 };
+/**
+ * Status Change Options for League Participation
+ * Used when changing a member's status (with descriptions of what happens)
+ * 
+ * Pattern: Same as Gender options!
+ * - Each option has value, label, and description
+ * - Reusable across components
+ * - Single source of truth
+ */
+export interface StatusChangeOption {
+  value: number;
+  label: string;
+  description: string;
+}
+
+export const LeagueParticipationStatusChangeOptions: StatusChangeOption[] = [
+  {
+    value: LeagueParticipationStatus.PENDING,
+    label: LeagueParticipationStatusLabels[LeagueParticipationStatus.PENDING],
+    description: "⚠️ Removes attendance records"
+  },
+  {
+    value: LeagueParticipationStatus.CANCELLED,
+    label: LeagueParticipationStatusLabels[LeagueParticipationStatus.CANCELLED],
+    description: "⚠️ Removes attendance records"
+  },
+  {
+    value: LeagueParticipationStatus.HOLIDAY,
+    label: LeagueParticipationStatusLabels[LeagueParticipationStatus.HOLIDAY],
+    description: "✅ Updates attendance to ABSENT"
+  },
+  {
+    value: LeagueParticipationStatus.INJURED,
+    label: LeagueParticipationStatusLabels[LeagueParticipationStatus.INJURED],
+    description: "✅ Updates attendance to ABSENT"
+  },
+  {
+    value: LeagueParticipationStatus.RESERVE,
+    label: LeagueParticipationStatusLabels[LeagueParticipationStatus.RESERVE],
+    description: "✅ Updates attendance to WAITLIST"
+  },
+];
+
+/**
+ * Helper function to get status change options
+ * Smart function that returns appropriate options for different status types
+ * 
+ * @param statusType - Type of status ('participation' | 'attendance' | 'membership')
+ * @returns Array of status change options with value, label, and description
+ * 
+ * @example
+ * const options = getStatusChangeOptions('participation');
+ * // Returns LeagueParticipationStatusChangeOptions
+ * 
+ * @example
+ * // Future: Add attendance status changes
+ * const attendanceOptions = getStatusChangeOptions('attendance');
+ */
+export function getStatusChangeOptions(
+  statusType: 'participation' | 'attendance' | 'membership'
+): StatusChangeOption[] {
+  switch (statusType) {
+    case 'participation':
+      return LeagueParticipationStatusChangeOptions;
+    case 'attendance':
+      // TODO: Add LeagueAttendanceStatusChangeOptions when needed
+      return [];
+    case 'membership':
+      // TODO: Add ClubMembershipStatusChangeOptions when needed
+      return [];
+    default:
+      return [];
+  }
+}
 
 /**
  * Day of Week
@@ -596,6 +675,7 @@ export const LeagueAttendanceStatus = {
   ATTENDING: 1,
   CANCELLED: 2,
   ABSENT: 3,
+  WAITLIST: 4,
 } as const;
 
 export type LeagueAttendanceStatusValue =
@@ -608,6 +688,7 @@ export const LeagueAttendanceStatusLabels: Record<
   [LeagueAttendanceStatus.ATTENDING]: "Attending",
   [LeagueAttendanceStatus.CANCELLED]: "Cancelled",
   [LeagueAttendanceStatus.ABSENT]: "Absent (no-show)",
+  [LeagueAttendanceStatus.WAITLIST]: "Waitlisted",
 };
 
 // Reverse mapping: label → value (for form submissions)
@@ -618,6 +699,7 @@ export const LeagueAttendanceStatusValues: Record<
   Attending: LeagueAttendanceStatus.ATTENDING,
   Cancelled: LeagueAttendanceStatus.CANCELLED,
   "Absent (no-show)": LeagueAttendanceStatus.ABSENT,
+  Waitlisted: LeagueAttendanceStatus.WAITLIST,
 };
 
 // =====================================================
@@ -1385,10 +1467,11 @@ export const LeagueParticipationStatusBadgeVariant: Record<
   BadgeVariant
 > = {
   [LeagueParticipationStatus.ACTIVE]: "success",
-  [LeagueParticipationStatus.RESERVE]: "warning",
+  [LeagueParticipationStatus.RESERVE]: "accent1",
   [LeagueParticipationStatus.INJURED]: "error",
   [LeagueParticipationStatus.HOLIDAY]: "info",
   [LeagueParticipationStatus.CANCELLED]: "default",
+  [LeagueParticipationStatus.PENDING]: "warning",
 };
 
 /**
@@ -1405,6 +1488,7 @@ export const LeagueAttendanceStatusBadgeVariant: Record<
   [LeagueAttendanceStatus.ATTENDING]: "success",
   [LeagueAttendanceStatus.CANCELLED]: "warning",
   [LeagueAttendanceStatus.ABSENT]: "error",
+  [LeagueAttendanceStatus.WAITLIST]: "default",
 };
 
 /**

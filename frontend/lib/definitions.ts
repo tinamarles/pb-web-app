@@ -38,8 +38,8 @@ export interface PaginatedResponse<T> {
 // +++ Filtering types
 // NEW: Event list filters
 export interface EventListFilters {
-  type?: "event" | "league" | "all";
-  status?: "upcoming" | "past" | "all";
+  type?: C.EventFilterTypeValue; // "event" | "league" | "all";
+  status?: C.EventFilterStatusValue; // "upcoming" | "past" | "all";
   page?: string;
   pageSize?: string;
   includeUserParticipation?: boolean;
@@ -492,6 +492,7 @@ export interface ClubHome {
 // used in Members Tab
 export type ClubMember = TopMember & {
   membershipId: number;
+  clubInfo: ClubInfo;
   roles: Role[];
   levels: ClubMembershipSkillLevel[];
   type: number;
@@ -517,7 +518,7 @@ export interface ClubInfo {
 /**
  * NextOccurrence - next session info for events/leagues
  * apiResponseType: DjangoNextOccurrence
- * backend: leagues.NextOccurrenceSerializer
+ * backend: leagues.NextOccurrenceSerializer based on SessionOccurrence model
  */
 export interface Session {
   id: number;
@@ -532,6 +533,24 @@ export interface Session {
   userAttendanceStatus: C.LeagueAttendanceStatusValue | null;
   registrationOpen: boolean;
   maxParticipants: number | null;
+}
+
+/**
+ * LeagueSession -> based on model LeagueSession (not SessionOccurrence)
+ */
+
+export interface LeagueSession {
+  id: number;
+  courtLocationInfo: CourtInfo;
+  courtsUsed: number;
+  dayOfWeek: C.DayOfWeekValue;
+  startTime: string | null;
+  endTime: string | null;
+  recurrenceType: C.RecurrenceTypeValue;
+  recurrenceInterval: number;
+  activeFrom: string | null;
+  activeUntil: string | null;
+  isActive: boolean;
 }
 // Type for participant data
 export type Participant = UserInfo & {
@@ -618,6 +637,80 @@ export type Event = League & {
     calculatedPrice?: number;
   };
 };
+
+/**
+ * ADMIN EVENT TYPES
+ */
+
+export interface AdminEventBase {
+  id: number;
+  name: string;
+  isEvent: boolean;
+  clubInfo: ClubInfo; // ⚡ CHANGED: Full object with logo
+  captainInfo: UserInfo;
+  minimumSkillLevel: C.SkillLevelValue | null;
+  maxParticipants: number | null;
+  participantsCount: number;
+  fee: string | null; // decimal field in Django
+  startDate: string;
+  endDate: string;
+  isActive: boolean; // ✅ Added based on is_active property in Django model
+  userIsCaptain: boolean;
+}
+
+export type AdminEvent = AdminEventBase & {
+  description: string;
+  imageUrl: string;
+  allowReserves: boolean;
+  registrationOpensHoursBefore: number;
+  registrationClosesHoursBefore: number;
+  registrationStartDate: string | null;
+  registrationEndDate: string | null;
+  leagueType: C.LeagueTypeValue;
+  defaultGenerationFormat: C.GenerationFormatValue;
+  leagueSessions: LeagueSession[];
+};
+
+export interface AdminLeagueParticipant {
+  id: number;
+  leagueId: number;
+  participant: ClubMember;
+  status: C.LeagueParticipationStatusValue;
+  joinedAt: string;
+  leftAt: string | null;
+  captainNotes: string;
+  excludeFromRankings: boolean;
+}
+
+/**
+ * Eligible Member for adding to league
+ * Returned from /api/leagues/{leagueId}/eligible-members/
+ */
+export interface EligibleMember {
+  id: number; // ClubMembership ID
+  userInfo: UserInfo;
+  email: string;
+  status: C.MembershipStatusValue; // Club membership status
+}
+
+/** Update Participation Status
+ * Returned from /api/leagues/participation/{memberId}/status
+ */
+export interface ParticipationStatusChangeResponse {
+  participants: AdminLeagueParticipant[];
+  attendanceChanges: AttendanceChange[];
+}
+
+/**
+ * Attendance change record (from Django API)
+ */
+export interface AttendanceChange {
+  participationId: number;
+  attendanceCreated?: number;    // ✅ Now camelCase after conversion!
+  attendanceDeleted?: number;
+  attendanceUpdated?: number;
+  message: string;
+}
 
 // ⚡ Helper to check if event is recurring (frontend-side)
 export function isRecurring(event: Event): boolean {

@@ -130,7 +130,7 @@ export interface DjangoClubInfo {
 }
 /**
  * Basic Role Fields without permission flags
- * Maps to: 
+ * Maps to:
  * - backend: RoleSerializer
  * - frontend: type Role
  * NOTE: for admin module a complete RoleSerializer will be required
@@ -270,6 +270,7 @@ export type DjangoTopMember = DjangoUserBase & {
 export type DjangoClubMember = DjangoTopMember & {
   // ClubMembership fields
   membership_id: number;
+  club_info: DjangoClubInfo;
   roles: DjangoRole[];
   levels: DjangoClubMembershipSkillLevel[];
   type: number; // id of ClubMembershipType
@@ -288,8 +289,6 @@ export interface DjangoCourtInfo {
 // ========================================
 // APP LEAGUES TYPES
 // ========================================
-
-
 
 /**
  * Next Occurrence (for events and recurring leagues)
@@ -313,7 +312,7 @@ export interface DjangoSession {
 
 export type DjangoParticipant = DjangoUserInfo & {
   skill_level: string | null; // DecimalField, null=True
-}
+};
 
 export interface DjangoSessionParticipants {
   session_id: number;
@@ -371,7 +370,84 @@ export interface DjangoLeague {
   user_is_participant?: boolean;
 }
 
-export type DjangoEvent = DjangoLeague
+export type DjangoEvent = DjangoLeague;
+
+// ========================================
+// APP ADMIN TYPES
+// ========================================
+
+export interface DjangoAdminEventBase {
+  id: number;
+  name: string;
+  is_event: boolean;
+  club_info: DjangoClubInfo; // ⚡ CHANGED: Full object with logo
+  captain_info: DjangoUserInfo;
+  minimum_skill_level: C.SkillLevelValue | null;
+  max_participants: number | null;
+  participants_count: number; // Smart count (leagues vs events)
+  fee: string | null; // decimal field
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  user_is_captain: boolean;
+}
+
+export type DjangoAdminEvent = DjangoAdminEventBase & {
+  description: string;
+  image_url: string;
+  allow_reserves: boolean;
+  registration_opens_hours_before: number;
+  registration_closes_hours_before: number;
+  registration_start_date: string | null;
+  registration_end_date: string | null;
+  league_type: C.LeagueTypeValue;
+  default_generation_format: C.GenerationFormatValue;
+  league_sessions: DjangoLeagueSession[];
+};
+
+export interface DjangoLeagueSession {
+  id: number;
+  court_location_info: DjangoCourtInfo;
+  courts_used: number; // check if null possible
+  day_of_week: C.DayOfWeekValue;
+  start_time: string | null;
+  end_time: string | null;
+  recurrence_type: C.RecurrenceTypeValue;
+  recurrence_interval: number;
+  active_from: string | null;
+  active_until: string | null;
+  is_active: boolean;
+}
+
+export interface DjangoAdminLeagueParticipant {
+  id: number;
+  league_id: number;
+  participant: DjangoClubMember;
+  status: C.LeagueParticipationStatusValue;
+  joined_at: string;
+  left_at: string | null;
+  captain_notes: string;
+  exclude_from_rankings: boolean;
+}
+
+export interface DjangoEligibleMember {
+  id: number; // ClubMembership ID
+  userInfo: DjangoUserInfo;
+  email: string;
+  status: C.MembershipStatusValue; // Club membership status
+}
+
+export interface DjangoParticipationStatusChangeResponse {
+  participants: DjangoAdminLeagueParticipant[];
+  attendance_changes: DjangoAttendanceChange[];
+}
+export interface DjangoAttendanceChange {
+  participation_id: number;
+  attendance_created?: number;    // ✅ Now camelCase after conversion!
+  attendance_deleted?: number;
+  attendance_updated?: number;
+  message: string;
+}
 
 // ========================================
 // APP NOTIFICATIONS TYPES
@@ -495,7 +571,7 @@ export interface DjangoAnnouncementUpdate {
 }
 
 /** API endpoint: api/profile/activities
- * 
+ *
  */
 
 export interface DjangoUserActivities {

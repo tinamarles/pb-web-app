@@ -10,9 +10,10 @@
  */
 
 import type {
-  League,
+  EligibleMember,
   Event,
   PaginatedResponse,
+  ParticipationStatusChangeResponse,
   SessionParticipants,
 } from "./definitions";
 import { EventListFilters } from "./definitions";
@@ -37,7 +38,7 @@ import { EventListFilters } from "./definitions";
 export async function getClubEventsClient(
   clubId: number,
   filters?: EventListFilters, // ✅ Filter object
-  requireAuth: boolean = true
+  requireAuth: boolean = true,
 ): Promise<PaginatedResponse<Event>> {
   const params = new URLSearchParams();
 
@@ -61,7 +62,7 @@ export async function getClubEventsClient(
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new Error(
-      `[${response.status}] ${error.error || "Failed to fetch events"}`
+      `[${response.status}] ${error.error || "Failed to fetch events"}`,
     );
   }
 
@@ -70,7 +71,7 @@ export async function getClubEventsClient(
 
 export async function getSessionParticipantsClient(
   sessionId: number,
-  requireAuth: boolean = true
+  requireAuth: boolean = true,
 ): Promise<SessionParticipants> {
   const params = new URLSearchParams();
 
@@ -82,17 +83,124 @@ export async function getSessionParticipantsClient(
     {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-    }
+    },
   );
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new Error(
-      `[${response.status}] ${error.error || "Failed to fetch events"}`
+      `[${response.status}] ${error.error || "Failed to fetch events"}`,
     );
   }
 
   return response.json();
 }
 
+/**
+ * Get eligible members for adding to league
+ *
+ * @param leagueId - League ID
+ * @param requireAuth - Whether authentication is required (default: true)
+ * @returns Promise<EligibleMember[]>
+ */
+export async function getEligibleMembersClient(
+  leagueId: number,
+  requireAuth: boolean = true,
+): Promise<EligibleMember[]> {
+  const params = new URLSearchParams();
+
+  // ✅ Add requireAuth param to query string
+  if (!requireAuth) params.set("requireAuth", "false");
+
+  const response = await fetch(
+    `/api/league/${leagueId}/eligible-members?${params}`,
+    {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      `[${response.status}] ${error.error || "Failed to fetch eligible members"}`,
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Bulk add participants to league
+ *
+ * @param leagueId - League ID
+ * @param memberIds - Array of ClubMembership IDs
+ * @returns Promise with created count (participants ignored, router.refresh() will re-fetch)
+ */
+export async function addLeagueParticipantsClient(
+  leagueId: number,
+  memberIds: number[],
+): Promise<{ created: number }> {
+  const response = await fetch(
+    `/api/league/${leagueId}/participants/bulk-add`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memberIds }),
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      `[${response.status}] ${error.error || "Failed to add participants"}`,
+    );
+  }
+
+  const data = await response.json();
+  // ✅ Backend sends participants too, but we only need created count
+  // router.refresh() will re-fetch all participants anyway!
+  return { created: data.created };
+}
+
+/**
+ * Update league participation status
+ * 
+ * Pattern: Client Component → clientActions.ts → API Route → Django
+ * 
+ * @param participationId - LeagueParticipation ID
+ * @param status - New status (integer constant from LeagueParticipationStatus)
+ * @returns Updated participant data + attendance changes summary
+ * 
+ * @example
+ * // Activate a pending member
+ * const result = await updateParticipationStatusClient(71, LeagueParticipationStatus.ACTIVE);
+ * // result.attendanceChanges[0].message: "Created 21 attendance records"
+ * 
+ * // Set member on holiday
+ * const result = await updateParticipationStatusClient(71, LeagueParticipationStatus.HOLIDAY);
+ * // result.attendanceChanges[0].message: "Updated 21 attendance records"
+ */
+export async function updateParticipationStatusClient(
+  participationId: number,
+  status: number
+): Promise<ParticipationStatusChangeResponse> {
+  const response = await fetch(
+    `/api/league/participation/${participationId}/status`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      `[${response.status}] ${error.error || "Failed to update participation status"}`
+    );
+  }
+
+  return response.json();
+}
 // Add more client-side fetch functions as needed...

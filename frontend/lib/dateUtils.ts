@@ -8,6 +8,7 @@
 // ========================
 
 import { toISODate } from "./calendarUtils";
+import { formatDate, DateDisplayProps } from "@/ui/dateDisplay";
 
 /**
  * 🔧 HELPER: Parse "YYYY-MM-DD" string in LOCAL timezone (not UTC!)
@@ -89,6 +90,25 @@ export function formatTimeRange(
 
   return `${start} - ${end}`;
 }
+
+export function formatDateRange(
+  startDate: string | null | undefined,
+  endDate: string | null | undefined,
+  format: DateDisplayProps["format"] = "short",
+): string {
+  if (!startDate || !endDate) {
+    return "N/A";
+  }
+
+  const start = formatDate(startDate, format);
+  const end = formatDate(endDate, format);
+
+  if (start === "Invalid Date" || end === "Invalid Date") {
+    return "Invalid Date";
+  }
+
+  return `${start} - ${end}`;
+}
 /**
  * Format date to readable string (e.g., "Dec 31, 2025")
  *
@@ -101,26 +121,26 @@ export function formatTimeRange(
  * formatDate("2025-12-31", "long") // "December 31, 2025"
  * formatDate(null) // "N/A"
  */
-export function formatDate(
-  date: string | null | undefined,
-  format: "short" | "long" = "short",
-): string {
-  if (!date) {
-    return "N/A";
-  }
+// export function formatDate(
+//   date: string | null | undefined,
+//   format: "short" | "long" | "weekday" = "short",
+// ): string {
+//   if (!date) {
+//     return "N/A";
+//   }
 
-  try {
-    // ✅ Parse in local timezone
-    const d = parseLocalDate(date);
-    return d.toLocaleDateString("en-US", {
-      month: format === "long" ? "long" : "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  } catch {
-    return "Invalid Date";
-  }
-}
+//   try {
+//     // ✅ Parse in local timezone
+//     const d = parseLocalDate(date);
+//     return d.toLocaleDateString("en-US", {
+//       month: format === "long" ? "long" : "short",
+//       day: "numeric",
+//       year: "numeric",
+//     });
+//   } catch {
+//     return "Invalid Date";
+//   }
+// }
 
 /**
  * Check if today falls within a date range (inclusive)

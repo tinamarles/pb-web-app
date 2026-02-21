@@ -9,8 +9,11 @@ import { snakeToCamel, camelToSnake } from "./utils";
 import {
   MemberClub,
   ClubHome,
-  League,
+  AdminLeagueParticipant,
   Event,
+  EligibleMember,
+  AdminEventBase,
+  AdminEvent,
   ClubMember,
   Feed,
   Notification,
@@ -18,6 +21,7 @@ import {
   AnnouncementCreate,
   AnnouncementUpdate,
   PaginatedResponse,
+  ParticipationStatusChangeResponse,
   ClubListFilters,
   EventListFilters,
   SessionParticipants,
@@ -25,8 +29,12 @@ import {
 } from "./definitions";
 import {
   DjangoPaginatedResponse,
-  DjangoLeague,
+  DjangoParticipationStatusChangeResponse,
+  DjangoAdminLeagueParticipant,
+  DjangoAdminEventBase,
+  DjangoAdminEvent,
   DjangoEvent,
+  DjangoEligibleMember,
   DjangoClubHome,
   DjangoClubMember,
   DjangoFeed,
@@ -35,7 +43,7 @@ import {
   DjangoAnnouncementUpdate,
   DjangoClubNested,
   DjangoSessionParticipants,
-  DjangoUserActivities
+  DjangoUserActivities,
 } from "./apiResponseTypes";
 
 import {
@@ -75,7 +83,7 @@ async function getAuthHeaders() {
  */
 export async function customPatch<T>(
   fullEndpoint: string,
-  data: object
+  data: object,
 ): Promise<T> {
   if (!API_BASE_URL) {
     throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
@@ -105,9 +113,13 @@ export async function customPatch<T>(
 /**
  * Generic GET request WITHOUT authentication (for public endpoints)
  * @param endpoint - API endpoint (e.g., 'clubs', 'clubs/123')
+ * @param cache - If true, uses 'force-cache'; if false/undefined, uses 'no-store' (default)
  * @returns Promise with typed response
  */
-export async function getPublic<T>(endpoint: string): Promise<T> {
+export async function getPublic<T>(
+  endpoint: string,
+  cache?: boolean,
+): Promise<T> {
   if (!API_BASE_URL) {
     throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
   }
@@ -116,15 +128,15 @@ export async function getPublic<T>(endpoint: string): Promise<T> {
   const url = endpoint.includes("?")
     ? `${API_BASE_URL}/api/${endpoint}` // No trailing slash with query params
     : `${API_BASE_URL}/api/${endpoint}/`; // Trailing slash without query params
-  
+
   try {
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      // ✅ No cache for public data to stay fresh
-      cache: "no-store",
+      // ✅ Simple: true = force-cache, false/undefined = no-store
+      cache: cache ? "force-cache" : "no-store",
     });
 
     if (!response.ok) {
@@ -141,11 +153,12 @@ export async function getPublic<T>(endpoint: string): Promise<T> {
 /**
  * Generic GET request to Django API with Authentication required
  * @param endpoint - Django API endpoint (without /api/ prefix)
+ * @param cache - If true, uses 'force-cache'; if false/undefined, uses 'no-store' (default)
  * @returns Promise with typed response data
- * @example await get<Club[]>('clubs')
+ * @example await get<Club[]>('clubs', true) // Cache it!
  * @throws {ApiError} - Throws ApiError with status code, detail, and endpoint
  */
-export async function get<T>(endpoint: string): Promise<T> {
+export async function get<T>(endpoint: string, cache?: boolean): Promise<T> {
   if (!API_BASE_URL) {
     throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
   }
@@ -158,23 +171,23 @@ export async function get<T>(endpoint: string): Promise<T> {
     : `${API_BASE_URL}/api/${endpoint}/`; // Trailing slash without query params
   console.log("actions - get with url: ", url);
   const response = await fetch(url, {
-    cache: "no-store",
+    // ✅ Simple: true = force-cache, false/undefined = no-store
+    cache: cache ? "force-cache" : "no-store",
     headers,
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+
     // ✅ Extract detail message from Django error response
-    const detail = errorData.detail || 
-                   errorData.message || 
-                   response.statusText || 
-                   'An error occurred';
+    const detail =
+      errorData.detail ||
+      errorData.message ||
+      response.statusText ||
+      "An error occurred";
+
     // ✅ Throw ApiError with status code, detail, and endpoint
-    throw createApiError(
-      response.status,
-      detail,
-      endpoint
-    );
+    throw createApiError(response.status, detail, endpoint);
   }
 
   return response.json();
@@ -219,7 +232,7 @@ export async function post<T>(endpoint: string, data: object): Promise<T> {
 export async function patch<T>(
   endpoint: string,
   id: number,
-  data: object
+  data: object,
 ): Promise<T> {
   if (!API_BASE_URL) {
     throw new Error("NEXT_PUBLIC_DJANGO_API_URL is not defined");
@@ -264,8 +277,8 @@ export async function del(endpoint: string, id: number): Promise<number> {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
       `Failed to delete record from endpoint: /${endpoint}/${id}. ${JSON.stringify(
-        errorData
-      )}`
+        errorData,
+      )}`,
     );
   }
 
@@ -299,14 +312,21 @@ export async function checkBackendHealth(): Promise<boolean> {
 /**
  * Get list of all clubs (lightweight data)
  *
+ * @param filters - Optional filters (page, pageSize, search)
+ * @param requireAuth - Whether authentication is required
+ * @param cache - If true, uses 'force-cache'; if false/undefined, uses 'no-store' (default)
  * @returns Array of MemberClub objects
- * @example const clubs = await getClubs();
+ * @example const clubs = await getClubs(filters, true, true);
  *
  * Backend: GET /api/clubs/
  * Serializer: NestedClubSerializer (returns MemberClub[])
  */
 export const getClubs = cache(
-  async (filters?: ClubListFilters, requireAuth: boolean = true) => {
+  async (
+    filters?: ClubListFilters,
+    requireAuth: boolean = true,
+    cache?: boolean,
+  ) => {
     const params = new URLSearchParams();
 
     if (filters?.page) params.set("page", filters.page);
@@ -318,24 +338,26 @@ export const getClubs = cache(
     const fetchFn = requireAuth ? get : getPublic;
 
     const apiData = await fetchFn<DjangoPaginatedResponse<DjangoClubNested>>(
-      endpoint
+      endpoint,
+      cache,
     );
     return snakeToCamel(apiData) as PaginatedResponse<MemberClub>; // ✅ Returns paginated response
-  }
+  },
 );
 
 /**
  * Get single club data (lightweight)
  *
  * @param clubId - Club ID
+ * @param cache - If true, uses 'force-cache'; if false/undefined, uses 'no-store' (default)
  * @returns Single MemberClub object
- * @example const club = await getClub('345');
+ * @example const club = await getClub('345', true);
  *
  * Backend: GET /api/clubs/{id}/
  * Serializer: NestedClubSerializer (returns MemberClub)
  */
-export const getClub = cache(async (clubId: string) => {
-  const apiData = await get<unknown>(`clubs/${clubId}`);
+export const getClub = cache(async (clubId: string, cache?: boolean) => {
+  const apiData = await get<unknown>(`clubs/${clubId}`, cache);
   return snakeToCamel(apiData) as MemberClub;
 });
 
@@ -343,15 +365,16 @@ export const getClub = cache(async (clubId: string) => {
  * Get club HOME TAB data
  *
  * @param clubId - Club ID
+ * @param cache - If true, uses 'force-cache'; if false/undefined, uses 'no-store' (default)
  * @returns ClubHome object (extends MemberClub with home tab data)
- * @example const clubHome = await getClubHome('345');
+ * @example const clubHome = await getClubHome('345', true);
  *
  * Backend: GET /api/clubs/{id}/home/
  * Serializer: ClubHomeSerializer
  * Returns: MemberClub fields + { latestAnnouncement, allAnnouncements, topMembers, nextEvent }
  */
-export const getClubHome = cache(async (clubId: string) => {
-  const apiData = await get<DjangoClubHome>(`clubs/${clubId}/home`);
+export const getClubHome = cache(async (clubId: string, cache?: boolean) => {
+  const apiData = await get<DjangoClubHome>(`clubs/${clubId}/home`, cache);
   return snakeToCamel(apiData) as ClubHome;
 });
 
@@ -371,7 +394,7 @@ export const getClubEvents = cache(
     clubId: string,
     filters?: EventListFilters,
     requireAuth: boolean = true,
-    requireAdmin: boolean = false
+    requireAdmin: boolean = false,
   ) => {
     const params = new URLSearchParams();
 
@@ -393,23 +416,170 @@ export const getClubEvents = cache(
       queryString ? `?${queryString}` : ""
     }`;
     const fetchFn = requireAuth ? get : getPublic;
-    const apiData = await fetchFn<DjangoPaginatedResponse<DjangoEvent>>(
-      endpoint
-    );
+    const apiData =
+      await fetchFn<DjangoPaginatedResponse<DjangoEvent>>(endpoint);
 
     return snakeToCamel(apiData) as PaginatedResponse<Event>;
-  }
-); 
+  },
+);
+
+/**
+ * Get ADMIN club EVENTS List data
+ *
+ * @param clubId - Club ID
+ * @returns AdminEventBase[]
+ *
+ * Backend: GET /api/admin-events/{id}/
+ * Serializer: AdminLeagueListSerializer
+ */
+export const getAdminClubEvents = cache(
+  async (clubId: string, requireAuth: boolean = true) => {
+    const endpoint = `admin-events/${clubId}`;
+    const fetchFn = requireAuth ? get : getPublic;
+    const apiData = await fetchFn<DjangoAdminEventBase[]>(endpoint);
+
+    return snakeToCamel(apiData) as AdminEventBase[];
+  },
+);
+
+/**
+ * Get ADMIN club EVENT Detail data
+ *
+ * @param clubId - Club ID
+ * @param eventId - Event ID
+ * @returns AdminEvent
+ *
+ * Backend: GET /api/admin-events/{id}/
+ * Serializer: AdminLeagueListSerializer
+ */
+export const getAdminClubEvent = cache(
+  async (
+    clubId: string,
+    eventId: string,
+    requireAuth: boolean = true,
+    cache?: boolean,
+  ) => {
+    const endpoint = `admin-events/${clubId}/${eventId}`;
+    const fetchFn = requireAuth ? get : getPublic;
+    const apiData = await fetchFn<DjangoAdminEvent>(endpoint, cache);
+
+    return snakeToCamel(apiData) as AdminEvent;
+  },
+);
+
+/**
+ * Get ADMIN League Participants data
+ *
+ * @param eventId - Event ID
+ * @returns
+ *
+ * Backend: GET /api/admin-leagues/{id}/participants/
+ * Serializer: AdminLeagueParticipantSerializer
+ */
+export const getAdminLeagueParticipants = cache(
+  async (eventId: string, requireAuth: boolean = true) => {
+    const endpoint = `admin-leagues/${eventId}/participants`;
+    const fetchFn = requireAuth ? get : getPublic;
+    const apiData = await fetchFn<DjangoAdminLeagueParticipant[]>(endpoint);
+
+    return snakeToCamel(apiData) as AdminLeagueParticipant[];
+  },
+);
+
+/**
+ * Get Eligible Members for adding to league
+ *
+ * @param leagueId - League ID
+ * @param requireAuth - Whether authentication is required (default: true)
+ * @param cache - Whether to cache the response (default: false)
+ * @returns EligibleMember[]
+ *
+ * Backend: GET /api/leagues/{leagueId}/eligible-members/
+ * Permissions: IsLeagueAdmin
+ */
+export const getEligibleMembers = cache(
+  async (
+    leagueId: number,
+    requireAuth: boolean = true,
+    useCache?: boolean,
+  ): Promise<EligibleMember[]> => {
+    const endpoint = `leagues/${leagueId}/eligible-members`;
+    const fetchFn = requireAuth ? get : getPublic;
+    const apiData = await fetchFn<DjangoEligibleMember[]>(endpoint, useCache);
+    return snakeToCamel(apiData) as EligibleMember[];
+  },
+);
+
+/**
+ * Bulk add participants to league (with PENDING status)
+ *
+ * @param leagueId - League ID
+ * @param memberIds - Array of ClubMembership IDs (just numbers: [1, 2, 3, ...])
+ * @returns Created count (we ignore participants since router.refresh() will re-fetch)
+ * 
+ * Backend: POST /api/leagues/{leagueId}/participants/bulk-add/
+ * Body: { member_ids: [1, 2, 3, ...] }
+ * Response: { created: 5, participants: [...] }
+ * Permissions: IsLeagueAdmin
+ * 
+ * // Step 1: Convert Frontend type (camelCase) → Django type (snake_case)
+  const djangoData = camelToSnake(data) as DjangoAnnouncementCreate;
+
+  // Step 2: POST to Django with Django type
+  const apiData = await post<DjangoAnnouncement>("announcements", djangoData);
+
+  // Step 3: Convert Django response (snake_case) → Frontend type (camelCase)
+  return snakeToCamel(apiData) as Announcement;
+ */
+export async function addLeagueParticipants(
+  leagueId: number,
+  memberIds: number[],
+): Promise<{ created: number }> {
+  const endpoint = `leagues/${leagueId}/participants/bulk-add`;
+  // ✅ Convert memberIds → member_ids (Django expects snake_case)
+  const djangoData = camelToSnake({ memberIds }) as object;
+  // ✅ Backend returns: { created: 5, participants: [...] }
+  const apiData = await post<{ created: number }>(endpoint, djangoData);
+  // ✅ No need for snakeToCamel - 'created' is the same in both conventions!
+  return { created: apiData.created };
+}
+
+/**
+ * Update participation status (PENDING → ACTIVE, ACTIVE → CANCELLED, etc.)
+ *
+ * @param participationId - LeagueParticipation ID
+ * @param status - New status value
+ * @returns Updated participants list + attendance change summary
+ *
+ * Backend endpoint: PATCH /api/leagues/participation/{id}/status/
+ */
+export async function updateParticipationStatus(
+  participationId: number,
+  status: number,
+): Promise<ParticipationStatusChangeResponse> {
+  const endpoint = `leagues/participation/${participationId}/status`;
+  const djangoData = { status };
+
+  // ✅ Backend returns snake_case
+  const apiData = await patch<DjangoParticipationStatusChangeResponse>(
+    endpoint,
+    participationId,
+    djangoData,
+  );
+
+  // ✅ Convert response from snake_case to camelCase
+  return snakeToCamel(apiData) as ParticipationStatusChangeResponse;
+}
 
 /**
  * Get events from ALL clubs the user is a member of
  *
  * @param filters - Optional EventListFilters (type, status, page, pageSize)
  * @returns PaginatedResponse<Event> with results array and pagination metadata
- * @example 
+ * @example
  * // Get all upcoming events from user's clubs
- * const response = await getMyClubsEvents({ 
- *   type: EventFilterType.EVENT, 
+ * const response = await getMyClubsEvents({
+ *   type: EventFilterType.EVENT,
  *   status: EventFilterStatus.UPCOMING,
  *   page: '1',
  *   pageSize: '20'
@@ -417,54 +587,48 @@ export const getClubEvents = cache(
  *
  * Backend: GET /api/leagues/my-clubs/?type=event&status=upcoming
  * Serializer: LeagueSerializer
- * 
+ *
  * 🎯 ADDED: 2026-01-28 - Server-side filtering to clubs where user is ACTIVE member
- * 
+ *
  * AUTHENTICATION: ✅ Required (redirects to /login if not authenticated)
- * 
- * PERFORMANCE: 
+ *
+ * PERFORMANCE:
  * - Server-side filtering (database does the work!)
  * - 2 queries (memberships + leagues)
  * - Scales to thousands of events
  * - Pagination works correctly (filters BEFORE paginating)
- * 
+ *
  * WHY THIS EXISTS:
  * - "All Events" button on dashboard/overview
  * - Shows events from ALL clubs user is member of
  * - Client-side filtering would break with pagination!
  */
 export const getMyClubsEvents = cache(
-  async (
-    filters?: EventListFilters
-  ): Promise<PaginatedResponse<Event>> => {
+  async (filters?: EventListFilters): Promise<PaginatedResponse<Event>> => {
     const params = new URLSearchParams();
-   
+
     if (filters?.type) params.set("type", filters.type);
     if (filters?.status) params.set("status", filters.status);
     if (filters?.page) params.set("page", filters.page);
     if (filters?.pageSize) params.set("page_size", filters.pageSize);
-    
+
     // Note: includeUserParticipation is always true for this endpoint
     // Backend automatically includes user participation data
-    
+
     const queryString = params.toString();
-    const endpoint = `my-clubs-events${
-      queryString ? `?${queryString}` : ""
-    }`;
+    const endpoint = `my-clubs-events${queryString ? `?${queryString}` : ""}`;
 
     const apiData = await get<DjangoPaginatedResponse<DjangoEvent>>(endpoint);
     return snakeToCamel(apiData) as PaginatedResponse<Event>;
-  }
+  },
 );
 
-export const getUserActivities = cache(
-  async(): Promise<UserActivities> => {
-    const endpoint = `profile/activities`;
+export const getUserActivities = cache(async (): Promise<UserActivities> => {
+  const endpoint = `profile/activities`;
 
-    const apiData = await get<DjangoUserActivities>(endpoint);
-    return snakeToCamel(apiData) as UserActivities;
-  }
-);
+  const apiData = await get<DjangoUserActivities>(endpoint);
+  return snakeToCamel(apiData) as UserActivities;
+});
 
 /**
  * Get Session Participants Data
@@ -477,25 +641,20 @@ export const getUserActivities = cache(
  * Serializer: LeagueSerializer
  */
 export const getSessionParticipants = cache(
-  async (
-    sessionId: string,
-    requireAuth: boolean = true
-  ) => {
+  async (sessionId: string, requireAuth: boolean = true) => {
     const params = new URLSearchParams();
 
     const queryString = params.toString(); // ← CRITICAL! Convert params to string!
     const endpoint = `leagues/session/${sessionId}/participants${
       queryString ? `?${queryString}` : ""
     }`;
-    console.log('calling Participants from Django with: ', endpoint);
+    console.log("calling Participants from Django with: ", endpoint);
     const fetchFn = requireAuth ? get : getPublic;
-    const apiData = await fetchFn<DjangoSessionParticipants>(
-      endpoint
-    );
+    const apiData = await fetchFn<DjangoSessionParticipants>(endpoint);
 
     return snakeToCamel(apiData) as SessionParticipants;
-  }
-); 
+  },
+);
 
 /**
  * Get club MEMBERS TAB data (paginated, filterable)
@@ -522,7 +681,7 @@ export const getClubMembers = cache(
       status?: MembershipStatusValue; // ✅ Integer constant (1 | 2 | 3 | 4)
       page?: string; // Pagination - can be any number string
       pageSize?: string; // Pagination - can be any number string
-    }
+    },
   ) => {
     // Build query string
     const params = new URLSearchParams();
@@ -541,11 +700,10 @@ export const getClubMembers = cache(
       queryString ? `?${queryString}` : ""
     }`;
 
-    const apiData = await get<DjangoPaginatedResponse<DjangoClubMember>>(
-      endpoint
-    );
+    const apiData =
+      await get<DjangoPaginatedResponse<DjangoClubMember>>(endpoint);
     return snakeToCamel(apiData) as PaginatedResponse<ClubMember>;
-  }
+  },
 );
 
 // ========================================
@@ -569,7 +727,7 @@ export const getEvents = cache(
     if (filters?.status) params.set("status", filters.status);
     if (filters?.page) params.set("page", filters.page);
     if (filters?.pageSize) params.set("page_size", filters.pageSize); // ← Converts to snake_case!
-  
+
     // ← NEW: Add include_user_participation if true
     if (filters?.includeUserParticipation) {
       params.set("include_user_participation", "true");
@@ -578,19 +736,19 @@ export const getEvents = cache(
     const queryString = params.toString();
     const endpoint = `leagues${queryString ? `?${queryString}` : ""}`;
     const fetchFn = requireAuth ? get : getPublic;
-    const apiData = await fetchFn<DjangoPaginatedResponse<DjangoEvent>>(
-      endpoint
-    );
+    const apiData =
+      await fetchFn<DjangoPaginatedResponse<DjangoEvent>>(endpoint);
     return snakeToCamel(apiData) as PaginatedResponse<Event>; // ✅ Returns paginated response
-  }
+  },
 );
 
 /**
  * Get single event data (lightweight)
  *
  * @param eventId - Event ID
+ * @param cache - If true, uses 'force-cache'; if false/undefined, uses 'no-store' (default)
  * @returns Single Event object
- * @example const event = await getEvent('345');
+ * @example const event = await getEvent('345', true); // Cache it!
  *
  * Backend: GET /api/leagues/{id}/
  * Serializer: LeagueDetailSerializer (returns Event)
@@ -599,22 +757,22 @@ export const getEvent = cache(
   async (
     eventId: string,
     filters?: EventListFilters,
-    requireAuth: boolean = true
+    requireAuth: boolean = true,
+    cache?: boolean,
   ) => {
     const params = new URLSearchParams();
-
     if (filters?.includeUserParticipation) {
       params.set("include_user_participation", "true");
     }
-
     const queryString = params.toString();
     const endpoint = `leagues/${eventId}${
       queryString ? `?${queryString}` : ""
     }`;
     const fetchFn = requireAuth ? get : getPublic;
-    const apiData = await fetchFn<DjangoEvent>(endpoint);
-  return snakeToCamel(apiData) as Event;
-});
+    const apiData = await fetchFn<DjangoEvent>(endpoint, cache);
+    return snakeToCamel(apiData) as Event;
+  },
+);
 
 // ========================================
 // NOTIFICATIONS & ANNOUNCEMENTS
@@ -691,7 +849,7 @@ export const getAnnouncement = cache(async (id: number) => {
  * Body: { is_read: true }
  */
 export async function markNotificationAsRead(
-  id: number
+  id: number,
 ): Promise<Notification> {
   const apiData = await patch<unknown>("notifications", id, { is_read: true });
   return snakeToCamel(apiData) as Notification;
@@ -712,7 +870,7 @@ export async function markNotificationAsRead(
  * CRITICAL: notification_type is AUTO-CALCULATED by backend (match → MATCH_ANNOUNCEMENT, league → LEAGUE_ANNOUNCEMENT, club → CLUB_ANNOUNCEMENT)
  */
 export async function createAnnouncement(
-  data: AnnouncementCreate
+  data: AnnouncementCreate,
 ): Promise<Announcement> {
   // Step 1: Convert Frontend type (camelCase) → Django type (snake_case)
   const djangoData = camelToSnake(data) as DjangoAnnouncementCreate;
@@ -733,7 +891,7 @@ export async function createAnnouncement(
  */
 export async function updateAnnouncement(
   id: number,
-  data: Partial<AnnouncementUpdate>
+  data: Partial<AnnouncementUpdate>,
 ): Promise<Announcement> {
   // Step 1: Convert Frontend type (camelCase) → Django type (snake_case)
   const djangoData = camelToSnake(data) as Partial<DjangoAnnouncementUpdate>;
@@ -742,7 +900,7 @@ export async function updateAnnouncement(
   const apiData = await patch<DjangoAnnouncement>(
     "announcements",
     id,
-    djangoData
+    djangoData,
   );
 
   // Step 3: Convert Django response (snake_case) → Frontend type (camelCase)
