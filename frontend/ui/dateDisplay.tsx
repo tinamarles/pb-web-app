@@ -58,93 +58,100 @@ export function DateDisplay({
 
 // Helper: Parse "YYYY-MM-DD" in LOCAL timezone (not UTC!)
 function parseLocalDate(dateString: string): Date {
-  const [year, month, day] = dateString.split('-').map(Number);
+  const [year, month, day] = dateString.split("-").map(Number);
   // month is 0-indexed in JavaScript Date!
   return new Date(year, month - 1, day);
 }
 
 // Helper: Format date based on format type
-function formatDate(
-  dateString: string,
-  format: DateDisplayProps["format"]
+export function formatDate(
+  dateString: string | null | undefined,
+  format: DateDisplayProps["format"] = "short",
 ): string {
   // ✅ Parse in local timezone (not UTC!)
-  const date = parseLocalDate(dateString);
+  if (!dateString) {
+    return "N/A";
+  }
+  
+  try {
+    const date = parseLocalDate(dateString);
+    switch (format) {
+      case "short":
+        // Dec 25, 2024
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
 
-  switch (format) {
-    case "short":
-      // Dec 25, 2024
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
+      case "short-noYear":
+        // Dec 25 (no year)
+        return date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
 
-    case 'short-noYear':
-      // Dec 25 (no year)
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
-      });
+      case "long":
+        // December 25, 2024
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
 
-    case "long":
-      // December 25, 2024
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+      case "iso":
+        // 2024-12-25
+        return date.toISOString().split("T")[0];
 
-    case "iso":
-      // 2024-12-25
-      return date.toISOString().split("T")[0];
+      case "numeric":
+        // 12/25/2024
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
 
-    case "numeric":
-      // 12/25/2024
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
+      case "day-only":
+        return date.toLocaleDateString("en-US", {
+          day: "2-digit",
+        });
 
-    case "day-only":
-      return date.toLocaleDateString("en-US", {
-        day: "2-digit",
-      });
+      case "weekday-short":
+        // Wed, Dec 25, 2024
+        return date.toLocaleDateString("en-US", {
+          weekday: "short",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
 
-    case "weekday-short":
-      // Wed, Dec 25, 2024
-      return date.toLocaleDateString("en-US", {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
+      case "weekday-short-noYear":
+        // Wed, Dec 25, 2024
+        return date.toLocaleDateString("en-US", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        });
 
-    case "weekday-short-noYear":
-      // Wed, Dec 25, 2024
-      return date.toLocaleDateString("en-US", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      });
-    
-    case "weekday-only":
-      // Wed, Dec 25, 2024
-      return date.toLocaleDateString("en-US", {
-        weekday: "short",
-      });
+      case "weekday-only":
+        // Wed, Dec 25, 2024
+        return date.toLocaleDateString("en-US", {
+          weekday: "short",
+        });
 
-    case "weekday-long":
-      // Wednesday, December 25, 2024
-      return date.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+      case "weekday-long":
+        // Wednesday, December 25, 2024
+        return date.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
 
-    default:
-      return date.toLocaleDateString("en-US");
+      default:
+        return date.toLocaleDateString("en-US");
+    }
+  } catch {
+    return "Invalid Date"
   }
 }

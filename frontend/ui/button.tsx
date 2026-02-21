@@ -72,16 +72,16 @@ export function Button(props: ButtonProps) {
     iconOnly = false,
     children,
     ...restProps
-  } = props; 
+  } = props;
 
   // Type guards and destructuring
   const asChild = "asChild" in props ? props.asChild : false;
   const href = "href" in props ? props.href : undefined;
   const type = "type" in props ? props.type : "button";
-  
+
   // Auto-apply icon="close" for dismiss variant if no icon provided
   const resolvedIcon = icon ?? (variant === "dismiss" ? "close" : undefined);
- 
+
   const buttonClasses = cn(
     // Variant classes from your utilities.css
 
@@ -94,7 +94,7 @@ export function Button(props: ButtonProps) {
     variant === "subtle" && "btn-subtle",
     variant === "outlined" && "btn-outlined",
     variant === "highlighted" && "btn-highlighted",
-    variant === "primary" && "btn-primary",
+    variant === "primary" && "btn-subtle text-primary",
     variant === "error" && "btn-destructive",
     variant === "warning" && "btn-warning",
     variant === "success" && "btn-success",
@@ -110,7 +110,7 @@ export function Button(props: ButtonProps) {
     // Icon-only styling: remove padding for circular icon buttons
     iconOnly && "p-0",
 
-    className
+    className,
   );
 
   // Determine what to render based on props
@@ -119,19 +119,23 @@ export function Button(props: ButtonProps) {
     if (iconOnly && resolvedIcon) {
       return (
         <>
-          <Icon name={resolvedIcon} className={iconClassName}/>
+          <Icon name={resolvedIcon} className={iconClassName} />
           {children}
         </>
       );
     }
     // ✅ asChild + icon: Clone child and inject icon into its children
     if (asChild && resolvedIcon && children && React.isValidElement(children)) {
-      const childElement = children as React.ReactElement<{ children?: React.ReactNode }>;
-      return React.cloneElement(childElement, {}, 
+      const childElement = children as React.ReactElement<{
+        children?: React.ReactNode;
+      }>;
+      return React.cloneElement(
+        childElement,
+        {},
         <>
-          <Icon name={resolvedIcon} className={iconClassName}/>
+          <Icon name={resolvedIcon} className={iconClassName} />
           {childElement.props.children}
-        </>
+        </>,
       );
     }
 
@@ -150,7 +154,9 @@ export function Button(props: ButtonProps) {
       return (
         <>
           {label}
-          {resolvedIcon && <Icon name={resolvedIcon} className={iconClassName} />}
+          {resolvedIcon && (
+            <Icon name={resolvedIcon} className={iconClassName} />
+          )}
         </>
       );
     }
@@ -163,7 +169,7 @@ export function Button(props: ButtonProps) {
     );
   };
 
-    const content = renderContent();
+  const content = renderContent();
 
   // Render as Link when href is provided
   if (href) {
@@ -182,11 +188,7 @@ export function Button(props: ButtonProps) {
   // Render as Slot when asChild is true
   if (asChild) {
     return (
-      <Slot
-        data-slot="button"
-        className={buttonClasses}
-        {...restProps}
-      >
+      <Slot data-slot="button" className={buttonClasses} {...restProps}>
         {content}
       </Slot>
     );

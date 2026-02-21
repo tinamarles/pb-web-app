@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
 import { Button } from './button';
+import { cn } from "./utils";
 
 // === MODIFICATION LOG ===
 // Date: 2026-01-02 UTC
@@ -26,6 +27,12 @@ export interface ModalProps {
   variant?: 'alert' | 'default' | 'large'; // Size/style variant
   showCloseButton?: boolean; // Show X button (default: true for 'default'/'large', false for 'alert')
   className?: string; // Custom class for modal content (for sizing, etc.)
+  /** Optional CSS classes for the title */
+  titleClassName?: string;
+  /** Optional CSS classes for the description */
+  descriptionClassName?: string;
+  /** Optional CSS classes for the modal body (e.g., 'overflow-hidden') */
+  bodyClassName?: string;
 }
 
 export const Modal = ({ 
@@ -36,7 +43,10 @@ export const Modal = ({
   description,
   variant = 'default',
   showCloseButton = variant !== 'alert', // Alert modals typically don't have X button
-  className = '' // Custom class for modal sizing
+  className = '', // Custom class for modal sizing
+  titleClassName = '',
+  descriptionClassName = '',
+  bodyClassName = '',
 }: ModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -168,12 +178,18 @@ export const Modal = ({
           <div className="modal__header">
             <div className="modal__header-content">
               {title && (
-                <h2 id="modal-title" className="modal__title">
+                <h2 id="modal-title" className={cn(
+                          "modal-title",
+                          titleClassName
+                        )}>
                   {title}
                 </h2>
               )}
               {description && (
-                <p id="modal-description" className="modal__description">
+                <p id="modal-description" className={cn(
+                          "modal-description",
+                          descriptionClassName
+                        )}>
                   {description}
                 </p>
               )}
@@ -189,7 +205,10 @@ export const Modal = ({
         )}
         
         {/* Body - content area */}
-        <div className="modal-body">
+        <div className={cn(
+                          "modal-body",
+                          bodyClassName
+                        )}>
           {children}
         </div>
       </div>

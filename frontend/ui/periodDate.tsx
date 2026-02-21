@@ -7,13 +7,19 @@
 // States: Not open yet, Open (safe), Open (closing soon), Closed
 // ========================
 
-import { DateDisplay } from './dateDisplay';
+import { DateDisplay } from "./dateDisplay";
 
 export interface PeriodDateProps {
   date: string | null | undefined;
   openDate: string | null | undefined;
   closeDate: string | null | undefined;
-  format?: 'short' | 'long' | 'iso' | 'numeric' | 'weekday-short' | 'weekday-long';
+  format?:
+    | "short"
+    | "long"
+    | "iso"
+    | "numeric"
+    | "weekday-short"
+    | "weekday-long";
   nullText?: string;
   warningDays?: number; // Default: 30 days before close
   className?: string;
@@ -21,38 +27,38 @@ export interface PeriodDateProps {
 
 /**
  * Date display with color coding based on registration period status
- * 
+ *
  * States:
  * 1. Before openDate → text-disabled (registration not open yet)
  * 2. Between open and close (safe) → text-info (registration open!)
  * 3. Between open and close (closing soon) → text-warning (hurry up!)
  * 4. After closeDate → text-error (registration closed)
- * 
+ *
  * Usage:
- * <RegistrationPeriodDate 
+ * <PeriodDate
  *   date={type.registrationOpenDate}
  *   openDate={type.registrationOpenDate}
  *   closeDate={type.registrationCloseDate}
  *   format="short"
  * />
  */
-export function PeriodDate({ 
-  date, 
+export function PeriodDate({
+  date,
   openDate,
   closeDate,
-  format = 'short',
-  nullText = 'N/A',
+  format = "short",
+  nullText = "N/A",
   warningDays = 30,
-  className = ''
+  className = "",
 }: PeriodDateProps) {
   // Get color class based on registration period status
   const colorClass = getPeriodColorClass(openDate, closeDate, warningDays);
   const combinedClassName = `${colorClass} ${className}`.trim();
-  
+
   return (
-    <DateDisplay 
-      date={date} 
-      format={format} 
+    <DateDisplay
+      date={date}
+      format={format}
       nullText={nullText}
       className={combinedClassName}
     />
@@ -65,39 +71,41 @@ export function PeriodDate({
 function getPeriodColorClass(
   openDate: string | null | undefined,
   closeDate: string | null | undefined,
-  warningDays: number
+  warningDays: number,
 ): string {
   // If either date is missing, use default color
   if (!openDate || !closeDate) {
-    return 'text-on-surface-variant';
+    return "text-on-surface-variant";
   }
-  
+
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Normalize to start of day
-  
+
   const open = new Date(openDate);
   open.setHours(0, 0, 0, 0);
-  
+
   const close = new Date(closeDate);
   close.setHours(0, 0, 0, 0);
-  
+
   // 1. Not open yet (today < openDate)
   if (today < open) {
-    return 'text-disabled'; // Registration not open yet
+    return "text-disabled"; // Registration not open yet
   }
-  
+
   // 2. Already closed (today > closeDate)
   if (today > close) {
-    return 'text-error'; // Registration closed
+    return "text-error"; // Registration closed
   }
-  
+
   // 3. Open - check if within warning period
-  const daysUntilClose = Math.ceil((close.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  
+  const daysUntilClose = Math.ceil(
+    (close.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
   if (daysUntilClose <= warningDays) {
-    return 'text-warning'; // Closing soon!
+    return "text-warning"; // Closing soon!
   }
-  
+
   // 4. Open and plenty of time
-  return 'text-info'; // Registration open
+  return "text-info"; // Registration open
 }

@@ -9,6 +9,7 @@ export {
   type ButtonSize,
 } from "./button";
 export { Icon, type IconProps, type IconName, type IconSize } from "./icon";
+export { Accordion, AccordionItem, type AccordionItemProps, type AccordionProps } from "./accordion";
 export { Logo, type LogoProps } from "./logo";
 export { Checkbox, type CheckboxProps } from "./checkbox";
 export { Badge, type BadgeProps, type BadgeVariant } from "./badge";
@@ -29,7 +30,7 @@ export {
 } from "./locationAutocomplete";
 export { RadioButton } from "./radioButton";
 export { ResponsiveButton, type ResponsiveButtonProps, type ResponsiveButtonConfig} from "./responsiveButton"; 
-export { Modal, type ModalProps } from './modal';
+export { Modal, ModalFooter, type ModalProps } from './modal';
 export { ProgressBar, type ProgressBarProps } from './progressBar';
 
 //export { UploadImageButton, type UploadImageButtonProps } from './uploadImageButton';
