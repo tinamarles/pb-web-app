@@ -3,15 +3,35 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 from users.serializers import UserInfoSerializer
-from .models import League, LeagueParticipation, LeagueAttendance, SessionOccurrence
-from public.constants import LeagueAttendanceStatus
-from public.serializers import AddressSerializer
+from .models import League, LeagueParticipation, LeagueAttendance, LeagueSession
+from public.constants import LeagueAttendanceStatus, LeagueParticipationStatus
 from django.utils import timezone
 from .mixins import CaptainInfoMixin
 from courts.serializers import CourtLocationInfoSerializer
 
 # Get the active user model
 User = get_user_model()
+
+class LeagueSessionSerializer(serializers.ModelSerializer):
+    court_location_info = serializers.SerializerMethodField()
+    class Meta:
+        model = LeagueSession
+        fields = ['id', 
+                  'court_location_info', 
+                  'courts_used',
+                  'day_of_week',
+                  'start_time',
+                  'end_time',
+                  'recurrence_type',
+                  'recurrence_interval',
+                  'active_from',
+                  'active_until',
+                  'is_active',
+                  ] 
+    def get_court_location_info(self, obj):
+        """Return minimal court Location using CourtLocationInfoSerializer"""
+        from courts.serializers import CourtLocationInfoSerializer
+        return CourtLocationInfoSerializer(obj.court_location).data
    
 class NextOccurrenceSerializer(serializers.Serializer):
     """
@@ -537,3 +557,238 @@ class SessionParticipantsSerializer(serializers.Serializer):
     session_id = serializers.IntegerField()
     count = serializers.IntegerField()
     participants = UserInfoSerializer(many=True)
+
+class AdminLeagueListSerializer(CaptainInfoMixin, serializers.ModelSerializer):
+    club_info = serializers.SerializerMethodField()
+   
+    captain_info = serializers.SerializerMethodField()
+    minimum_skill_level = serializers.IntegerField(
+                  source='minimum_skill_level.level',
+                  allow_null=True,
+                  read_only=True
+            )
+    # Participant count (smart counting!)
+    participants_count = serializers.SerializerMethodField()
+    
+    # ✅ User participation fields (read from annotations!)
+    # These are annotated in LeagueViewSet.get_queryset() when include_user_participation=true
+    user_is_captain = serializers.BooleanField(read_only=True, required=False)
+    
+    class Meta:
+        model = League
+        fields = [
+            'id',
+            'name',
+            'is_event',
+            'club_info',  
+            'captain_info',
+            'minimum_skill_level',
+            'max_participants',
+            'participants_count',
+            'fee',
+            'start_date',
+            'end_date',
+            'is_active',
+            'user_is_captain',      
+        ]
+    def get_club_info(self, obj):
+        """Return minimal club data using ClubInfoSerializer"""
+        from clubs.serializers import ClubInfoSerializer
+        return ClubInfoSerializer(obj.club).data
+    
+    def get_participants_count(self, obj):
+        """
+        Smart participant counting:
+        - Leagues: Total enrollment (LeagueParticipation)
+        - Events: Attendance for NEXT occurrence (LeagueAttendance)
+        """
+        if not obj.is_event:
+            # LEAGUES: Use annotated count from ViewSet
+            if hasattr(obj, 'league_participants_count'):
+                return obj.league_participants_count
+            return 0
+        return 0
+    
+class AdminLeagueDetailSerializer(AdminLeagueListSerializer):
+    '''
+    league = models.ForeignKey(
+        League, 
+        on_delete=models.CASCADE, 
+        related_name="sessions")
+    '''
+    league_sessions = LeagueSessionSerializer(source='sessions', read_only=True, many=True)
+
+    class Meta(AdminLeagueListSerializer.Meta):
+        fields = AdminLeagueListSerializer.Meta.fields + [
+            'description',
+            'image_url',
+            'allow_reserves',
+            'registration_opens_hours_before',
+            'registration_closes_hours_before',
+            'registration_start_date',
+            'registration_end_date',
+            'league_type',
+            'default_generation_format',
+            'league_sessions',
+        ]
+
+class AdminLeagueParticipantSerializer(serializers.ModelSerializer):
+    from clubs.serializers import ClubMemberSerializer
+    participant = ClubMemberSerializer(source='club_membership', read_only=True)
+
+    class Meta:
+        model = LeagueParticipation
+        fields = [
+            'id',
+            'league_id',
+            'participant',
+            'status',
+            'joined_at',
+            'left_at',
+            'captain_notes',
+            'exclude_from_rankings',
+        ]
+
+class ParticipantStatusUpdateSerializer(serializers.Serializer):
+    """
+    Serializer for ADMIN bulk updating participant status.
+    
+    KEY PATTERNS FROM set_preferred_club:
+    - Accepts integer status value (NOT string!)
+    - Validates against LeagueParticipationStatus choices
+    - Returns ARRAY of updated participations (for bulk updates)
+    - Uses to_representation() to format response
+    
+    Use case:
+    - Admin on /admin/[clubId]/events/[eventId]/members page
+    - Admin selects multiple participants
+    - Admin clicks "Set to Active" or "Set to Cancelled"
+    - Frontend needs updated list to re-render table
+    
+    Input (via view - NOT in body!):
+    - participation_ids (in URL or view logic)
+    - status: integer (in body, e.g., { "status": 1 })
+    
+    Output:
+    - Array of ALL updated LeagueParticipations
+    
+    CRITICAL RULES (from Guidelines.md):
+    1. Frontend ALWAYS sends integers, NEVER label strings
+    2. Backend uses constants.LeagueParticipationStatus (IntegerChoices)
+    3. NO string mapping like "ACTIVE" → 1
+    4. Return format matches what frontend expects for table refresh
+    """
+    
+    # ✅ CORRECT: Accept INTEGER status value
+    status = serializers.IntegerField(required=True)
+    
+    def validate_status(self, value):
+        """
+        Validate status is a valid LeagueParticipationStatus value.
+        
+        CRITICAL: Frontend already sends INTEGER (e.g., 1, 2, 5, 6)
+        We just need to validate it's a valid choice!
+        """
+        valid_statuses = [choice[0] for choice in LeagueParticipationStatus.choices]
+        
+        if value not in valid_statuses:
+            raise serializers.ValidationError(
+                f"Invalid status value: {value}. "
+                f"Must be one of: {valid_statuses}"
+            )
+        
+        return value
+    
+    def update(self, instances, validated_data):
+        """
+        Update status for multiple participations.
+        
+        Args:
+            instances: List[LeagueParticipation] (passed from view)
+            validated_data: { "status": int }
+        
+        Returns:
+            List[LeagueParticipation] (updated instances)
+        
+        Steps:
+        1. Normalize to list (handle single instance OR list)
+        2. Get new status from validated_data
+        3. Loop through instances
+        4. Store old_status, update to new_status
+        5. Call status_change service for each
+        6. Return updated instances as list
+        """
+        new_status = validated_data.get('status')
+        
+        # ✅ FIX: Normalize to list (handle single instance OR list)
+        if not isinstance(instances, list):
+            instances = [instances]
+            
+        # Import service here to avoid circular imports
+        from .services.status_change import handle_participation_status_change
+        
+        updated_instances = []
+        attendance_changes = []
+        
+        for participation in instances:
+            old_status = participation.status
+            
+            # Only update if status actually changed
+            if old_status != new_status:
+                # Update status
+                participation.status = new_status
+                participation.save()
+                
+                # Handle attendance records (create/delete/update based on status change)
+                result = handle_participation_status_change(
+                    participation, old_status, new_status
+                )
+                attendance_changes.append({
+                    'participation_id': participation.id,
+                    **result
+                })
+            
+            updated_instances.append(participation)
+        
+        # Store attendance changes in instance for response
+        # (We'll return this via to_representation)
+        if updated_instances:
+            updated_instances[0]._attendance_changes = attendance_changes
+        
+        return updated_instances
+    
+    def to_representation(self, instances):
+        """
+        Custom representation: Return ALL updated participations.
+        
+        PATTERN FROM set_preferred_club:
+        - Uses AdminLeagueParticipantSerializer for each participation
+        - Returns array of serialized data
+        - Includes attendance_changes summary
+        
+        Args:
+            instances: List[LeagueParticipation]
+        
+        Returns:
+            {
+                "participants": [...],
+                "attendanceChanges": [...]
+            }
+        """
+        # Use existing AdminLeagueParticipantSerializer for consistency
+        # from .serializers import AdminLeagueParticipantSerializer
+        
+        participant_data = AdminLeagueParticipantSerializer(
+            instances, 
+            many=True
+        ).data
+        
+        # Get attendance changes if available
+        attendance_changes = []
+        if instances and hasattr(instances[0], '_attendance_changes'):
+            attendance_changes = instances[0]._attendance_changes
+        
+        return {
+            'participants': participant_data,
+            'attendanceChanges': attendance_changes
+        }
