@@ -1,0 +1,206 @@
+[
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 11,
+  "fields": {
+    "club": 5,
+    "name": "Resident",
+    "description": "Member must live in St. Jerôme",
+    "requires_approval": false,
+    "registration_open_date": "2025-10-21",
+    "registration_close_date": "2026-09-30",
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "30.00",
+    "created_at": "2025-12-07T14:28:52.598Z",
+    "updated_at": "2025-12-07T14:45:06.898Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 12,
+  "fields": {
+    "club": 5,
+    "name": "Junior Resident",
+    "description": "For Members that are residents of St. Jerôme and between 12 - 18 years of age by 31st December 2026.\r\nPour junior plus de 12 ans et moins de 18 ans au 31 décembre 2026.",
+    "requires_approval": false,
+    "registration_open_date": "2025-10-21",
+    "registration_close_date": "2026-09-30",
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "30.00",
+    "created_at": "2025-12-07T14:45:06.899Z",
+    "updated_at": "2025-12-07T14:45:06.899Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 13,
+  "fields": {
+    "club": 5,
+    "name": "Non-Resident",
+    "description": "Non-residents can only renew their registration. No new non-residents are currently accepted.",
+    "requires_approval": true,
+    "registration_open_date": "2025-10-21",
+    "registration_close_date": "2025-11-11",
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "75.00",
+    "created_at": "2025-12-07T14:45:06.900Z",
+    "updated_at": "2025-12-07T14:45:06.900Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 14,
+  "fields": {
+    "club": 6,
+    "name": "Resident",
+    "description": "Resident Member",
+    "requires_approval": false,
+    "registration_open_date": "2025-07-01",
+    "registration_close_date": "2025-12-31",
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "25.00",
+    "created_at": "2025-12-08T12:48:59.309Z",
+    "updated_at": "2025-12-08T12:48:59.309Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 15,
+  "fields": {
+    "club": 7,
+    "name": "Standard",
+    "description": "Standard Membership",
+    "requires_approval": false,
+    "registration_open_date": "2025-10-21",
+    "registration_close_date": "2026-12-31",
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "0.00",
+    "created_at": "2026-01-04T10:51:42.514Z",
+    "updated_at": "2026-01-04T10:51:42.514Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 16,
+  "fields": {
+    "club": 8,
+    "name": "Member",
+    "description": "Full Member - 50% discount on all events",
+    "requires_approval": false,
+    "registration_open_date": "2025-12-01",
+    "registration_close_date": "2026-03-31",
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "259.99",
+    "created_at": "2026-01-18T18:39:31.341Z",
+    "updated_at": "2026-01-18T18:40:41.954Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 17,
+  "fields": {
+    "club": 8,
+    "name": "Drop-In",
+    "description": "Drop-In Visitor - pays full price for all events",
+    "requires_approval": false,
+    "registration_open_date": null,
+    "registration_close_date": null,
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "0.00",
+    "created_at": "2026-01-18T18:40:11.972Z",
+    "updated_at": "2026-01-18T18:40:11.972Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 18,
+  "fields": {
+    "club": 9,
+    "name": "Member",
+    "description": "Member of CentrePickle\r\nPlan: $390/yr or $36 for 4 weeks",
+    "requires_approval": false,
+    "registration_open_date": null,
+    "registration_close_date": null,
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "390.00",
+    "created_at": "2026-01-18T21:48:45.241Z",
+    "updated_at": "2026-01-18T21:48:45.241Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 19,
+  "fields": {
+    "club": 9,
+    "name": "Member Pickle",
+    "description": "Member Pickle\r\n$1256.67/yr or $116 for 4 weeks",
+    "requires_approval": false,
+    "registration_open_date": null,
+    "registration_close_date": null,
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "1256.67",
+    "created_at": "2026-01-18T21:50:54.023Z",
+    "updated_at": "2026-01-18T21:50:54.023Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 20,
+  "fields": {
+    "club": 9,
+    "name": "Member Pro",
+    "description": "Member Pro\r\n$ 2556.67/yr or $236 for 4 weeks",
+    "requires_approval": false,
+    "registration_open_date": null,
+    "registration_close_date": null,
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "2556.67",
+    "created_at": "2026-01-18T21:52:02.570Z",
+    "updated_at": "2026-01-18T21:52:02.570Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 21,
+  "fields": {
+    "club": 9,
+    "name": "Visitor",
+    "description": "Visitor - pays full price for all events",
+    "requires_approval": false,
+    "registration_open_date": null,
+    "registration_close_date": null,
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "0.00",
+    "created_at": "2026-01-18T21:52:44.720Z",
+    "updated_at": "2026-01-18T21:52:44.720Z"
+  }
+},
+{
+  "model": "clubs.clubmembershiptype",
+  "pk": 22,
+  "fields": {
+    "club": 5,
+    "name": "Organizer Member",
+    "description": "Members who are involved in managing the club and are excempt from fees.",
+    "requires_approval": false,
+    "registration_open_date": null,
+    "registration_close_date": null,
+    "max_capacity": null,
+    "max_capacity_percentage": null,
+    "annual_fee": "0.00",
+    "created_at": "2026-02-10T17:51:23.890Z",
+    "updated_at": "2026-02-10T17:51:23.890Z"
+  }
+}
+]

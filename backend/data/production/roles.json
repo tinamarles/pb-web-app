@@ -1,0 +1,542 @@
+[
+{
+  "model": "clubs.role",
+  "pk": 15,
+  "fields": {
+    "name": 1,
+    "club": 9,
+    "description": "A user with this role can manage the entire club. Typically applied to Club owners, Board members, Club Organizers etc.",
+    "can_manage_club": true,
+    "can_manage_members": true,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T16:33:12.790Z",
+    "updated_at": "2026-02-27T16:33:12.790Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 16,
+  "fields": {
+    "name": 2,
+    "club": 9,
+    "description": "An organizer typically is a Club member that is involved in organizing events (eg. tournaments), schedules Leagues and similar.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T16:33:12.791Z",
+    "updated_at": "2026-02-27T16:33:12.791Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 17,
+  "fields": {
+    "name": 3,
+    "club": 9,
+    "description": "A captain manages a Club League. They are responsible for the individual League sessions - eg. they can determine the playing format, or cancel a session. They create matches, enter match-results.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.791Z",
+    "updated_at": "2026-02-27T16:33:12.791Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 18,
+  "fields": {
+    "name": 4,
+    "club": 9,
+    "description": "Instructors at the Club Level - they do not necessarily have an appropriate certifications. An Instructor can create and run training sessions.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": true,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.792Z",
+    "updated_at": "2026-02-27T16:33:12.792Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 19,
+  "fields": {
+    "name": 5,
+    "club": 9,
+    "description": "Default for any Club Member - no permissions.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.793Z",
+    "updated_at": "2026-02-27T16:33:12.793Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 20,
+  "fields": {
+    "name": 1,
+    "club": 6,
+    "description": "A user with this role can manage the entire club. Typically applied to Club owners, Board members, Club Organizers etc.",
+    "can_manage_club": true,
+    "can_manage_members": true,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T16:33:12.793Z",
+    "updated_at": "2026-02-27T16:33:12.793Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 21,
+  "fields": {
+    "name": 2,
+    "club": 6,
+    "description": "An organizer typically is a Club member that is involved in organizing events (eg. tournaments), schedules Leagues and similar.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T16:33:12.794Z",
+    "updated_at": "2026-02-27T16:33:12.794Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 22,
+  "fields": {
+    "name": 3,
+    "club": 6,
+    "description": "A captain manages a Club League. They are responsible for the individual League sessions - eg. they can determine the playing format, or cancel a session. They create matches, enter match-results.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.794Z",
+    "updated_at": "2026-02-27T16:33:12.794Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 23,
+  "fields": {
+    "name": 4,
+    "club": 6,
+    "description": "Instructors at the Club Level - they do not necessarily have an appropriate certifications. An Instructor can create and run training sessions.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": true,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.795Z",
+    "updated_at": "2026-02-27T16:33:12.795Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 24,
+  "fields": {
+    "name": 5,
+    "club": 6,
+    "description": "Default for any Club Member - no permissions.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.795Z",
+    "updated_at": "2026-02-27T16:33:12.795Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 25,
+  "fields": {
+    "name": 1,
+    "club": 7,
+    "description": "A user with this role can manage the entire club. Typically applied to Club owners, Board members, Club Organizers etc.",
+    "can_manage_club": true,
+    "can_manage_members": true,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T16:33:12.796Z",
+    "updated_at": "2026-02-27T16:33:12.796Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 26,
+  "fields": {
+    "name": 2,
+    "club": 7,
+    "description": "An organizer typically is a Club member that is involved in organizing events (eg. tournaments), schedules Leagues and similar.",
+    "can_manage_club": false,
+    "can_manage_members": true,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T16:33:12.796Z",
+    "updated_at": "2026-02-27T16:33:12.796Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 27,
+  "fields": {
+    "name": 3,
+    "club": 7,
+    "description": "A captain manages a Club League. They are responsible for the individual League sessions - eg. they can determine the playing format, or cancel a session. They create matches, enter match-results.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.797Z",
+    "updated_at": "2026-02-27T16:33:12.797Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 28,
+  "fields": {
+    "name": 4,
+    "club": 7,
+    "description": "Instructors at the Club Level - they do not necessarily have an appropriate certifications. An Instructor can create and run training sessions.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": true,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.797Z",
+    "updated_at": "2026-02-27T16:33:12.797Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 29,
+  "fields": {
+    "name": 5,
+    "club": 7,
+    "description": "Default for any Club Member - no permissions.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.797Z",
+    "updated_at": "2026-02-27T16:33:12.797Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 30,
+  "fields": {
+    "name": 1,
+    "club": 5,
+    "description": "A user with this role can manage the entire club. Typically applied to Club owners, Board members, Club Organizers etc.",
+    "can_manage_club": true,
+    "can_manage_members": true,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T16:33:12.798Z",
+    "updated_at": "2026-02-27T16:33:12.798Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 31,
+  "fields": {
+    "name": 2,
+    "club": 5,
+    "description": "An organizer typically is a Club member that is involved in organizing events (eg. tournaments), schedules Leagues and similar.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T16:33:12.798Z",
+    "updated_at": "2026-02-27T16:33:12.798Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 32,
+  "fields": {
+    "name": 3,
+    "club": 5,
+    "description": "A captain manages a Club League. They are responsible for the individual League sessions - eg. they can determine the playing format, or cancel a session. They create matches, enter match-results.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.799Z",
+    "updated_at": "2026-02-27T16:33:12.799Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 33,
+  "fields": {
+    "name": 4,
+    "club": 5,
+    "description": "Instructors at the Club Level - they do not necessarily have an appropriate certifications. An Instructor can create and run training sessions.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": true,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.799Z",
+    "updated_at": "2026-02-27T16:33:12.799Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 34,
+  "fields": {
+    "name": 5,
+    "club": 5,
+    "description": "Default for any Club Member - no permissions.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.799Z",
+    "updated_at": "2026-02-27T16:33:12.799Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 35,
+  "fields": {
+    "name": 1,
+    "club": 8,
+    "description": "A user with this role can manage the entire club. Typically applied to Club owners, Board members, Club Organizers etc.",
+    "can_manage_club": true,
+    "can_manage_members": true,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T16:33:12.800Z",
+    "updated_at": "2026-02-27T16:33:12.800Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 36,
+  "fields": {
+    "name": 2,
+    "club": 8,
+    "description": "An organizer typically is a Club member that is involved in organizing events (eg. tournaments), schedules Leagues and similar.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T16:33:12.800Z",
+    "updated_at": "2026-02-27T16:33:12.800Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 37,
+  "fields": {
+    "name": 3,
+    "club": 8,
+    "description": "A captain manages a Club League. They are responsible for the individual League sessions - eg. they can determine the playing format, or cancel a session. They create matches, enter match-results.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.801Z",
+    "updated_at": "2026-02-27T16:33:12.801Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 38,
+  "fields": {
+    "name": 4,
+    "club": 8,
+    "description": "Instructors at the Club Level - they do not necessarily have an appropriate certifications. An Instructor can create and run training sessions.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": true,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.801Z",
+    "updated_at": "2026-02-27T16:33:12.801Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 39,
+  "fields": {
+    "name": 5,
+    "club": 8,
+    "description": "Default for any Club Member - no permissions.",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T16:33:12.802Z",
+    "updated_at": "2026-02-27T16:33:12.802Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 40,
+  "fields": {
+    "name": 1,
+    "club": 10,
+    "description": "Full club administration",
+    "can_manage_club": true,
+    "can_manage_members": true,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T18:08:42.125Z",
+    "updated_at": "2026-02-27T18:08:42.125Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 41,
+  "fields": {
+    "name": 2,
+    "club": 10,
+    "description": "Event and league organizer",
+    "can_manage_club": false,
+    "can_manage_members": true,
+    "can_create_training": true,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": true,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": true,
+    "created_at": "2026-02-27T18:08:42.126Z",
+    "updated_at": "2026-02-27T18:08:42.126Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 42,
+  "fields": {
+    "name": 3,
+    "club": 10,
+    "description": "League captain",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": true,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": true,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T18:08:42.126Z",
+    "updated_at": "2026-02-27T18:08:42.126Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 43,
+  "fields": {
+    "name": 4,
+    "club": 10,
+    "description": "Training instructor",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": true,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T18:08:42.127Z",
+    "updated_at": "2026-02-27T18:08:42.127Z"
+  }
+},
+{
+  "model": "clubs.role",
+  "pk": 44,
+  "fields": {
+    "name": 5,
+    "club": 10,
+    "description": "Club member",
+    "can_manage_club": false,
+    "can_manage_members": false,
+    "can_create_training": false,
+    "can_manage_leagues": false,
+    "can_manage_league_sessions": false,
+    "can_cancel_league_sessions": false,
+    "can_manage_courts": false,
+    "created_at": "2026-02-27T18:08:42.127Z",
+    "updated_at": "2026-02-27T18:08:42.127Z"
+  }
+}
+]

@@ -1,0 +1,80 @@
+[
+{
+  "model": "clubs.clubmembershipskilllevel",
+  "pk": 7,
+  "fields": {
+    "level": 2,
+    "short_name": "3.5+",
+    "description": "Player has been formally assessed and passed level 3.5+",
+    "min_level": "3.5",
+    "max_level": "3.9",
+    "created_at": "2025-12-07T15:24:42.380Z",
+    "updated_at": "2026-02-10T19:35:08.245Z"
+  }
+},
+{
+  "model": "clubs.clubmembershipskilllevel",
+  "pk": 8,
+  "fields": {
+    "level": 1,
+    "short_name": "Open",
+    "description": "Player has not been formally assessed and could be of any level.",
+    "min_level": "2.0",
+    "max_level": "6.0",
+    "created_at": "2025-12-07T15:25:12.883Z",
+    "updated_at": "2026-02-10T19:34:54.882Z"
+  }
+},
+{
+  "model": "clubs.clubmembershipskilllevel",
+  "pk": 9,
+  "fields": {
+    "level": 3,
+    "short_name": "4.0+",
+    "description": "Player has been formally assessed and passed level 4.0+",
+    "min_level": "4.0",
+    "max_level": "6.0",
+    "created_at": "2025-12-07T15:25:35.990Z",
+    "updated_at": "2026-02-10T19:35:16.664Z"
+  }
+},
+{
+  "model": "clubs.clubmembershipskilllevel",
+  "pk": 10,
+  "fields": {
+    "level": 4,
+    "short_name": "Inter 1",
+    "description": "Correspondes to PEL tag: INTER 1\r\n\r\nPlayers have requested to be added to that group. This does not mean the player is necessarily at that level. There was no assessment!",
+    "min_level": "2.8",
+    "max_level": "3.1",
+    "created_at": "2026-02-10T17:47:01.893Z",
+    "updated_at": "2026-02-10T19:35:45.092Z"
+  }
+},
+{
+  "model": "clubs.clubmembershipskilllevel",
+  "pk": 11,
+  "fields": {
+    "level": 5,
+    "short_name": "Inter 2",
+    "description": "Corresponds to PEL label: INTER 2\r\n\r\nAs for INTER 1, the players requested that level. This does not mean the player is necessarily at that level. There was no formal assessment.",
+    "min_level": "3.2",
+    "max_level": "3.4",
+    "created_at": "2026-02-10T17:48:03.006Z",
+    "updated_at": "2026-02-10T19:35:53.509Z"
+  }
+},
+{
+  "model": "clubs.clubmembershipskilllevel",
+  "pk": 12,
+  "fields": {
+    "level": 6,
+    "short_name": "Beginners",
+    "description": "Players that are just starting out to play Pickleball up to recreative level.",
+    "min_level": "2.0",
+    "max_level": "2.7",
+    "created_at": "2026-02-10T17:48:37.460Z",
+    "updated_at": "2026-02-10T19:36:09.510Z"
+  }
+}
+]

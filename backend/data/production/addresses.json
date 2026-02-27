@@ -1,0 +1,98 @@
+[
+{
+  "model": "public.address",
+  "pk": 1,
+  "fields": {
+    "address_line1": "245 Boulevard Lachapelle",
+    "address_line2": null,
+    "city": "Saint-Jérôme",
+    "state_province": "QC",
+    "postal_code": "J7Z 7L2",
+    "country": "Canada"
+  }
+},
+{
+  "model": "public.address",
+  "pk": 2,
+  "fields": {
+    "address_line1": "943 Rue de la Mairie",
+    "address_line2": null,
+    "city": "Blainville",
+    "state_province": "QC",
+    "postal_code": "J7C 5W2",
+    "country": "Canada"
+  }
+},
+{
+  "model": "public.address",
+  "pk": 3,
+  "fields": {
+    "address_line1": "17085 De Lauson",
+    "address_line2": null,
+    "city": "Mirabel",
+    "state_province": "QC",
+    "postal_code": "J7J0M4",
+    "country": "Canada"
+  }
+},
+{
+  "model": "public.address",
+  "pk": 4,
+  "fields": {
+    "address_line1": "450 Bd de la Salette",
+    "address_line2": null,
+    "city": "Saint-Jérôme",
+    "state_province": "QC",
+    "postal_code": "J5L 2J1",
+    "country": "Canada"
+  }
+},
+{
+  "model": "public.address",
+  "pk": 5,
+  "fields": {
+    "address_line1": "120 Rue de Val D'Isère",
+    "address_line2": "",
+    "city": "Sainte-Agathe-des-Monts",
+    "state_province": "QC",
+    "postal_code": "J8C 0W3",
+    "country": "Canada"
+  }
+},
+{
+  "model": "public.address",
+  "pk": 6,
+  "fields": {
+    "address_line1": "3/73 Payne Street, Indooroopilly QLD, Australia",
+    "address_line2": "",
+    "city": "Indooroopilly",
+    "state_province": "Queensland",
+    "postal_code": "4068",
+    "country": "Australia"
+  }
+},
+{
+  "model": "public.address",
+  "pk": 7,
+  "fields": {
+    "address_line1": "11 Rue Larocque O",
+    "address_line2": "",
+    "city": "Sainte-Agathe-des-Monts",
+    "state_province": "QC",
+    "postal_code": "J8C 1Z9",
+    "country": "Canada"
+  }
+},
+{
+  "model": "public.address",
+  "pk": 8,
+  "fields": {
+    "address_line1": "2350 Rue Dickson",
+    "address_line2": "Local 950 (porte de garage 32)",
+    "city": "Montréal",
+    "state_province": "QC",
+    "postal_code": "H1N 3L7",
+    "country": "Canada"
+  }
+}
+]

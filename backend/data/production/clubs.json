@@ -1,0 +1,116 @@
+[
+{
+  "model": "clubs.club",
+  "pk": 5,
+  "fields": {
+    "club_type": 2,
+    "name": "Pickleball St. Jerôme",
+    "short_name": "PSJ-St. Jerôme",
+    "description": "La mission du club Pickleball St-Jérôme est de promouvoir le Pickleball auprès des résidents de  St-Jérôme  contribuant ainsi au développement de l’activité physique et au maintien de la santé, le tout dans un esprit pour s’amuser ou plus compétitif.  Pickleball St-Jérôme est responsable de la saison extérieure seulement.  Pickleball St-Jérôme est membre de la Fédération Québécoise du Pickleball (FQP) ainsi que de la Fédération Canadienne de Pickleball (PCO).\r\n\r\nTous les joueurs débutants, intermédiaires et avancés profitent de plages de jeux  adaptées  à leur calibre et intérêt.  Nous sommes une équipe au conseil d’administration de 9 membres  ainsi que plusieurs instructeurs certifiés, bénévoles et organisateurs d’activité tous bénévoles et dédiées. En 2024 , le club compte bientôt 500  membres et est en croissance depuis sa fondation en 2017.",
+    "address": 1,
+    "phone_number": "none",
+    "email": "info@pickleballstjerome.ca",
+    "website_url": "https://pickleballenligne.com/Club/Home.aspx?gi=47c0e174-35ff-4eab-a5f8-8164194fe562",
+    "logo_url": "https://res.cloudinary.com/dvjri35p2/image/upload/v1764439218/PSJLogo_xnpgig.jpg",
+    "banner_url": "https://res.cloudinary.com/dvjri35p2/image/upload/v1768030839/club2_n731ri.jpg",
+    "autoapproval": true,
+    "created_at": "2025-12-07T14:28:52.594Z",
+    "updated_at": "2026-01-19T17:38:01.335Z"
+  }
+},
+{
+  "model": "clubs.club",
+  "pk": 6,
+  "fields": {
+    "club_type": 2,
+    "name": "Club de pickleball de Mirabel",
+    "short_name": "CPB-Mirabel",
+    "description": "Association Pickleball Mirabel - Club de Pickleball Mirabel pour les résidents de Mirabel,  notre but est de permettre aux citoyens de Mirabel de pratiquer le sport de Pickleball en toute sécurité tout en s’amusant.",
+    "address": 3,
+    "phone_number": "514-953-1334",
+    "email": "donald.hargray@clubdepickleballmirabel.ca",
+    "website_url": "https://pickleballenligne.com/Club/Home.aspx?gi=8a7fd3f0-598e-449d-9ad9-65fda80504d8",
+    "logo_url": "https://res.cloudinary.com/dvjri35p2/image/upload/v1764440869/ClubMirabell_ivxgtu.jpg",
+    "banner_url": "https://res.cloudinary.com/dvjri35p2/image/upload/v1768030839/club1_ptbeqy.jpg",
+    "autoapproval": true,
+    "created_at": "2025-12-08T12:48:11.084Z",
+    "updated_at": "2026-01-19T17:43:10.217Z"
+  }
+},
+{
+  "model": "clubs.club",
+  "pk": 7,
+  "fields": {
+    "club_type": 1,
+    "name": "Demo Pickleball Club",
+    "short_name": "Demo Club",
+    "description": "A club to test various features. Updating to see what NestedClubSerializer does",
+    "address": 2,
+    "phone_number": "+1 (819) 216 8123",
+    "email": "tina.marles@yahoo.com",
+    "website_url": "https://pickleballblainville.ca/",
+    "logo_url": "https://res.cloudinary.com/dvjri35p2/image/upload/v1764439796/PBBlainville_sekigd.png",
+    "banner_url": "https://res.cloudinary.com/dvjri35p2/image/upload/v1768030839/club3_tfu6sg.jpg",
+    "autoapproval": true,
+    "created_at": "2026-01-04T10:51:42.509Z",
+    "updated_at": "2026-01-10T16:30:56.959Z"
+  }
+},
+{
+  "model": "clubs.club",
+  "pk": 8,
+  "fields": {
+    "club_type": 2,
+    "name": "Pickleverse Sainte Agathe",
+    "short_name": "Pickleverse",
+    "description": "Mission\r\nPickleverse vise à faire découvrir et à rendre le pickleball accessible à tous, en créant un écosystème complet qui réunit salles de jeu, équipements, événements et communauté.\r\n\r\nL’objectif est d’offrir une expérience conviviale, motivante et inclusive, où chacun peut jouer, bouger et s’amuser, peu importe son niveau.",
+    "address": 7,
+    "phone_number": "+1 (514) 601-7425",
+    "email": "info@au12multisports.com",
+    "website_url": "",
+    "logo_url": "https://res.cloudinary.com/dvjri35p2/image/upload/v1768761145/pickleverseLogo2_fxo9id.jpg",
+    "banner_url": "https://res.cloudinary.com/dvjri35p2/image/upload/v1768837420/PickleverseBanner_rtlvwv.jpg",
+    "autoapproval": true,
+    "created_at": "2026-01-18T18:34:25.542Z",
+    "updated_at": "2026-01-19T16:41:56.927Z"
+  }
+},
+{
+  "model": "clubs.club",
+  "pk": 9,
+  "fields": {
+    "club_type": 2,
+    "name": "Centre Pickle Montreal",
+    "short_name": "Centre Pickle",
+    "description": "You want to improve your game?\r\n\r\nOur Pickle Academy, in partnership with Elite Pickleball, covers all the techniques to master and become an ace of the pickleball.\r\n\r\n- 14 pickleball courts with US OPEN quality cushioned surface\r\n- 30-foot clear ceiling height\r\n- Air-conditioned\r\n\r\nA complete center with:\r\n- Showers and locker rooms\r\n- Pro-shop\r\n- Café / Bar\r\n- Two terraces\r\nResting open area\r\nWi-Fi",
+    "address": 8,
+    "phone_number": "+1 (514) 360-9477",
+    "email": "info@centrepickle.com",
+    "website_url": "https://centrepickle.com/en/",
+    "logo_url": "https://res.cloudinary.com/dvjri35p2/image/upload/v1768829358/CentrePickle_logo_orange_fkqlva.png",
+    "banner_url": "https://res.cloudinary.com/dvjri35p2/image/upload/v1768772492/CentrePickleBanner_hkhmle.png",
+    "autoapproval": true,
+    "created_at": "2026-01-18T20:01:34.833Z",
+    "updated_at": "2026-01-19T16:33:56.376Z"
+  }
+},
+{
+  "model": "clubs.club",
+  "pk": 10,
+  "fields": {
+    "club_type": 1,
+    "name": "Tina's Own Personal Club",
+    "short_name": "PB-PC Tina",
+    "description": "My own personal club to test if Claude did it correct",
+    "address": 5,
+    "phone_number": "",
+    "email": "",
+    "website_url": "",
+    "logo_url": "",
+    "banner_url": "",
+    "autoapproval": true,
+    "created_at": "2026-02-27T18:08:42.123Z",
+    "updated_at": "2026-02-27T18:08:42.123Z"
+  }
+}
+]
