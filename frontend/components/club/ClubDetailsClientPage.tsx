@@ -1,4 +1,5 @@
 "use client";
+// not used
 import { PlaceholderPage } from "../PlaceholderPage";
 
 type ClubDetailsClientPageProps = {

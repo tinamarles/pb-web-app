@@ -23,7 +23,7 @@ export default async function ClubHomePage({
   return (
     <div className="flex flex-col gap-md">
       <h2 className="subheading-lg text-secondary">
-        HOME TAB for club: {club.club.name}
+        HOME TAB for club: {club.clubInfo.name}
       </h2>
       <p className="mt-2 title-lg text-on-surface">
         Announcement: {club.latestAnnouncement?.title}

@@ -1,3 +1,4 @@
+// not used
 import { PageProps } from "@/lib/definitions";
 import { Metadata } from "next";
 import { ClubDetailsClientPage } from "@/components/club/ClubDetailsClientPage";

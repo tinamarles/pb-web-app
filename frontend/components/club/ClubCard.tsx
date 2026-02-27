@@ -12,14 +12,14 @@ import { useDashboard } from "@/providers/DashboardProvider";
 import { useSearchParams } from "next/navigation";
 import { ResponsiveButton, Badge, Button } from "@/ui";
 import Image from "next/image";
-import { MemberClub } from "@/lib/definitions";
+import { ClubDetail } from "@/lib/definitions";
 import { ClubType, getClubTypeLabel } from "@/lib/constants";
 import { join } from "path";
 
 export type ClubCardVariant = "grid-display" | "detail";
 
 export interface ClubCardProps {
-  club: MemberClub;
+  club: ClubDetail;
   actions?: boolean; // whether to show action buttons
   joinMode?: boolean; // whether in join mode (for non-members)
   variant?: ClubCardVariant;

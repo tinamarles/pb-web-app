@@ -7,14 +7,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthUserProvider";
-import { MemberClub, MemberUser } from "@/lib/definitions";
+import { ClubDetail, MemberUser } from "@/lib/definitions";
 import { Button } from "@/ui";
 import { EmptyState } from "../EmptyState";
 import { ClubCard } from "./ClubCard";
 import { toast } from "sonner";
 
 interface ClubListClientProps {
-  clubs: MemberClub[];
+  clubs: ClubDetail[];
   isJoinMode: boolean;
 }
 
@@ -24,7 +24,7 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
   // ========================================
   const router = useRouter();
   const { user, isMemberUser } = useAuth();
-  const [selectedClub, setSelectedClub] = useState<MemberClub | null>(null);
+  const [selectedClub, setSelectedClub] = useState<ClubDetail | null>(null);
   const [isJoining, setIsJoining] = useState(false);
 
   // 🎯 Filter clubs in join mode - exclude clubs user is already a member of
@@ -55,7 +55,7 @@ export function ClubListClient({ clubs, isJoinMode }: ClubListClientProps) {
   };
 
   // 🎯 Handle join button - open confirmation dialog
-  const handleJoinClick = (e: React.MouseEvent, club: MemberClub) => {
+  const handleJoinClick = (e: React.MouseEvent, club: ClubDetail) => {
     e.stopPropagation(); // Prevent card click
     setSelectedClub(club);
   };
