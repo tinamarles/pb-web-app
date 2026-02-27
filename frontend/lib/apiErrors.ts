@@ -1,6 +1,6 @@
 /**
  * API Error handling utilities
- * 
+ *
  * Usage:
  * try {
  *   await get('endpoint');
@@ -17,7 +17,7 @@
  * API Error type definition
  */
 export type ApiError = {
-  readonly type: 'ApiError';
+  readonly type: "ApiError";
   readonly status: number;
   readonly message: string;
   readonly detail: string;
@@ -30,15 +30,15 @@ export type ApiError = {
 function getDefaultMessage(status: number): string {
   switch (status) {
     case 400:
-      return 'Bad Request';
+      return "Bad Request";
     case 401:
-      return 'Authentication Required';
+      return "Authentication Required";
     case 403:
-      return 'Not Authorized';
+      return "Not Authorized";
     case 404:
-      return 'Not Found';
+      return "Not Found";
     case 500:
-      return 'Server Error';
+      return "Server Error";
     default:
       return `HTTP Error ${status}`;
   }
@@ -46,7 +46,7 @@ function getDefaultMessage(status: number): string {
 
 /**
  * Create an API error object
- * 
+ *
  * @param status - HTTP status code
  * @param detail - Detailed error message from backend
  * @param endpoint - API endpoint that failed
@@ -57,10 +57,10 @@ export function createApiError(
   status: number,
   detail: string,
   endpoint: string,
-  message?: string
+  message?: string,
 ): ApiError {
   return {
-    type: 'ApiError',
+    type: "ApiError",
     status,
     message: message || getDefaultMessage(status),
     detail,
@@ -73,10 +73,10 @@ export function createApiError(
  */
 export function isApiError(error: unknown): error is ApiError {
   return (
-    typeof error === 'object' &&
+    typeof error === "object" &&
     error !== null &&
-    'type' in error &&
-    error.type === 'ApiError'
+    "type" in error &&
+    error.type === "ApiError"
   );
 }
 

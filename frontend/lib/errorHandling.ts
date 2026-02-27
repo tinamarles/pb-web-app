@@ -2,6 +2,8 @@
 
 import { redirect } from 'next/navigation';
 import type { ApiError } from './apiErrors';
+import { NextResponse } from "next/server";
+import { ValidationError } from './validationErrors';
 
 /**
  * Handle API errors in server components by redirecting with error params
@@ -30,4 +32,39 @@ export function handleApiError(
     default:
       redirect(`${fallbackUrl}?error=unknown&message=${message}`);
   }
+}
+
+/**
+ * Handle API errors in ROUTE HANDLERS by returning JSON response
+ * 
+ * ✅ USE IN: route.ts (API Route Handlers)
+ * ❌ DON'T USE IN: page.tsx (use handleApiError instead!)
+ * 
+ * WHY: route.ts cannot use redirect() - it must return NextResponse!
+ * PATTERN: Mirrors handleApiError() but returns JSON instead of redirect
+ */
+export function handleApiErrorInRoute(
+  error: ApiError | ValidationError
+): NextResponse {
+  // Extract common properties
+  const message = error.message;
+  const status = error.status;
+  const detail = 'detail' in error ? error.detail : undefined;
+  const endpoint = 'endpoint' in error ? error.endpoint : undefined;
+
+  // Build response object
+  const response: any = {
+    error: message,
+    status,
+  };
+
+  if (detail) {
+    response.detail = detail;
+  }
+
+  if (endpoint) {
+    response.endpoint = endpoint;
+  }
+
+  return NextResponse.json(response, { status });
 }
