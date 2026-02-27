@@ -25,6 +25,10 @@
 from django.contrib import admin
 from django import forms
 from django.contrib import messages
+from django.shortcuts import redirect  # ✅ ADD THIS!
+from django.urls import path  # ✅ ADD THIS!
+from django.core.management import call_command  # ✅ ADD THIS!
+
 from .models import (
     League, 
     LeagueParticipation, 
@@ -219,7 +223,6 @@ class EventLeagueFilter(admin.SimpleListFilter):
             return queryset.filter(is_event=False)
         return queryset  # "All" - no filter
 
-
 class ClubFilterForSessionOccurrence(admin.SimpleListFilter):
     """
     Filter SessionOccurrences by club.
@@ -244,7 +247,6 @@ class ClubFilterForSessionOccurrence(admin.SimpleListFilter):
         if self.value():
             return queryset.filter(league_session__league__club_id=self.value())
         return queryset
-
 
 class LeagueFilterForSessionOccurrence(admin.SimpleListFilter):
     """
@@ -293,7 +295,6 @@ class LeagueFilterForSessionOccurrence(admin.SimpleListFilter):
             return queryset.filter(league_session__league_id=self.value())
         return queryset
 
-
 class LeagueFilterForParticipation(admin.SimpleListFilter):
     """Custom filter to filter LeagueParticipation by League"""
     title = 'league/event'  # Display name in filter sidebar
@@ -314,7 +315,6 @@ class LeagueFilterForParticipation(admin.SimpleListFilter):
             # Filter participations for this league
             return queryset.filter(league__id=self.value())
         return queryset
-
 
 class LeagueFilterForAttendance(admin.SimpleListFilter):
     """
@@ -355,7 +355,6 @@ class LeagueFilterForAttendance(admin.SimpleListFilter):
             # Filter attendance for this league
             return queryset.filter(league_participation__league__id=self.value())
         return queryset
-
 
 # ========================================
 # INLINES
@@ -477,7 +476,6 @@ class LeagueParticipationInline(admin.TabularInline):
         
         formset.save_m2m()
 
-
 class LeagueSessionInline(admin.TabularInline):
     model = LeagueSession
     form = LeagueSessionForm  # ✅ Use custom form with TimeInputWidget!
@@ -547,7 +545,6 @@ class LeagueSessionInline(admin.TabularInline):
                 f'✅ Regenerated {total_occurrences} SessionOccurrence records for {len(sessions_to_regenerate)} session(s).'
             )
 
-
 class LeagueAttendanceInline(admin.TabularInline):
     """
     Book members to specific session occurrence.
@@ -567,7 +564,6 @@ class LeagueAttendanceInline(admin.TabularInline):
     fields = ['league_participation', 'status', 'checked_in', 'checked_in_by']
     verbose_name = "Attendee"
     verbose_name_plural = "Attendees (Book members for this session)"
-
 
 # ========================================
 # LEAGUE ADMIN
@@ -772,8 +768,7 @@ class LeagueParticipationAdmin(admin.ModelAdmin):
         return obj.status == LeagueParticipationStatus.ACTIVE
     is_active.boolean = True
     is_active.short_description = 'Active'
-
-
+    
 @admin.register(LeagueSession)
 class LeagueSessionAdmin(admin.ModelAdmin):
     form = LeagueSessionForm  # ✅ Use custom form with TimeInputWidget!
@@ -857,7 +852,6 @@ class LeagueSessionAdmin(admin.ModelAdmin):
         return f"{obj.start_time.strftime('%H:%M')} - {obj.end_time.strftime('%H:%M')}"
     time_range.short_description = 'Time'
 
-
 @admin.register(LeagueAttendance)
 class LeagueAttendanceAdmin(admin.ModelAdmin):
     list_display = (
@@ -931,7 +925,6 @@ class LeagueAttendanceAdmin(admin.ModelAdmin):
         return obj.get_status_display()
     status_display.short_description = 'Status'
 
-
 @admin.register(RoundRobinPattern)
 class RoundRobinPatternAdmin(admin.ModelAdmin):
     list_display = (
@@ -954,7 +947,6 @@ class RoundRobinPatternAdmin(admin.ModelAdmin):
             'fields': ('created_at',)
         }),
     )
-
 
 @admin.register(SessionOccurrence)
 class SessionOccurrenceAdmin(admin.ModelAdmin):
@@ -1047,7 +1039,6 @@ class SessionOccurrenceAdmin(admin.ModelAdmin):
             status=LeagueAttendanceStatus.ATTENDING
         ).count()
     attendance_count.short_description = 'Attendees'
-
 
 @admin.register(SessionCancellation)
 class SessionCancellationAdmin(admin.ModelAdmin):

@@ -8,6 +8,9 @@ from django.utils.html import format_html
 from django import forms
 from django.db import models
 from django.contrib import messages
+from django.shortcuts import redirect  # ✅ ADD THIS!
+from django.urls import path  # ✅ ADD THIS!
+from django.core.management import call_command  # ✅ ADD THIS!
 
 from .models import (
     Club,
@@ -196,6 +199,23 @@ class ClubAdmin(admin.ModelAdmin):
         has_info = bool(obj.email or obj.phone_number or obj.website_url)
         return '✓' if has_info else '-'
     has_contact.short_description = 'Contact Info'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('load-clubs/', 
+                 self.admin_site.admin_view(self.load_clubs_view), 
+                 name='load_clubs'),
+        ]
+        return custom_urls + urls
+    
+    def load_clubs_view(self, request):
+        try:
+            call_command('loaddata', 'data/production/clubs.json')
+            messages.success(request, '✅ Clubs loaded successfully!')
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+        return redirect('..')
 
 # ==========================================
 # CLUB MEMBERSHIP ADMIN
@@ -431,6 +451,30 @@ class ClubMembershipAdmin(admin.ModelAdmin):
         """Display the name of the membership type"""
         return obj.type.name if obj.type else '-'
     type_name.short_description = 'Type'
+
+    # ✅ ADD LOAD BUTTON FOR CLUB MEMBERSHIPS!
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('load-club-memberships/', self.admin_site.admin_view(self.load_club_memberships_view), name='load_club_memberships'),
+        ]
+        return custom_urls + urls
+    
+    def load_club_memberships_view(self, request):
+        """Load club memberships from JSON fixture"""
+        dry_run = request.GET.get('dry_run') == 'true'
+        
+        try:
+            if dry_run:
+                messages.warning(request, '🧪 DRY RUN: Would load club_memberships.json')
+            else:
+                # call_command('loaddata', 'data/production/club_memberships.json')
+                call_command('loaddata', 'data/test/test_club_memberships.json')
+                messages.success(request, '✅ Club Memberships loaded successfully!')
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+        
+        return redirect('..')
 # ==========================================
 # CLUB MEMBERSHIP TYPE ADMIN
 # ==========================================
@@ -523,6 +567,24 @@ class ClubMembershipTypeAdmin(admin.ModelAdmin):
         return '-'
     registration_status_display.short_description = 'Registration'
 
+    # ✅ ADD LOAD BUTTON FOR CLUB MEMBERSHIP TYPES!
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('load-club-membership-types/', 
+                 self.admin_site.admin_view(self.load_club_membership_types_view), 
+                 name='load_club_membership_types'),
+        ]
+        return custom_urls + urls
+    
+    def load_club_membership_types_view(self, request):
+        """Load club membership types from JSON fixture"""
+        try:
+            call_command('loaddata', 'data/production/club_membership_types.json')
+            messages.success(request, '✅ Club Membership Types loaded successfully!')
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+        return redirect('..')
 
 # ==========================================
 # CLUB MEMBERSHIP SKILL LEVEL ADMIN
@@ -574,6 +636,24 @@ class ClubMembershipSkillLevelAdmin(admin.ModelAdmin):
         return 0
     member_count.short_description = 'Members at Level'
 
+    # ✅ ADD LOAD BUTTON FOR SKILL LEVELS!
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('load-skill-levels/', 
+                 self.admin_site.admin_view(self.load_skill_levels_view), 
+                 name='load_skill_levels'),
+        ]
+        return custom_urls + urls
+    
+    def load_skill_levels_view(self, request):
+        """Load skill levels from JSON fixture"""
+        try:
+            call_command('loaddata', 'data/production/skill_levels.json')
+            messages.success(request, '✅ Skill Levels loaded successfully!')
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+        return redirect('..')
 
 # ==========================================
 # ROLE ADMIN
@@ -582,26 +662,31 @@ class ClubMembershipSkillLevelAdmin(admin.ModelAdmin):
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
     list_display = (
+        'club',
         'name_display',
         'permission_summary',
         'membership_count',
         'created_at'
     )
     list_filter = (
+        'club',
+        'name',
         'can_manage_club',
         'can_manage_members',
         'can_manage_leagues',
         'can_create_training'
     )
     search_fields = (
+        'club__name',
+        'club__short_name',
         'description',
     )
-    ordering = ('name',)
+    ordering = ('club', 'name',)
     readonly_fields = ('created_at', 'updated_at', 'membership_count')
     
     fieldsets = (
         ('Role Information', {
-            'fields': ('name', 'description')
+            'fields': ('club', 'name', 'description')
         }),
         ('Club Permissions', {
             'fields': (
@@ -630,6 +715,13 @@ class RoleAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    def club_display(self, obj):
+        """Display club name (with short name if available)"""
+        if obj.club.short_name:
+            return f"{obj.club.short_name}"
+        return obj.club.name
+    club_display.short_description = 'Club'
     
     def name_display(self, obj):
         """Display role name with icon"""
@@ -670,3 +762,23 @@ class RoleAdmin(admin.ModelAdmin):
             return obj.club_memberships_with_role.count()
         return 0
     membership_count.short_description = 'Memberships with Role'
+
+    # ✅ ADD LOAD BUTTON FOR ROLES!
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('load-roles/', 
+                 self.admin_site.admin_view(self.load_roles_view), 
+                 name='load_roles'),
+        ]
+        return custom_urls + urls
+    
+    def load_roles_view(self, request):
+        """Load roles from JSON fixture"""
+        try:
+            call_command('loaddata', 'data/production/roles.json')
+            messages.success(request, '✅ Roles loaded successfully!')
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+        return redirect('..')
+    

@@ -1,5 +1,9 @@
 # users/admin.py
 from django.contrib import admin
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.urls import path
+from django.core.management import call_command
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser
 
@@ -49,5 +53,32 @@ class CustomUserAdmin(UserAdmin):
         
         return queryset, use_distinct
 
+    '''
+    Added to allow uploading users via admin panel
+    path('load-users/', self.admin_site.admin_view(self.load_users_view), name='load_user_data'),
+    '''
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('load-users/', self.admin_site.admin_view(self.load_users_view), name='load_users'),
+        ]
+        return custom_urls + urls
+    
+    def load_users_view(self, request):
+        # Load users from JSON fixture
+        dry_run = request.GET.get('dry_run') == 'true'
+
+        try:
+            if dry_run:
+                messages.warning(request, '🧪 DRY RUN: Would load users.json (check file exists)')
+            else:
+                # call_command('loaddata', 'data/production/users.json')
+                call_command('loaddata', 'data/test/test_users.json')
+                messages.success(request,'✅ Users loaded successfully!')
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+
+        return redirect('..')
+    
 admin.site.register(CustomUser, CustomUserAdmin)
 # Register your models here.

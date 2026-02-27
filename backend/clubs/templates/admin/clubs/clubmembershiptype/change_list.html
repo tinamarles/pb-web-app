@@ -1,0 +1,8 @@
+{% extends "admin/change_list.html" %} {% block object-tools-items %} {{
+block.super }}
+<li>
+  <a href="{% url 'admin:load_club_membership_types' %}" class="button">
+    Load Membership Types
+  </a>
+</li>
+{% endblock %}
