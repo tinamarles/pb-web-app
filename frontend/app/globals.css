@@ -2089,6 +2089,9 @@
         /* Active state: primary text color, no border unless hovering */
         /* Border stays transparent for active items to avoid permanent left border */
       }
+      &.disabled {
+        @apply disabled-item;
+      }
     }
   }
   /* desktop */
