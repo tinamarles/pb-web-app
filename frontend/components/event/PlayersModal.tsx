@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { Avatar, Badge, Modal } from "@/ui";
 import { getSessionParticipantsClient } from "@/lib/clientActions";
-import { Participant} from "@/lib/definitions";
+import { UserDetail} from "@/lib/definitions";
 
 export interface PlayersModalProps {
   sessionId: number;
@@ -34,7 +34,7 @@ export function PlayersModal({
   onClose,
 }: PlayersModalProps) {
 
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [participants, setParticipants] = useState<UserDetail[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -108,7 +108,7 @@ export function PlayersModal({
                 
                 <div className="flex-1 min-w-0">
                   <p className="body-md text-on-surface truncate">
-                    {participant.firstName} {participant.lastName}
+                    {participant.firstName} {participant.lastName} 
                   </p>
                 </div>
 
