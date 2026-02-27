@@ -162,10 +162,12 @@ class UserInfoSerializer(serializers.ModelSerializer):
                   'username',
                   'profile_picture_url']
         
-class SessionParticipantSerializer(UserInfoSerializer):
+class UserDetailSerializer(UserInfoSerializer):
     class Meta(UserInfoSerializer.Meta):
         fields = UserInfoSerializer.Meta.fields + [
-            'skill_level'
+            'skill_level',
+            'email',
+            'mobile_phone',
+            'gender',
         ]
-
 

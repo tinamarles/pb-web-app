@@ -6,20 +6,19 @@ from django.contrib.auth import get_user_model
 from rest_framework import viewsets, filters, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import League, LeagueParticipation, LeagueAttendance, SessionOccurrence
-from .serializers import LeagueSerializer, LeagueDetailSerializer, AdminLeagueListSerializer, AdminLeagueDetailSerializer, AdminLeagueParticipantSerializer, ParticipantStatusUpdateSerializer
-from .filters import LeagueFilter  # ✅ NEW: Import custom filter!
+from .serializers import LeagueSerializer, LeagueDetailSerializer, AdminLeagueListSerializer, AdminLeagueDetailSerializer, AdminLeagueParticipationSerializer, BulkLeagueParticipationStatusSerializer
+from .filters import LeagueFilter, ParticipationFilter  # ✅ NEW: Import custom filter!
 from .permissions import IsLeagueAdmin
 
 from clubs.models import ClubMembership
-from users.serializers import UserInfoSerializer
+from users.serializers import UserInfoSerializer, UserDetailSerializer
 from public.constants import LeagueParticipationStatus, LeagueAttendanceStatus, MembershipStatus
 from public.pagination import StandardPagination
-from users.serializers import SessionParticipantSerializer
 
 User = get_user_model()
 
@@ -69,7 +68,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
     filterset_class = LeagueFilter  # ← Uses constants from public.constants!
     
     # ✅ Enable search
-    search_fields = ['name', 'description']
+    search_fields = ['name', 'description', 'captain__get_full_name']
     
     # ✅ Enable ordering
     # ⚡ BUGFIX 2026-01-22: Use earliest_session_date instead of start_date!
@@ -213,150 +212,24 @@ class SessionParticipantsView(APIView):
         ]
         
         # 4. Serialize the data
+        serializer = UserDetailSerializer(participants, many=True)
         response_data = {
             'session_id': session_id,
             'count': len(participants),
-            'participants': SessionParticipantSerializer(participants, many=True).data
+            'participants': serializer.data
         }
         
         return Response(response_data, status=status.HTTP_200_OK)
-    
-class MyClubsEventsViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ViewSet for fetching events from ALL clubs the user is a member of.
-    
-    ENDPOINT:
-    - GET /api/leagues/my-clubs/                                   → list (paginated)
-    - GET /api/leagues/my-clubs/?status=upcoming                   → filter by status
-    - GET /api/leagues/my-clubs/?type=event                        → filter by type
-    - GET /api/leagues/my-clubs/?search=beginner                   → search
-    - GET /api/leagues/my-clubs/?ordering=-earliest_session_date   → order results
-    
-    AUTHENTICATION:
-    - ✅ Required (must be logged in to see your clubs' events)
-    
-    FILTERING:
-    - Automatically filters to clubs where user has ACTIVE membership
-    - Same filters as LeagueViewSet (type, status, search, ordering)
-    - Uses LeagueFilter for consistent filtering logic
-    
-    PERFORMANCE:
-    - Server-side filtering in database (efficient!)
-    - Pagination handles large result sets
-    - Annotations done at DB level (PostgreSQL does the work)
-    
-    HOW IT WORKS:
-    1. Get user's active club memberships
-    2. Extract club IDs
-    3. Filter leagues WHERE club_id IN (user's clubs)
-    4. Apply additional filters (status, type, search)
-    5. Paginate and return
-    
-    EXAMPLE USAGE:
-    ```
-    // Frontend
-    const response = await fetch('/api/leagues/my-clubs/?status=upcoming');
-    // Returns events from ALL clubs user is a member of
-    ```
-    """
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    serializer_class = LeagueSerializer
-    pagination_class = StandardPagination
-    
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_class = LeagueFilter
-    search_fields = ['name', 'description']
-    ordering_fields = ['earliest_session_date', 'created_at', 'name']
-    ordering = ['earliest_session_date']
-    
-    def get_queryset(self):
-        """
-        Filter to events/leagues from clubs where user is an ACTIVE member.
-        
-        PERFORMANCE:
-        - 1 query to get user's club IDs (values_list is efficient!)
-        - 1 query for leagues with WHERE club_id IN (...) 
-        - Annotations don't add queries (done in main query)
-        - Total: ~2 queries for 100+ events ✅
-        """
-        user = self.request.user
-        
-        # Get IDs of clubs where user has ACTIVE membership
-        from clubs.models import ClubMembership
-        from public.constants import MembershipStatus
-        
-        user_club_ids = ClubMembership.objects.filter(
-            member=user,
-            status=MembershipStatus.ACTIVE
-        ).values_list('club_id', flat=True)
-        
-        # Filter leagues to those clubs
-        queryset = League.objects.filter(
-            club_id__in=user_club_ids,
-            is_active=True
-        )
-        
-        # Select related data (same as LeagueViewSet)
-        queryset = queryset.select_related(
-            'club',
-            'minimum_skill_level',
-            'captain'
-        )
-        
-        # Annotate earliest session date (for ordering)
-        today = timezone.localtime().date()
-        queryset = queryset.annotate(
-            earliest_session_date=Min(
-                'all_occurrences__session_date',
-                filter=Q(
-                    all_occurrences__session_date__gte=today,
-                    all_occurrences__is_cancelled=False
-                )
-            )
-        )
-        
-        # Annotate participants count
-        queryset = queryset.annotate(
-            league_participants_count=Count(
-                'league_participants',
-                filter=Q(league_participants__status=LeagueParticipationStatus.ACTIVE),
-                distinct=True
-            )
-        )
-        
-        # Add user participation data (always include for this endpoint)
-        queryset = queryset.annotate(
-            user_is_captain=Case(
-                When(captain=user, then=True),
-                default=False,
-                output_field=BooleanField()
-            )
-        )
-        
-        queryset = queryset.annotate(
-            user_is_participant=Exists(
-                LeagueParticipation.objects.filter(
-                    league=OuterRef('pk'),
-                    member=user,
-                    status__in=[
-                        LeagueParticipationStatus.ACTIVE,
-                        LeagueParticipationStatus.RESERVE
-                    ]
-                )
-            )
-        )
-        
-        return queryset
-    
-    def get_serializer_context(self):
-        """Always include user participation for this endpoint"""
-        context = super().get_serializer_context()
-        context['include_user_participation'] = True
-        return context
-    
-class AdminEventsViewSet(viewsets.ReadOnlyModelViewSet):
+   
+class AdminEventsViewSet(viewsets.ModelViewSet):
 
     permission_classes = [IsLeagueAdmin]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]  # Tells DRF HOW to filter -> DRF says: "Use django-filter!"
+    filterset_class = LeagueFilter # tells DRF WHAT to filter
+    ordering_fields = ['start_date', 'name', 'created_at']  # ✅ Adjust per model
+    ordering = ['name']
+    search_fields = ['name', 'description', 'captain__get_full_name']
+    # pagination_class = StandardPagination
 
     def get_serializer_class(self):
         """Use different serializers for list vs detail"""
@@ -366,11 +239,12 @@ class AdminEventsViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         # ✅ Get club_id from URL!
-        club_id = self.kwargs['club_id'] 
+        # club_id = self.kwargs['club_id'] 
         user = self.request.user
 
-        # Return ONLY leagues from those clubs
-        queryset = League.objects.filter(club_id=club_id)
+        # Return ONLY leagues from the club passed on in the filter
+        # The filter automatically applies .filter(club_id=club)
+        queryset = League.objects.all()
         
         # ✅ PREFETCH: Related data (club, captain, skill level)
         queryset = queryset.select_related(
@@ -397,25 +271,159 @@ class AdminEventsViewSet(viewsets.ReadOnlyModelViewSet):
 
         return queryset
 
-class AdminLeagueParticipantsViewSet(viewsets.ReadOnlyModelViewSet):
-    '''
-    List all participants for a League
-    '''
+    @action(detail=True, methods=['get'], url_path='eligible-members')
+    def get_eligible_members(self, request, pk=None):
+        """
+        Get club members who CAN be added to this league
+        
+        OPTIMIZED APPROACH:
+        1. Filter at DB level for status (ACTIVE + SUSPENDED)
+        2. Filter at DB level for skill level (if league has minimum)
+        3. Filter at DB level to exclude existing participants
+        4. No need to call can_user_join - already filtered!
+        
+        WHY INCLUDE SUSPENDED:
+        Captain wants to see suspended members so they can tell them
+        to renew their membership before joining the league!
+        That's why membership status is shown in the table!
+        
+        RETURNS: [
+            {
+                "id": 1,
+                "fullName": "John Doe",
+                "email": "john@example.com",
+                "membershipStatus": "ACTIVE",  # or "SUSPENDED"
+                "skillLevels": [2.5, 3.0]
+            }
+        ]
+        Permission: IsLeagueAdmin (inherited from class!)
+        """
+        league_id = pk # pk come from the URL /admin/events/{pk}/eligible-members/
+        league = get_object_or_404(League, id=league_id)
+        club = league.club
+        
+        # ========================================
+        # STEP 1: Get club members (ACTIVE + SUSPENDED)
+        # ========================================
+        # WHY: Include SUSPENDED so captain knows who needs to renew!
+        
+        club_memberships = ClubMembership.objects.filter(
+            club=club,
+            status__in=[
+                MembershipStatus.ACTIVE,
+                MembershipStatus.SUSPENDED,
+            ]
+        ).select_related('member').prefetch_related('levels')
+        
+        # ========================================
+        # STEP 2: Filter by skill level at DB level (OPTIMIZATION!)
+        # ========================================
+        # WHY: If league requires minimum skill level, filter at DB
+        # BEFORE: Loop through all members and call can_user_join (slow!)
+        # NOW: One DB query with filter (fast!)
+        
+        if league.minimum_skill_level:
+            # HOW: ManyToManyField filter - members who have this skill level
+            club_memberships = club_memberships.filter(
+                levels__level=league.minimum_skill_level.level
+            )
+        
+        # ========================================
+        # STEP 3: Exclude existing participants at DB level (OPTIMIZATION!)
+        # ========================================
+        # WHY: Don't show members already in league (except CANCELLED)
+        # BEFORE: Loop through and check each one (slow!)
+        # NOW: One DB query with exclude (fast!)
+        
+        # Get IDs of members already participating (ACTIVE or PENDING)
+        # NOTE: CANCELLED members CAN be re-added, so don't exclude them!
+        existing_participant_ids = LeagueParticipation.objects.filter(
+            league=league,
+            status__in=[
+                LeagueParticipationStatus.ACTIVE,
+                LeagueParticipationStatus.PENDING,
+                LeagueParticipationStatus.RESERVE,
+                LeagueParticipationStatus.HOLIDAY,
+                LeagueParticipationStatus.INJURED,
+            ]
+        ).values_list('member_id', flat=True)
+        
+        # Exclude existing participants
+        # ✅ FIXED: member_id not user_id (ClubMembership FK is 'member')
+        club_memberships = club_memberships.exclude(member_id__in=existing_participant_ids)
+        
+        # ========================================
+        # STEP 4: Build response (already filtered!)
+        # ========================================
+        # NOTE: No need to loop and call can_user_join!
+        # We already filtered at DB level - much more efficient!
+        
+        eligible_members = []
+        for membership in club_memberships:
+            user_info = UserInfoSerializer(membership.member).data
+            eligible_members.append({
+                'id': membership.id,  # ✅ FIXED: Return ClubMembership ID, not User ID!
+                'user_info': user_info,
+                'email': membership.member.email,  # ✅ FIXED: .member not .user!
+                'status': membership.status,  # "Active" or "Suspended"
+            })
+        
+        return Response(eligible_members)
 
+class AdminLeagueParticipantsViewSet(viewsets.ModelViewSet):
+    '''
+    CRUD operations for League Participants (ADMIN endpoint)
+    
+    STANDARD ENDPOINTS:
+    - GET    /api/admin/participants/                → list (filterable!)
+    - GET    /api/admin/participants/456/            → retrieve  
+    - PATCH  /api/admin/participants/456/            → update (single status change!)
+    - DELETE /api/admin/participants/456/            → destroy
+    
+    FILTERING (via ParticipationFilter):
+    - event:  Filter by league/event ID (e.g., ?event=10)
+    - member: Filter by user ID (e.g., ?member=123)
+    - status: Filter by status integer (e.g., ?status=1)
+    
+    Examples:
+    - GET /api/admin/participants/?event=10          # All participants for event 10
+    - GET /api/admin/participants/?member=123        # All leagues user 123 participates in
+    - GET /api/admin/participants/?event=10&status=1 # Active participants for event 10
+    
+    CUSTOM ACTIONS:
+    - POST   /api/admin/participants/bulk-add/       → bulk_add_participants
+    - PATCH  /api/admin/participants/bulk-update/    → bulk_update
+    '''
+    # pagination_class = StandardPagination
     permission_classes = [IsLeagueAdmin]
+    filter_backends=[DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class=ParticipationFilter
+    search_fields = [
+        'member__first_name',
+        'member__last_name',
+        'member__email',
+    ]
+    ordering_fields = ['member__last_name', 'status', 'created_at']  # ✅ Adjust per model
+    ordering = ['member__last_name']
+    queryset = LeagueParticipation.objects.all()
 
     def get_serializer_class(self):
-        """Use different serializers for list vs detail"""
-        if self.action == 'list':
-            return AdminLeagueParticipantSerializer  
-        return AdminLeagueParticipantSerializer  # in case I want to change later
+        
+        if self.action == 'update':
+            return AdminLeagueParticipationSerializer #LeagueParticipationUpdateSerializer  # ✅ NEW comprehensive serializer!
+        return AdminLeagueParticipationSerializer  # in case I want to change later
     
     def get_queryset(self):
+        """
+        Optimize queryset with prefetching
+        
+        ✅ Uses super().get_queryset() to inherit class-level queryset
+        ✅ Adds select_related/prefetch_related for performance
+        """
         # ✅ Get league_id from URL!
-        league_id = self.kwargs['league_id'] 
+        # league_id = self.kwargs['league_id'] 
 
-        # Return all participants for the league
-        queryset = LeagueParticipation.objects.filter(league_id=league_id)
+        queryset = super().get_queryset()
 
         # ✅ PREFETCH: Related data (member (User), club_membership)
         queryset = queryset.select_related(
@@ -427,395 +435,315 @@ class AdminLeagueParticipantsViewSet(viewsets.ReadOnlyModelViewSet):
         )
         return queryset
     
-@api_view(['GET'])
-@permission_classes([IsLeagueAdmin])
-def get_eligible_members(request, league_id):
-    """
-    Get club members who CAN be added to this league
-    
-    OPTIMIZED APPROACH:
-    1. Filter at DB level for status (ACTIVE + SUSPENDED)
-    2. Filter at DB level for skill level (if league has minimum)
-    3. Filter at DB level to exclude existing participants
-    4. No need to call can_user_join - already filtered!
-    
-    WHY INCLUDE SUSPENDED:
-    Captain wants to see suspended members so they can tell them
-    to renew their membership before joining the league!
-    That's why membership status is shown in the table!
-    
-    RETURNS: [
-        {
-            "id": 1,
-            "fullName": "John Doe",
-            "email": "john@example.com",
-            "membershipStatus": "ACTIVE",  # or "SUSPENDED"
-            "skillLevels": [2.5, 3.0]
-        }
-    ]
-    """
-    league = get_object_or_404(League, id=league_id)
-    club = league.club
-    
     # ========================================
-    # STEP 1: Get club members (ACTIVE + SUSPENDED)
+    # BUILT-IN PATCH ENDPOINT (FREE!)
     # ========================================
-    # WHY: Include SUSPENDED so captain knows who needs to renew!
-    
-    club_memberships = ClubMembership.objects.filter(
-        club=club,
-        status__in=[
-            MembershipStatus.ACTIVE,
-            MembershipStatus.SUSPENDED
-        ]
-    ).select_related('member').prefetch_related('levels')
-    
-    # ========================================
-    # STEP 2: Filter by skill level at DB level (OPTIMIZATION!)
-    # ========================================
-    # WHY: If league requires minimum skill level, filter at DB
-    # BEFORE: Loop through all members and call can_user_join (slow!)
-    # NOW: One DB query with filter (fast!)
-    
-    if league.minimum_skill_level:
-        # HOW: ManyToManyField filter - members who have this skill level
-        club_memberships = club_memberships.filter(
-            levels__level=league.minimum_skill_level.level
-        )
-    
-    # ========================================
-    # STEP 3: Exclude existing participants at DB level (OPTIMIZATION!)
-    # ========================================
-    # WHY: Don't show members already in league (except CANCELLED)
-    # BEFORE: Loop through and check each one (slow!)
-    # NOW: One DB query with exclude (fast!)
-    
-    # Get IDs of members already participating (ACTIVE or PENDING)
-    # NOTE: CANCELLED members CAN be re-added, so don't exclude them!
-    existing_participant_ids = LeagueParticipation.objects.filter(
-        league=league,
-        status__in=[
-            LeagueParticipationStatus.ACTIVE,
-            LeagueParticipationStatus.PENDING,
-            LeagueParticipationStatus.RESERVE,
-            LeagueParticipationStatus.HOLIDAY,
-            LeagueParticipationStatus.INJURED,
-        ]
-    ).values_list('member_id', flat=True)
-    
-    # Exclude existing participants
-    # ✅ FIXED: member_id not user_id (ClubMembership FK is 'member')
-    club_memberships = club_memberships.exclude(member_id__in=existing_participant_ids)
-    
-    # ========================================
-    # STEP 4: Build response (already filtered!)
-    # ========================================
-    # NOTE: No need to loop and call can_user_join!
-    # We already filtered at DB level - much more efficient!
-    
-    eligible_members = []
-    for membership in club_memberships:
-        user_info = UserInfoSerializer(membership.member).data
-        eligible_members.append({
-            'id': membership.id,  # ✅ FIXED: Return ClubMembership ID, not User ID!
-            'user_info': user_info,
-            'email': membership.member.email,  # ✅ FIXED: .member not .user!
-            'status': membership.status,  # "Active" or "Suspended"
-        })
-    
-    return Response(eligible_members)
-
-@api_view(['POST'])
-@permission_classes([IsLeagueAdmin])
-def bulk_add_participants(request, league_id):
-    """
-    Add multiple members to league with PENDING status
-    
-    SIMPLIFIED APPROACH:
-    - Frontend already filtered eligible members
-    - Frontend only sends IDs from eligible list
-    - No need to re-validate (they were already validated!)
-    
-    CREATES: LeagueParticipation records with status=PENDING
-    DOES NOT CREATE: LeagueAttendance records (signal checks status!)
-    
-    WHY PENDING: Members need to confirm participation first
-    
-    REQUEST BODY:
-    {
-        "member_ids": [1, 2, 3, 4, 5]
-    }
-    
-    RESPONSE:
-    {
-        "created": 5,
-        "participants": [...serialized data...]
-    }
-    """
-    league = get_object_or_404(League, id=league_id)
-    member_ids = request.data.get('member_ids', [])
-    
-    # ========================================
-    # VALIDATION: Basic checks
-    # ========================================
-    
-    if not member_ids:
-        return Response(
-            {"error": "member_ids is required"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    # ========================================
-    # VALIDATION: Redundant checks (commented out)
-    # ========================================
-    # WHY COMMENTED OUT:
-    # - Frontend already filtered eligible members
-    # - Only shows members who exist and aren't participating
-    # - These checks are redundant at this point
-    # - Only one user (captain) can do this, so race conditions unlikely
-    # - Can uncomment in 500 years if it becomes an issue! 😄
-    
-    # # Validate all users exist
-    # users = User.objects.filter(id__in=member_ids)
-    # if users.count() != len(member_ids):
-    #     return Response(
-    #         {"error": "Some user IDs are invalid"},
-    #         status=status.HTTP_400_BAD_REQUEST
-    #     )
-    
-    # # Check for duplicates (already participating)
-    # existing = LeagueParticipation.objects.filter(
-    #     league=league,
-    #     member_id__in=member_ids,
-    #     status__in=[
-    #         LeagueParticipation.ParticipationStatus.ACTIVE,
-    #         LeagueParticipation.ParticipationStatus.PENDING
-    #     ]
-    # ).values_list('member_id', flat=True)
-    # 
-    # if existing:
-    #     return Response(
-    #         {"error": f"Some members are already participating: {list(existing)}"},
-    #         status=status.HTTP_400_BAD_REQUEST
-    #     )
-    
-    # ========================================
-    # CREATE: LeagueParticipation records
-    # ========================================
-    # HOW: Bulk create for efficiency
-    # WHY PENDING: Members haven't confirmed participation yet
-    # NOTE: Signal WON'T create attendance (status != ACTIVE)
-    
-    # ✅ FIXED: Get ClubMemberships (not Users!)
-    # Frontend sends ClubMembership IDs, not User IDs!
-    # ✅ FIXED: select_related('member') not 'user'!
-    club_memberships = ClubMembership.objects.filter(id__in=member_ids).select_related('member')
-    
-    participations = []
-    for membership in club_memberships:
-        participation = LeagueParticipation(
-            league=league,
-            member=membership.member,  # ✅ User FK (field is 'member' in ClubMembership!)
-            club_membership=membership,  # ✅ ClubMembership FK
-            status=LeagueParticipationStatus.PENDING,
-            # Let model defaults handle:
-            # - joined_at (auto_now_add)
-            # - updated_at (auto_now)
-        )
-        participations.append(participation)
-    
-    # Bulk create all at once (efficient!)
-    # NOTE: bulk_create doesn't call save(), so signals won't fire
-    # But we don't want signals anyway (status=PENDING)
-    created_participations = LeagueParticipation.objects.bulk_create(participations)
-    
-    # ========================================
-    # RESPONSE: return
-    # ========================================
-    
-    # serializer = AdminLeagueParticipantSerializer(created_participations, many=True)
-    
-    return Response({
-        "created": len(created_participations),
-    #    "participants": serializer.data
-    }, status=status.HTTP_201_CREATED)
-
-# ========================================
-# SINGLE PARTICIPANT STATUS UPDATE
-# ========================================
-
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated, IsLeagueAdmin])
-def update_participation_status(request, participation_id):
-    """
-    ADMIN endpoint: Update single LeagueParticipation status.
-    
-    URL: /api/leagues/participation/<id>/status/
-    Method: PATCH
-    
-    Permission:
-    - User must be league admin (IsLeagueAdmin checks this)
-    
-    Request body:
-        { "status": 1 }  ← INTEGER value, NOT string!
+    # PATCH /api/admin/participants/123/
+    # Body: { "status": 1 }
+    def perform_update(self, serializer):
+        """
+        Override to customize update behavior.
+        This is called AFTER validation, BEFORE save.
+        AdminLeagueParticipationSerializer handles:
+        - Status change
+        - Attendance creation/deletion
+        - Business logic validation
         
-    Example values:
-        { "status": 1 }  → ACTIVE
-        { "status": 2 }  → RESERVE
-        { "status": 3 }  → INJURED
-        { "status": 4 }  → HOLIDAY
-        { "status": 5 }  → CANCELLED
-        { "status": 6 }  → PENDING
-    
-    Returns:
+        DRF automatically:
+        1. Gets object by pk from URL
+        2. Validates request.data with serializer
+        3. Calls this method
+        4. Returns serializer.data
+        """
+        # Your custom serializer handles the complex logic!
+        # It triggers status change service, creates/deletes attendance, etc.
+        serializer.save()
+        # Add custom logic here if needed (logging, notifications, etc.)
+
+    @action(detail=False, methods=['post'], url_path='bulk-add')
+    def bulk_add_participants(self, request):
+        """
+        POST /api/admin/participants/bulk-add/
+        
+        Add multiple members to league with PENDING status
+        
+        SIMPLIFIED APPROACH:
+        - Frontend already filtered eligible members
+        - Frontend only sends IDs from eligible list
+        - No need to re-validate (they were already validated!)
+        
+        CREATES: LeagueParticipation records with status=PENDING
+        DOES NOT CREATE: LeagueAttendance records (signal checks status!)
+        
+        WHY PENDING: Members need to confirm participation first
+        
+        REQUEST BODY:
         {
+            "league_id": 10,
+            "member_ids": [1, 2, 3, 4, 5]
+        }
+        
+        RESPONSE:
+        {
+            "created": 5
+        }
+        """
+        # league = get_object_or_404(League, id=league_id)
+        league_id = request.query_params.get('league')  # ✅ From URL!
+        member_ids = request.data.get('member_ids', [])
+        
+        # ========================================
+        # VALIDATION: Basic checks
+        # ========================================
+        if not league_id:
+            return Response(
+                {"error": "league_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not member_ids:
+            return Response(
+                {"error": "member_ids is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        league = get_object_or_404(League, id=league_id)
+        
+        # ========================================
+        # CREATE: LeagueParticipation records
+        # ========================================
+        # HOW: Bulk create for efficiency
+        # WHY PENDING: Members haven't confirmed participation yet
+        # NOTE: Signal WON'T create attendance (status != ACTIVE)
+        
+        # ✅ FIXED: Get ClubMemberships (not Users!)
+        # Frontend sends ClubMembership IDs, not User IDs!
+        # ✅ FIXED: select_related('member') not 'user'!
+        club_memberships = ClubMembership.objects.filter(id__in=member_ids).select_related('member')
+        
+        participations = []
+        for membership in club_memberships:
+            participation = LeagueParticipation(
+                league=league,
+                member=membership.member,  # ✅ User FK (field is 'member' in ClubMembership!)
+                club_membership=membership,  # ✅ ClubMembership FK
+                status=LeagueParticipationStatus.PENDING,
+                # Let model defaults handle:
+                # - joined_at (auto_now_add)
+                # - updated_at (auto_now)
+            )
+            participations.append(participation)
+        
+        # Bulk create all at once (efficient!)
+        # NOTE: bulk_create doesn't call save(), so signals won't fire
+        # But we don't want signals anyway (status=PENDING)
+        
+        # created_participations = LeagueParticipation.objects.bulk_create(participations)
+        
+        # ========================================
+        # UPSERT: Create or Update in ONE query!
+        # ========================================
+        # PostgreSQL: INSERT ... ON CONFLICT (club_membership_id, league_id) DO UPDATE SET status = PENDING
+        # Django 4.2+: bulk_create with update_conflicts
+        
+        LeagueParticipation.objects.bulk_create(
+            participations,
+            update_conflicts=True,  # ✅ Update if conflict
+            update_fields=['status'],  # ✅ Only update status field
+            unique_fields=['club_membership', 'league'],  # ✅ Conflict on these fields
+        )
+
+        # ========================================
+        # RESPONSE: return
+        # ========================================
+        
+        # serializer = AdminLeagueParticipationSerializer(created_participations, many=True)
+        
+        return Response({
+            "created": len(participations),
+        #    "participants": serializer.data
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['patch'], url_path='bulk-update-status')
+    def bulk_update_status(self, request):
+        """
+        PATCH /api/admin/participants/bulk-update-status/
+        🚨 SPECIAL ACTION: Update participant STATUS (triggers attendance logic!)
+        
+        WHY SEPARATE FROM bulk_update:
+        - Uses BulkLeagueParticipationStatusSerializer (complex business logic!)
+        - Creates/deletes LeagueAttendance records
+        - Has special validation rules
+        - Returns attendance changes in response
+        
+        Update MULTIPLE LeagueParticipation records at once
+        
+        RENAMED from bulk_update_status because it can update ANY field,
+        not just status! (Though status is the primary use case)
+        
+        Body: {
+            "participation_ids": [123, 456, 789],
+            "status": 1  ← INTEGER value, NOT string!
+        }
+        
+        Returns: {
             "participants": [
-                {
-                    "id": 123,
-                    "participant": {...},
-                    "status": 1,
-                    "joined_at": "...",
-                    ...
-                }
+                { "id": 123, "status": 1, ... },
+                { "id": 456, "status": 1, ... },
+                { "id": 789, "status": 1, ... }
             ],
-            "attendanceChanges": [
+            "attendance_changes": [
                 {
                     "participation_id": 123,
-                    "attendance_created": 12,
-                    "attendance_deleted": 0,
+                    "attendanceCreated": 12,
+                    "attendanceDeleted": 0,
                     "message": "Created 12 attendance records"
-                }
+                },
+                ...
             ]
         }
-    
-    CRITICAL PATTERNS (from Guidelines.md + set_preferred_club):
-    1. ✅ Frontend sends INTEGER (e.g., 1, 5, 6)
-    2. ✅ Backend uses LeagueParticipationStatus constant directly
-    3. ✅ Serializer validates + updates + formats response
-    4. ✅ Returns array (for consistency with bulk update)
-    5. ❌ NO string mapping like "ACTIVE" → 1
-    """
-    try:
-        # Get the participation
-        participation = get_object_or_404(LeagueParticipation, id=participation_id)
         
-        # SECURITY: IsLeagueAdmin permission checks league admin status
-        # (No additional check needed here - decorator handles it!)
+        CRITICAL PATTERNS:
+        1. ✅ Frontend sends INTEGER status
+        2. ✅ Frontend sends array of participation IDs
+        3. ✅ Serializer handles bulk update logic
+        4. ✅ Returns array of ALL updated participations
+        """
+        # ✅ Extract participation_ids from request body
+        participation_ids = request.data.get('participation_ids', [])
         
-        # ✅ CORRECT PATTERN: Use serializer for validation + update
-        serializer = ParticipantStatusUpdateSerializer(
-            participation,  # ← Single instance (but serializer returns array!)
+        if not participation_ids:
+            return Response(
+                {'error': 'participation_ids is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get all participations (with prefetch from get_queryset!)
+        # participations = LeagueParticipation.objects.filter(id__in=participation_ids)
+        participations = self.get_queryset().filter(id__in=participation_ids)
+        
+        if not participations.exists():
+            return Response(
+                {'error': 'No participations found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        
+        # ✅ SECURITY: Verify user is admin for ALL leagues involved
+        # (IsLeagueAdmin permission checks this per-league)
+        # For bulk updates, we need to verify user has admin access to ALL leagues
+        unique_leagues = set(p.league for p in participations)
+        for league in unique_leagues:
+            # Check if user has admin permission for THIS league
+            # IsLeagueAdmin.has_object_permission() will raise PermissionDenied if not admin
+            self.check_object_permissions(request, league)
+        
+        # ✅ CORRECT PATTERN: Use serializer for validation + bulk update
+        serializer = BulkLeagueParticipationStatusSerializer(
+            participations,  # ← List of instances
             data=request.data,
             partial=True
         )
         
         if serializer.is_valid():
             # Save the update (triggers update() method in serializer)
-            # This calls status_change service internally!
+            # This calls status_change service for EACH participation!
             updated_instances = serializer.save()
             
             # ✅ CORRECT: Call to_representation() directly
-            # (Bypasses .data property, returns formatted response)
             data = serializer.to_representation(updated_instances)
             
             return Response(data, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['patch'], url_path='bulk-update')
+    def bulk_update(self, request):
+        """
+        PATCH /api/admin/participants/bulk-update/
         
-    except LeagueParticipation.DoesNotExist:
-        return Response(
-            {'error': 'Participation not found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
-
-# ========================================
-# BULK PARTICIPANT STATUS UPDATE
-# ========================================
-
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated, IsLeagueAdmin])
-def bulk_update_participation_status(request):
-    """
-    ADMIN endpoint: Update MULTIPLE LeagueParticipation statuses.
-    
-    URL: /api/leagues/participations/bulk-status-update/
-    Method: PATCH
-    
-    Permission:
-    - User must be league admin (IsLeagueAdmin checks this)
-    
-    Request body:
-        {
+        Generic bulk update for NON-STATUS fields
+        
+        USE CASES:
+        - Update left_at for multiple participants
+        - Update exclude_from_rankings for multiple participants
+        - Update captain_notes for multiple participants
+        
+        WHY SEPARATE FROM bulk_update_status:
+        - Uses standard AdminLeagueParticipationSerializer (no side effects!)
+        - NO attendance creation/deletion
+        - Simple field updates only
+        
+        REQUEST: {
             "participation_ids": [123, 456, 789],
-            "status": 1  ← INTEGER value, NOT string!
+            "left_at": "2025-02-23",
+            // OR
+            "exclude_from_rankings": true,
+            // OR
+            "captain_notes": "Great players!"
         }
-    
-    Returns:
-        {
+        
+        RESPONSE: {
+            "updated": 3,
             "participants": [
-                { "id": 123, "status": 1, ... },
-                { "id": 456, "status": 1, ... },
-                { "id": 789, "status": 1, ... }
-            ],
-            "attendanceChanges": [
-                {
-                    "participation_id": 123,
-                    "attendance_created": 12,
-                    "attendance_deleted": 0,
-                    "message": "Created 12 attendance records"
-                },
-                ...
+                { "id": 123, "left_at": "2025-02-23", ... },
+                { "id": 456, "left_at": "2025-02-23", ... },
+                { "id": 789, "left_at": "2025-02-23", ... }
             ]
         }
-    
-    CRITICAL PATTERNS:
-    1. ✅ Frontend sends INTEGER status
-    2. ✅ Frontend sends array of participation IDs
-    3. ✅ Serializer handles bulk update logic
-    4. ✅ Returns array of ALL updated participations
-    """
-    # ✅ Extract participation_ids from request body
-    participation_ids = request.data.get('participation_ids', [])
-    
-    if not participation_ids:
-        return Response(
-            {'error': 'participation_ids is required'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    # Get all participations
-    participations = LeagueParticipation.objects.filter(id__in=participation_ids)
-    
-    if not participations.exists():
-        return Response(
-            {'error': 'No participations found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
-    
-    # ✅ SECURITY: Verify user is admin for ALL leagues involved
-    # (IsLeagueAdmin permission checks this per-league)
-    # For bulk updates, we need to verify user has admin access to ALL leagues
-    unique_leagues = set(p.league for p in participations)
-    for league in unique_leagues:
-        # This will raise PermissionDenied if user is not admin
-        # (Assuming IsLeagueAdmin has check_object_permissions logic)
-        pass
-    
-    # ✅ CORRECT PATTERN: Use serializer for validation + bulk update
-    serializer = ParticipantStatusUpdateSerializer(
-        participations,  # ← List of instances
-        data=request.data,
-        partial=True
-    )
-    
-    if serializer.is_valid():
-        # Save the update (triggers update() method in serializer)
-        # This calls status_change service for EACH participation!
-        updated_instances = serializer.save()
+        """
+        participation_ids = request.data.get('participation_ids', [])
+
+        if not participation_ids:
+            return Response(
+                {'error': 'participation_ids is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        # ✅ CORRECT: Call to_representation() directly
-        data = serializer.to_representation(updated_instances)
+        # Remove participation_ids from data (not a model field!)
+        update_data = {k: v for k, v in request.data.items() if k != 'participation_ids'}
         
-        return Response(data, status=status.HTTP_200_OK)
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not update_data:
+            return Response(
+                {'error': 'No fields to update provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # ⚠️ Prevent status updates via this endpoint!
+        if 'status' in update_data:
+            return Response(
+                {'error': 'Use bulk-update-status endpoint for status changes'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        participations = self.get_queryset().filter(id__in=participation_ids)
+        
+        if not participations.exists():
+            return Response(
+                {'error': 'No participations found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # ========================================
+        # 🚨 SECURITY CHECK: Verify admin for ALL leagues!
+        # ========================================
+        unique_leagues = set(p.league for p in participations)
+        
+        for league in unique_leagues:
+            self.check_object_permissions(request, league)
+        
+        # ✅ Use STANDARD serializer for generic updates!
+        serializer = AdminLeagueParticipationSerializer(
+            participations,
+            data=update_data,
+            partial=True,
+            many=True
+        )
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'updated': len(participations),
+                'participants': serializer.data
+            }, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

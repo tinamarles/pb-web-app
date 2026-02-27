@@ -1,21 +1,41 @@
-# pickleball/permissions.py
+# clubs/permissions.py
 from rest_framework import permissions
 from .models import ClubMembership
 from public.constants import MembershipStatus
 
 class IsClubMember(permissions.BasePermission):
     """
-    Permission to check if user is an ACTIVE member of the club.
+    Permission to check if user is an ACTIVE member of at least one club.
     
     Usage:
-    - Requires club object to be available (detail endpoints)
-    - Checks if user has an ACTIVE membership to the club
+    - View-level (list): Check if user is a member of ANY club
+    - Object-level (detail): Check if user is a member of THIS specific club
     
-    ADDED: 2026-02-12
+    UPDATED: 2026-02-23 - Added has_permission for list views
     """
     
+    def has_permission(self, request, view):
+        """
+        View-level permission: Check if user is a member of ANY club.
+        
+        This allows the user to access the list/create endpoints.
+        Data filtering happens in get_queryset().
+        """
+        if not request.user.is_authenticated:
+            return False
+        
+        # User must be a member of at least ONE club
+        return ClubMembership.objects.filter(
+            member=request.user,
+            status=MembershipStatus.ACTIVE
+        ).exists()
+    
     def has_object_permission(self, request, view, obj):
-        # obj is the Club instance
+        """
+        Object-level permission: Check if user is a member of THIS club.
+        
+        obj is the Club instance.
+        """
         if not request.user.is_authenticated:
             return False
         
@@ -30,18 +50,34 @@ class IsClubAdmin(permissions.BasePermission):
     """
     Custom permission to only allow club admins to edit/delete a club.
     Superusers are allowed to do anything.
+    
+    A user is considered a club admin if they have a ClubMembership with a role that has:
+    - can_manage_club = True, OR
+    - can_manage_members = True
+    
+    UPDATED: 2026-02-23
     """
     def has_object_permission(self, request, view, obj):
+        '''
+        NOTE: has_object_permission() is ONLY called for detail views but NOT list views
+              For list views with filters, you MUST check permissions in get_queryset()!
+        '''
         # A superuser should always have permission
         if request.user and request.user.is_superuser:
             return True
 
         # Read permissions are allowed to any user who is a member of the club
         if request.method in permissions.SAFE_METHODS:
-            return obj.members.filter(member=request.user).exists()
+            return obj.club_memberships.filter(member=request.user).exists()
 
-        # Write permissions are only allowed to the club admin
-        return obj.club_admins.filter(member=request.user).exists()
+        # Write permissions: User must have a role with can_manage_club OR can_manage_members
+        return obj.club_memberships.filter(
+            member=request.user,
+            roles__can_manage_club=True
+        ).exists() or obj.club_memberships.filter(
+            member=request.user,
+            roles__can_manage_members=True
+        ).exists()
 
     def has_permission(self, request, view):
         # A superuser can access any view
@@ -56,15 +92,21 @@ class IsClubAdmin(permissions.BasePermission):
         if view.action == 'create' and request.method == 'POST':
             return request.user and request.user.is_authenticated
 
-        # The rest of the checks are handled by has_object_permission
-        return False
+        # For other actions (retrieve, update, destroy), has_object_permission will handle it
+        return request.user and request.user.is_authenticated
         
 class ClubMembershipPermissions(permissions.BasePermission):
     """
-    Custom permissions for ClubMembershipViewSet.
-    - Club members can only view members of their own club.
-    - Club admins can edit any member in their club.
-    - Regular club members can only edit themselves.
+    Custom permissions for ClubMembershipViewSet (OLD - DEPRECATED).
+    
+    NOTE: This permission class is NO LONGER USED!
+    We now use TWO separate ViewSets:
+    - ClubMembershipViewSet (read-only, uses IsAuthenticated)
+    - AdminClubMembershipViewSet (full CRUD, uses IsClubAdmin)
+    
+    Keeping this for reference only.
+    
+    DEPRECATED: 2026-02-23
     """
     def has_permission(self, request, view):
         # A superuser can do anything
@@ -80,8 +122,8 @@ class ClubMembershipPermissions(permissions.BasePermission):
         if view.action in ['list', 'retrieve']:
             return True
 
-        # For create, update, and delete, the user must be a club member.
-        # This check is a preliminary step; has_object_permission will handle specifics.
+        # For create, update, and delete, check if user is a club admin
+        # This will be handled by has_object_permission
         return True
 
     def has_object_permission(self, request, view, obj):
@@ -90,13 +132,16 @@ class ClubMembershipPermissions(permissions.BasePermission):
             return True
 
         # Check if the user is a member of the club the object belongs to
-        if request.user != obj.member and not obj.club.members.filter(id=request.user.id).exists():
+        if request.user != obj.member and not obj.club.club_memberships.filter(member=request.user).exists():
              return False
 
-        # Admins can edit/delete any member record in their club
+        # Check if user has admin permissions (can_manage_club OR can_manage_members)
         is_admin = obj.club.club_memberships.filter(
             member=request.user,
-            roles__name='Admin'
+            roles__can_manage_club=True
+        ).exists() or obj.club.club_memberships.filter(
+            member=request.user,
+            roles__can_manage_members=True
         ).exists()
 
         if is_admin:

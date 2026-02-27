@@ -1,12 +1,13 @@
 # clubs/views.py
 
 # ========================================
-# IMPORTS
+# IMPORTS 
 # ========================================
 
 # Django imports
-from django.db.models import Q, Min, Max, Count, Exists, OuterRef
+from django.db.models import Q, Min, Exists, OuterRef
 from django.utils import timezone
+from django.contrib.auth import get_user_model
 
 # Django REST Framework imports
 from rest_framework import viewsets, status, filters  # ✅ filters for SearchFilter
@@ -16,35 +17,35 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from django_filters.rest_framework import DjangoFilterBackend  # ✅ For filtering
 
 # Local app imports
-from .models import Club, ClubMembership, Role
+from .models import Club, ClubMembership, Role, ClubMembershipType
 from .serializers import (
-    NestedClubSerializer,
+    ClubDetailSerializer,
     ClubSerializer,
-    ClubHomeSerializer, # ‼️ change to ClubHomeSerializer
-    ClubMemberSerializer,
-    ClubMembershipSerializer,
+    ClubHomeSerializer, 
     ClubMembershipTypeSerializer,
     UserClubMembershipUpdateSerializer,
-    AdminClubMembershipUpdateSerializer,
+    UserClubMembershipSerializer,
+    AdminClubMembershipSerializer,
 )
-from .permissions import ClubMembershipPermissions, IsClubAdmin
+from .permissions import IsClubAdmin, IsClubMember
+from .filters import ClubMembershipFilter, AdminClubMembershipFilter, ClubFilter
 
 # Other app imports
-from leagues.models import League, SessionOccurrence, LeagueAttendance
-from leagues.serializers import LeagueSerializer
+from leagues.models import League, SessionOccurrence
 from notifications.models import Announcement
-from notifications.serializers import NotificationSerializer
-from public.constants import NotificationType, MembershipStatus, RoleType
+from public.constants import MembershipStatus, RoleType
 from public.pagination import StandardPagination  # ✅ Import shared pagination!
+
+User = get_user_model
 
 class ClubViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Club CRUD operations + custom tab actions
     
     STANDARD REST ENDPOINTS (use get_serializer_class()):
-    - GET    /api/clubs/              → list (uses NestedClubSerializer) ✅ PAGINATED + SEARCHABLE!
+    - GET    /api/clubs/              → list (uses ClubDetailSerializer) ✅ PAGINATED + SEARCHABLE!
     - POST   /api/clubs/              → create (uses ClubSerializer)
-    - GET    /api/clubs/{id}/         → retrieve (uses NestedClubSerializer)
+    - GET    /api/clubs/{id}/         → retrieve (uses ClubDetailSerializer)
     - PATCH  /api/clubs/{id}/         → update (uses ClubSerializer)
     - DELETE /api/clubs/{id}/         → destroy (uses ClubSerializer)
     
@@ -55,8 +56,6 @@ class ClubViewSet(viewsets.ModelViewSet):
     
     CUSTOM @action ENDPOINTS (instantiate serializers INSIDE methods):
     - GET    /api/clubs/{id}/home/          → ClubHomeSerializer
-    - GET    /api/clubs/{id}/events/        → LeagueSerializer
-    - GET    /api/clubs/{id}/members/       → ClubMemberSerializer (paginated)
     - GET    /api/clubs/{id}/subscriptions/ → ClubMembershipTypeSerializer
     """
     queryset = Club.objects.all()
@@ -66,9 +65,27 @@ class ClubViewSet(viewsets.ModelViewSet):
     pagination_class = StandardPagination
     
     # ✅ Add filtering and search for list endpoint
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    search_fields = ['name', 'short_name']  # ✅ Search by name or short_name
-
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_class=ClubFilter
+    search_fields = ['name', 'short_name', 'description']  # ✅ Search by name or short_name
+    ordering_fields = ['name', 'short_name' 'created_at'] 
+    ordering = ['name']
+    
+    def get_permissions(self):
+        """
+        - List/Retrieve: Public (or auth for details)
+        - Create: Any authenticated user
+        - Update/Delete: Only club admins
+        """
+        if self.action in ['update', 'partial_update', 'destroy']:
+            permission_classes = [IsAuthenticated, IsClubAdmin]
+        elif self.action == 'create':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAuthenticatedOrReadOnly]
+        
+        return [permission() for permission in permission_classes]
+    
     def get_serializer_class(self):
         """
         Return serializers for STANDARD REST actions ONLY!
@@ -78,8 +95,19 @@ class ClubViewSet(viewsets.ModelViewSet):
         
         NOT called for: home, events, members, subscriptions (those are @action)
         """
+
+        '''
+        For list (all records) and retrieve (individual record requiring {id})
+        Method: GET -> use ClubDetailSerializer
+
+        For all other methods: ClubSerializer
+        create (POST)
+        update (PUT)
+        partial_update (PATCH)
+        destroy (DELETE)
+        '''
         if self.action in ['list', 'retrieve']:
-            return NestedClubSerializer
+            return ClubDetailSerializer
         return ClubSerializer
       
     def perform_create(self, serializer):
@@ -110,6 +138,13 @@ class ClubViewSet(viewsets.ModelViewSet):
         
         # Add the 'Admin' role to the new membership
         club_membership.roles.add(admin_role)
+
+        # other ClubMembership fields??
+        '''
+        Required fields:
+        - type -> ClubMembershipType model ?
+        - membership_number (unique=True) -> Club.short_name - ClubMembership.id
+        '''
 
     def get_queryset(self):
         """
@@ -214,289 +249,12 @@ class ClubViewSet(viewsets.ModelViewSet):
     # ========================================
     # EVENTS TAB
     # ========================================
-    
-    @action(detail=True, methods=['get'])
-    def events(self, request, pk=None):
-        """
-        GET /api/clubs/{id}/events/
-        
-        Returns all events/leagues for this club
-        
-        Query Params:
-        - type: 'league' | 'event' | 'all' (default: 'all')
-        - status: 'upcoming' | 'past' | 'all' | 'next' (default: 'upcoming')
-        - include_user_participation: 'true' | 'false' (default: 'false')
-        - require_admin: 'true' | 'false' (default: 'false')
-          If true, checks if user is admin of this club before returning data
-        """
-        club = self.get_object()
+    # -> replaced by endpoint 'leagues' (LeaguesViewSet)
 
-        # ========================================
-        # ✅ ADMIN PERMISSION CHECK (if requested)
-        # ========================================
-        require_admin = request.query_params.get('require_admin', 'false').lower() == 'true'
-        # 🐛 DEBUG: Print to console
-        
-        if require_admin:
-            # Check if user is authenticated
-            
-            if not request.user.is_authenticated:
-                
-                return Response(
-                    {'detail': 'Authentication required.'},
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-            
-            # Check if user is member of this club
-            
-            try:
-                membership = ClubMembership.objects.get(
-                    member=request.user,
-                    club=club,
-                    status=MembershipStatus.ACTIVE
-                )
-               
-            except ClubMembership.DoesNotExist:
-               
-                return Response(
-                    {'detail': 'You are not a member of this club.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            # Check if user has ANY admin permission for this club
-            # These properties exist on ClubMembership and check the user's roles
-           
-            admin_properties = [
-                'can_manage_club',
-                'can_manage_members',
-                'can_create_training',
-                'can_manage_leagues',
-                'can_manage_league_sessions',
-                'can_cancel_league_sessions',
-                'can_manage_courts',
-            ]
-
-            has_admin_permission = any(
-                getattr(membership, prop, False) for prop in admin_properties
-            )
-
-            if not has_admin_permission:
-                return Response(
-                    {'detail': 'You do not have admin permissions for this club.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-        # ========================================
-        # FETCH DATA (authorization passed)
-        # ========================================
-        
-        # today = timezone.now().date()
-        today = timezone.localtime().date()
-        
-        # Filter by type
-        event_type = request.query_params.get('type', 'all')
-        queryset = League.objects.filter(club=club)
-        
-        if event_type == 'league':
-            queryset = queryset.filter(is_event=False)
-        elif event_type == 'event':
-            queryset = queryset.filter(is_event=True)
-        
-        # Check if user wants participation info
-        include_user_participation = request.query_params.get(
-            'include_user_participation', 
-            'false'
-        ).lower() == 'true'
-        
-        # ========================================
-        # Filter by status using SessionOccurrence
-        # ========================================
-        status_filter = request.query_params.get('status', 'upcoming')
-        
-        if status_filter == 'upcoming':
-            # ⚡ UPDATED: Use direct FK
-            has_upcoming_sessions = SessionOccurrence.objects.filter(
-                league=OuterRef('pk'),  # ⚡ CHANGED!
-                session_date__gte=today,
-                is_cancelled=False
-            )
-            queryset = queryset.annotate(
-                has_upcoming=Exists(has_upcoming_sessions),
-                # ⚡ NEW: For ordering by earliest session
-                earliest_session_date=Min(
-                    'all_occurrences__session_date',
-                    filter=Q(
-                        all_occurrences__session_date__gte=today,
-                        all_occurrences__is_cancelled=False
-                    )
-                )
-            ).filter(has_upcoming=True)
-            
-        elif status_filter == 'past':
-            # ⚡ UPDATED: Use direct FK
-            has_future_sessions = SessionOccurrence.objects.filter(
-                league=OuterRef('pk'),  # ⚡ CHANGED!
-                session_date__gte=today
-            )
-            queryset = queryset.annotate(
-                has_future=Exists(has_future_sessions),
-                # ⚡ NEW: For past events, order by most recent end_date
-                latest_session_date=Max(
-                    'all_occurrences__session_date',
-                    filter=Q(
-                        all_occurrences__is_cancelled=False
-                    )
-                )
-            ).filter(has_future=False)
-        
-        else:
-            # ⚡ BUGFIX 2026-01-22: For 'all' status, also annotate earliest_session_date
-            # so we can order by next occurrence, not start_date!
-            queryset = queryset.annotate(
-                earliest_session_date=Min(
-                    'all_occurrences__session_date',
-                    filter=Q(
-                        all_occurrences__session_date__gte=today,
-                        all_occurrences__is_cancelled=False
-                    )
-                )
-            )
-        
-        # ⚡ UPDATED: Order by session dates, not start_date!
-        if status_filter == 'upcoming':
-            queryset = queryset.order_by('earliest_session_date')
-        elif status_filter == 'past':
-            queryset = queryset.order_by('-latest_session_date')  # Most recent past first
-        else:
-            # ⚡ BUGFIX 2026-01-22: For 'all', order by next occurrence (not start_date!)
-            # Events with no future sessions will have earliest_session_date=None, so they go to end
-            from django.db.models import F
-            queryset = queryset.order_by(F('earliest_session_date').asc(nulls_last=True))
-        
-        # Optimize queries
-        queryset = queryset.select_related(
-            'club',
-            'captain',
-            'minimum_skill_level'
-        )
-        # ⚡ REMOVED: .prefetch_related('sessions__occurrences') - not needed anymore!
-        
-        # ⚡ ALWAYS annotate participants count (serializer needs it!)
-        from public.constants import LeagueParticipationStatus
-        queryset = queryset.annotate(
-            league_participants_count=Count(
-                'league_participants',
-                filter=Q(league_participants__status=LeagueParticipationStatus.ACTIVE),
-                distinct=True
-            )
-        )
-        
-        # ⚡ NEW: Add user participation annotations if requested
-        if include_user_participation and request.user.is_authenticated:
-            from django.db.models import Case, When, BooleanField
-            from leagues.models import LeagueParticipation
-            from public.constants import LeagueParticipationStatus
-            
-            user = request.user
-            
-            # Annotate user_is_captain
-            queryset = queryset.annotate(
-                user_is_captain=Case(
-                    When(captain=user, then=True),
-                    default=False,
-                    output_field=BooleanField()
-                )
-            )
-            
-            # Annotate user_is_participant
-            queryset = queryset.annotate(
-                user_is_participant=Exists(
-                    LeagueParticipation.objects.filter(
-                        league=OuterRef('pk'),
-                        member=user,
-                        status__in=[
-                            LeagueParticipationStatus.ACTIVE,
-                            LeagueParticipationStatus.RESERVE
-                        ]
-                    )
-                )
-            ) 
-
-        # ✅ Paginate
-        paginator = StandardPagination()
-        page = paginator.paginate_queryset(queryset, request)
-        
-        # ========================================
-        # SERIALIZATION
-        # ========================================
-        
-        # ⚡ SIMPLIFIED: No more manual context passing!
-        # Serializer uses obj.next_occurrence property automatically
-        
-        context = {'request': request}
-        if include_user_participation:
-            context['include_user_participation'] = True
-        
-        serializer = LeagueSerializer(page, many=True, context=context)
-        
-        return paginator.get_paginated_response(serializer.data)
-        
     # ========================================
     # MEMBERS TAB
     # ========================================
-    
-    @action(detail=True, methods=['get'])
-    def members(self, request, pk=None):
-        """
-        GET /api/clubs/{id}/members/
-        
-        Returns paginated, filterable list of club members
-        
-        Query Params:
-        - role: Filter by role name (e.g., 'coach', 'admin')
-        - level: Filter by skill level (e.g., '3.0', '4.5')
-        - status: Filter by membership status (e.g., 'active', 'pending')
-        - page: Page number (default: 1)
-        - page_size: Results per page (default: 20, max: 100)
-        
-        TypeScript Type: ClubMembersResponse
-        
-        Returns:
-        {
-            "count": 487,
-            "next": "http://api/clubs/345/members/?page=3",
-            "previous": "http://api/clubs/345/members/?page=1",
-            "results": [ ... ClubMember objects ... ]
-        }
-        """
-        club = self.get_object()
-        queryset = ClubMembership.objects.filter(club=club)
-        
-        # ✅ Filter by role
-        role = request.query_params.get('role')
-        if role:
-            queryset = queryset.filter(roles__name=role)
-        
-        # ✅ Filter by status
-        status_param = request.query_params.get('status')
-        if status_param:
-            queryset = queryset.filter(status=status_param)
-        
-        #  Filter by skill level
-        level = request.query_params.get('level')
-        if level:
-            queryset = queryset.filter(levels__level=level)
-        
-        # Prefetch related data for efficiency
-        queryset = queryset.select_related('member').prefetch_related('roles', 'levels')
-        
-        # ✅ Paginate
-        paginator = StandardPagination()
-        page = paginator.paginate_queryset(queryset, request)
-        
-        # Serialize
-        serializer = ClubMemberSerializer(page, many=True)
-        
-        return paginator.get_paginated_response(serializer.data)
+    # -> replaced by endpoint 'memberships' (ClubMembershipViewSet)
     
     # ========================================
     # SUBSCRIPTIONS TAB
@@ -526,67 +284,289 @@ class ClubViewSet(viewsets.ModelViewSet):
             'count': membership_types.count()
         })
    
-class ClubMembershipViewSet(viewsets.ModelViewSet):
+class ClubMembershipViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    A ViewSet for managing ClubMembership resources.
-    - Only Club Members can see a list of that club's members.
-    - Admins can edit/delete any member record in their club.
-    - Regular members can only edit their own record.
+    A READ-ONLY ViewSet for Club Member ClubMembership resources.
     
-    ENDPOINTS:
-    - GET    /api/memberships/           → list (filtered by user's clubs)
-    - POST   /api/memberships/           → create
-    - GET    /api/memberships/{id}/      → retrieve
-    - PATCH  /api/memberships/{id}/      → update
-    - DELETE /api/memberships/{id}/      → destroy
+    TWO USE CASES:
+    
+    1. Dashboard Members (?club=X):
+       - Returns ALL members of club X
+       - Frontend ensures user is member of club X (via dashboard access)
+       - No backend re-validation needed
+    
+    2. Messaging Recipients (no filter):
+       - Returns members from user's clubs
+       - Future: + Users with allow_public_profile=True
+    
+    Endpoints:
+    - GET /api/memberships/?club=5 → Dashboard members for club 5
+    - GET /api/memberships/ → All potential message recipients
+    - GET /api/memberships/{id}/ → Single member details
+    
+    Permission: IsClubMember (user must be active member of at least one club)
+    
+    Data Exposure:
+    ✅ Shows: Basic member info, roles, skill levels, status
+    ❌ Hides: Admin-only fields (notes, tags, dates), other members' is_preferred_club
     """
     queryset = ClubMembership.objects.all()
-    serializer_class = ClubMembershipSerializer
-    permission_classes = [ClubMembershipPermissions]
+    serializer_class = UserClubMembershipSerializer
+    permission_classes = [IsClubMember]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = ['member__last_name', 'member__first_name', 'created_at'] 
+    ordering = ['member__last_name']
+    search_fields = [
+        'member__first_name',
+        'member__last_name',
+        'member__email',
+        'club__name'
+    ]
+    filterset_class = ClubMembershipFilter
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         """
-        Filters the queryset based on the requesting user's membership.
-        A user can only see members of clubs they are a part of.
+        Two behaviors based on query params:
+        
+        1. If ?club=X provided (Dashboard Members):
+           - Return ALL memberships (DjangoFilterBackend will apply ?club filter)
+           - Trust frontend validation (user has dashboard = is member)
+        
+        2. If no club filter (Messaging Recipients):
+           - Return members from user's clubs
+           - Future: + Users with allow_public_profile=True
         """
-        if self.request.user.is_superuser:
-            return ClubMembership.objects.all()
+        # Check if club filter is provided
+        club_id = self.request.query_params.get('club')
+    
+        if club_id:
+            # ✅ USE CASE 1: Dashboard Members
+            # Frontend already validated user is member of this club
+            # Return ALL memberships - DjangoFilterBackend will apply ?club=X filter
+            # (This also allows combining with other filters like ?status=1)
+            return ClubMembership.objects.all().select_related(
+                'club',
+                'member',
+                'type'
+            ).prefetch_related(
+                'roles',
+                'levels'
+            ).order_by('member__last_name', 'member__first_name')
+        
+        else:
+            # ✅ USE CASE 2: Messaging Recipients
+            # Return members from user's clubs
+            user_club_ids = ClubMembership.objects.filter(
+                member=self.request.user
+            ).values_list('club_id', flat=True)
+            
+            # TODO (Future): Add Users with allow_public_profile=True
+            # Will need:
+            # 1. Get all ClubMemberships from user's clubs
+            # 2. Get all Users with allow_public_profile=True
+            # 3. Union/distinct to avoid duplicates
+            # 4. Return combined queryset
+            
+            return ClubMembership.objects.filter(
+                club_id__in=user_club_ids
+            ).select_related(
+                'club',
+                'member',
+                'type'
+            ).prefetch_related(
+                'roles',
+                'levels'
+            ).order_by('member__last_name', 'member__first_name')
 
-        # Find the IDs of clubs the user is a member of
-        # The commented code below is another option but not as readable!
-        # my_club_ids = ClubMembership.objects.filter(
-        #     member=self.request.user
-        # ).values_list('club__pk', flat=True)
+class AdminClubMembershipViewSet(viewsets.ModelViewSet):
+    """
+    Full CRUD ViewSet for club admins to manage members.
+    
+    Endpoints:
+    - GET /api/admin/memberships/ → list() - All members in admin's clubs
+    - GET /api/admin/memberships/{id}/ → retrieve() - Single member details
+    - POST /api/admin/memberships/ → create() - Add new member
+    - PATCH /api/admin/memberships/{id}/ → partial_update() - Update member
+    - DELETE /api/admin/memberships/{id}/ → destroy() - Remove member
+    
+    Permission: IsClubAdmin (has 'can_manage_members' permission)
+    
+    Data Exposure:
+    ✅ Shows: ALL fields including admin-only (notes, tags, dates)
+    ❌ Does NOT show: is_preferred_club (user-only field, not relevant for admins)
+    
+    Update Logic:
+    ✅ Admin updating OWN membership → can change ALL fields
+    ✅ Admin updating OTHER's membership → can change ALL fields EXCEPT is_preferred_club
+    """
+    queryset = ClubMembership.objects.all()
+    serializer_class = AdminClubMembershipSerializer 
+    permission_classes = [IsAuthenticated, IsClubAdmin]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]  # ✅ CRITICAL! Required for filterset_class to work!
+    ordering_fields = ['member__last_name', 'member__first_name', 'status', 'created_at'] 
+    ordering = ['member__last_name']
+    search_fields = [
+        'member__first_name',
+        'member__last_name',
+        'member__email',
+        'club__name',
+        'membership_number'
+    ]
+    filterset_class = AdminClubMembershipFilter
+    pagination_class = StandardPagination
 
-        # Find the IDs of clubs the user is a member of
-        my_club_ids = self.request.user.clubs_as_member.values_list('pk', flat=True)
-
-        # Return a queryset of all memberships in those clubs
-        return ClubMembership.objects.filter(club__pk__in=my_club_ids)
-
-    def perform_destroy(self, instance):
+    def get_queryset(self):
         """
-        Overridden to prevent a user from deleting their own last membership.
+        Admin can only see/manage members of clubs they administer.
+        
+        IMPORTANT: Frontend sends ?club=5 filter!
+        This method validates the user is admin of the requested club.
+        ClubMembershipFilter then applies the actual ?club=5 filtering.
+        
+        Flow:
+        1. Frontend sends: GET /api/admin/memberships/?club=5
+        2. This method: Validates user is admin of club 5 (if club filter provided)
+        3. ClubMembershipFilter: Applies ?club=5 to filter the queryset
+        4. Result: Only members from club 5 (validated user is admin)
+        
+        If no club filter provided:
+        - Return memberships ONLY from clubs user is admin of
+        - Prevents data leakage from non-admin clubs
         """
-        # A superuser can delete anything
-        if self.request.user.is_superuser:
-            instance.delete()
-            return
+        from rest_framework.exceptions import PermissionDenied
 
-        # Deny deletion if the user is attempting to delete their own record
-        if self.request.user == instance.member:
-            return Response(
-                {"detail": "You cannot delete your own club membership record."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # Check if frontend is filtering by specific club
+        club_id = self.request.query_params.get('club')
+        
+        if club_id:
+            # Frontend is requesting a specific club
+            # Validate user is admin of THIS club
+            is_admin_of_requested_club = ClubMembership.objects.filter(
+                member=self.request.user,
+                club_id=club_id,
+                roles__can_manage_club=True
+            ).exists() or ClubMembership.objects.filter(
+                member=self.request.user,
+                club_id=club_id,
+                roles__can_manage_members=True
+            ).exists()
+            
+            if not is_admin_of_requested_club:
+                # User is NOT admin of requested club
+                raise PermissionDenied(
+                    "You do not have admin permissions for this club."
+                )
+            
+            # User IS admin of requested club
+            # Return ALL memberships (ClubMembershipFilter will apply ?club=X)
+            return ClubMembership.objects.select_related(
+                'club',
+                'member',
+                'type'
+            ).prefetch_related(
+                'roles',
+                'levels',
+                'tags'
+            ).order_by('member__last_name', 'member__first_name')
+        else:
+            # No club filter provided
+            # Return memberships ONLY from clubs user is admin of
+            # (prevents data leakage from non-admin clubs)
+            
+            # Get all club IDs where user has admin permissions
+            admin_club_ids = ClubMembership.objects.filter(
+                member=self.request.user,
+                roles__can_manage_club=True
+            ).values_list('club_id', flat=True).distinct()
+            
+            # Also get clubs where user can manage members
+            manage_members_club_ids = ClubMembership.objects.filter(
+                member=self.request.user,
+                roles__can_manage_members=True
+            ).values_list('club_id', flat=True).distinct()
+            
+            # Combine both querysets
+            all_admin_club_ids = set(admin_club_ids) | set(manage_members_club_ids)
+            
+            # Return memberships from those clubs with optimized queries
+            return ClubMembership.objects.filter(
+                club_id__in=all_admin_club_ids
+            ).select_related(
+                'club',
+                'member',
+                'type'
+            ).prefetch_related(
+                'roles',
+                'levels',
+                'tags'
+            ).order_by('member__last_name', 'member__first_name')
+        
+    def partial_update(self, request, *args, **kwargs):
+        """
+        PATCH /api/admin/memberships/{id}/
+        
+        Permission Logic:
+        ┌─────────────────────┬──────────────────────┬───────────────────────────┐
+        │ Admin Action        │ Updating OWN         │ Updating OTHER's          │
+        ├─────────────────────┼──────────────────────┼───────────────────────────┤
+        │ Can update          │ ALL fields           │ ALL EXCEPT is_preferred   │
+        └─────────────────────┴──────────────────────┴───────────────────────────┘
+        
+        Rationale:
+        - Admin can manage their own is_preferred_club via admin endpoint
+        - Admin CANNOT change is_preferred_club for others (user privacy!)
+        - Users change their own is_preferred via set_preferred_club_membership()
+        """
+        membership = self.get_object()
+        
+        # ========================================
+        # CASE 1: Admin updating THEIR OWN membership
+        # ========================================
+        if membership.member == request.user:
+            # Admin can update ALL fields on own membership
+            # (including is_preferred_club, status, type, roles, notes, tags)
+            return super().partial_update(request, *args, **kwargs)
+        
+        # ========================================
+        # CASE 2: Admin updating OTHER member's membership
+        # ========================================
+        else:
+            # Admin CANNOT change is_preferred_club for other members
+            if 'is_preferred_club' in request.data:
+                return Response({
+                    "detail": "You cannot change is_preferred_club for other members. "
+                              "Members must set their own preferred club."
+                }, status=status.HTTP_403_FORBIDDEN)
+            
+            # Admin CAN update all other fields
+            return super().partial_update(request, *args, **kwargs)
 
-        # For admin users deleting another user's record, perform the deletion
-        instance.delete()
+    def destroy(self, request, *args, **kwargs):
+        """
+        DELETE /api/admin/memberships/{id}/
+        
+        Remove member from club (soft delete by setting status to INACTIVE).
+        
+        NOTE: This does NOT delete the ClubMembership record!
+        It sets status to INACTIVE to preserve history.
+        """
+        membership = self.get_object()
+        
+        # Soft delete - set status to CANCELLED instead of hard delete
+        membership.status = MembershipStatus.CANCELLED  # MembershipStatus.CANCELLED
+        membership.save()
+        
+        return Response({
+            "detail": f"Membership for {membership.member.get_full_name()} "
+                     f"has been set to cancelled."
+        }, status=status.HTTP_200_OK)  
+    
 # ========================================
 # FUNCTION-BASED VIEWS (membership updates - EXISTING!)
 # ========================================
 @api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsClubMember])
 def set_preferred_club_membership(request, membership_id):
     """
     USER endpoint: Set preferred club membership.
@@ -661,74 +641,4 @@ def set_preferred_club_membership(request, membership_id):
             {'error': 'Membership not found'},
             status=status.HTTP_404_NOT_FOUND
         )
-    
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated, IsClubAdmin])
-def update_club_membership_admin(request, membership_id):
-    """
-    ADMIN endpoint: Update membership details.
-    
-    URL: /api/clubs/membership/<id>/
-    Method: PATCH
-    
-    Permission:
-    - User must be admin (is_staff or is_superuser)
-    
-    Request body:
-        {
-            "type": 2,
-            "roles": [1, 3],
-            "levels": [2],
-            "tags": [1, 5],
-            "status": 1,
-            "registration_start_date": "2026-01-01",
-            "registration_end_date": "2026-12-31",
-            "notes": "Admin notes here"
-        }
-        
-    Returns:
-        Single ClubMembership object (the one that was updated)
-        
-    Example response:
-        {
-            "id": 3,
-            "club": {...},
-            "member": {...},
-            "type": {...},
-            "roles": [...],
-            "levels": [...],
-            "tags": [...],
-            "status": 1,
-            "registration_start_date": "2026-01-01",
-            "registration_end_date": "2026-12-31",
-            "notes": "Admin notes here",
-            "is_preferred_club": true,  // Cannot be changed by admin!
-            ...
-        }
-    """
-    try:
-        # Get the membership
-        membership = ClubMembership.objects.get(id=membership_id)
-        
-        # Permission already checked by IsAdminUser
-        
-        # Update the membership
-        serializer = AdminClubMembershipUpdateSerializer(
-            membership,
-            data=request.data,
-            partial=True
-        )
-        
-        if serializer.is_valid():
-            serializer.save()
-            
-            # Returns ONLY that membership (no need for all)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-    except ClubMembership.DoesNotExist:
-        return Response(
-            {'error': 'Membership not found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+

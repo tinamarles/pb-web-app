@@ -1,6 +1,8 @@
+from django.utils import timezone
 from rest_framework import serializers
 from .models import Notification, Announcement
 from users.serializers import UserInfoSerializer
+
 
 # ========================================
 # BASE SERIALIZER (Common Fields)
@@ -142,6 +144,17 @@ class NotificationSerializer(BaseFeedItemSerializer, serializers.ModelSerializer
             'metadata',
         ]
     
+    def update(self, instance, validated_data):
+        """
+        Auto-set read_at when is_read changes to True.
+        
+        Just like updated_at is auto-set!
+        """
+        # If is_read is being set to True, auto-set read_at
+        if 'is_read' in validated_data and validated_data['is_read']:
+            validated_data['read_at'] = timezone.now()
+        
+        return super().update(instance, validated_data)
     def get_feed_type(self, obj):
         """Override abstract method - return 'notification'"""
         return 'notification'

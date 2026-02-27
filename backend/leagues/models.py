@@ -562,7 +562,7 @@ class LeagueParticipation(models.Model):
         default=LeagueParticipationStatus.ACTIVE
     )
     
-    # Dates
+    # Dates 
     joined_at = models.DateTimeField(auto_now_add=True)
     left_at = models.DateTimeField(blank=True, null=True)
     

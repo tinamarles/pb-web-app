@@ -8,9 +8,9 @@ from rest_framework.routers import DefaultRouter
 
 # Import the ViewSets from different apps
 from users.views import CustomTokenObtainPairView, LogoutAndBlacklistRefreshToken, UserDetailsView
-from clubs.views import ClubViewSet, ClubMembershipViewSet
-from leagues.views import LeagueViewSet, MyClubsEventsViewSet, AdminEventsViewSet, AdminLeagueParticipantsViewSet
-from notifications.views import AnnouncementViewSet, notification_feed    
+from clubs.views import ClubViewSet, ClubMembershipViewSet, AdminClubMembershipViewSet
+from leagues.views import LeagueViewSet, AdminEventsViewSet, AdminLeagueParticipantsViewSet
+from notifications.views import AnnouncementViewSet, NotificationViewSet    
 
 # Create a single router instance
 router = DefaultRouter()
@@ -19,15 +19,13 @@ router = DefaultRouter()
 
 router.register(r'clubs', ClubViewSet, basename='clubs')
 router.register(r'leagues', LeagueViewSet, basename='leagues')
-router.register(r'my-clubs-events', MyClubsEventsViewSet, basename='my-clubs-events')
 router.register(r'memberships', ClubMembershipViewSet, basename='club-membership')
 router.register(r'announcements', AnnouncementViewSet, basename='announcements')
-router.register(r'admin-events/(?P<club_id>[0-9]+)', AdminEventsViewSet, basename='admin-events')
-router.register(
-    r'admin-leagues/(?P<league_id>[0-9]+)/participants',
-    AdminLeagueParticipantsViewSet,
-    basename='admin-league-participants'
-)
+router.register(r'notifications', NotificationViewSet, basename='notifications')
+
+router.register(r'admin/events', AdminEventsViewSet, basename='admin-events')
+router.register(r'admin/participants', AdminLeagueParticipantsViewSet, basename='admin-league-participants')
+router.register(r'admin/memberships', AdminClubMembershipViewSet, basename='admin-membership')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,12 +34,11 @@ urlpatterns = [
     path("api/logout/", LogoutAndBlacklistRefreshToken.as_view(), name='logout_and_blacklist'),
     path("api/auth/user/", UserDetailsView.as_view(), name="user_details" ),
     # App-specific API URLs
-    path('api/members/', include('members.urls')),
-    path('api/profile/', include('users.urls')),
-    path('api/clubs/', include('clubs.urls')),
-    path('api/leagues/', include('leagues.urls')),
-    path('api/notifications/', include('notifications.urls')),
-    path('api/feed/', notification_feed, name='notification_feed'),
+    path('api/members/', include('members.urls')), # Not used at all
+    path('api/profile/', include('users.urls')),   # update, registration, activities
+    path('api/clubs/', include('clubs.urls')),     # membership/<id>/set-preferred
+    path('api/leagues/', include('leagues.urls')), # session/<id>/participants
+    
     # Use include to attach the URLs from the single, master router
     path('api/', include(router.urls)),
 ]

@@ -11,10 +11,4 @@ urlpatterns = [
         name='set_preferred_club_membership'
     ),
     
-    # Admin endpoint (update details)
-    path(
-        'membership/<int:membership_id>/',
-        views.update_club_membership_admin,
-        name='update_club_membership_admin'
-    ),
 ]

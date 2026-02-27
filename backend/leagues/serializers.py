@@ -8,6 +8,7 @@ from public.constants import LeagueAttendanceStatus, LeagueParticipationStatus
 from django.utils import timezone
 from .mixins import CaptainInfoMixin
 from courts.serializers import CourtLocationInfoSerializer
+from clubs.serializers import ClubInfoSerializer
 
 # Get the active user model
 User = get_user_model()
@@ -56,7 +57,7 @@ class NextOccurrenceSerializer(serializers.Serializer):
     # location_address = AddressSerializer(source='league_session.court_location.address', read_only=True)
     court_info = CourtLocationInfoSerializer(source='league_session.court_location', read_only=True)
     
-    # 🆕 NEW FIELDS:
+    # 🆕 NEW FIELDS: 
     participants_count = serializers.SerializerMethodField()
     user_attendance_status = serializers.SerializerMethodField()
     registration_open = serializers.BooleanField()
@@ -118,7 +119,8 @@ class LeagueSerializer(CaptainInfoMixin, serializers.ModelSerializer):
       * Leagues: Total LeagueParticipation count
       * Events: LeagueAttendance count for next occurrence
     """
-    club_info = serializers.SerializerMethodField()
+    # club_info = serializers.SerializerMethodField()
+    club_info = ClubInfoSerializer(source='club')
    
     captain_info = serializers.SerializerMethodField()
     minimum_skill_level = serializers.IntegerField(
@@ -172,10 +174,10 @@ class LeagueSerializer(CaptainInfoMixin, serializers.ModelSerializer):
             'user_is_participant',
         ]
     
-    def get_club_info(self, obj):
-        """Return minimal club data using ClubInfoSerializer"""
-        from clubs.serializers import ClubInfoSerializer
-        return ClubInfoSerializer(obj.club).data
+    # def get_club_info(self, obj):
+    #     """Return minimal club data using ClubInfoSerializer"""
+    #     from clubs.serializers import ClubInfoSerializer
+    #     return ClubInfoSerializer(obj.club).data
     
     def get_next_session(self, obj):
         """
@@ -290,134 +292,56 @@ class LeagueSerializer(CaptainInfoMixin, serializers.ModelSerializer):
             data.pop('user_is_participant', None)
         
         return data
-    
-class LeagueDetailSerializer(CaptainInfoMixin, serializers.ModelSerializer):
-    """
+
+class LeagueDetailSerializer(LeagueSerializer):
+    """‼️
     Full serializer for league/event detail view.
     Extends LeagueSerializer to include all fields.
     
-    UPDATED 2026-01-19:
-    - Now extends LeagueSerializer instead of ModelSerializer
-    - Inherits user participation logic
-    - Adds extra detail fields
+    INHERITS from LeagueSerializer:
+    - All base fields (club_info, captain_info, next_session, etc.)
+    - All base methods (get_club_info, get_next_session, get_participants_count, etc.)
+    - User participation logic (user_is_captain, user_is_participant)
+    - to_representation() override for conditional user fields
+    
+    ADDS:
+    - registration_start_date, registration_end_date (for detail view)
+    - upcoming_sessions (list of all upcoming occurrences, not just next)
+    - user_next_session_id (ID of user's next attending session)
+    
+    USE CASE:
+    - /api/leagues/<id>/ (detail view)
+    - Shows ALL upcoming sessions, not just next
+    - Shows registration window dates
+    - Shows which specific session user is attending next
     """
     
-    # Inherit all LeagueSerializer fields + methods
-    club_info = serializers.SerializerMethodField()
-    
-    captain_info = serializers.SerializerMethodField()
-    minimum_skill_level = serializers.IntegerField(
-                  source='minimum_skill_level.level',
-                  allow_null=True,
-                  read_only=True
-            )
-    next_session = serializers.SerializerMethodField()
-    one_time_session_info = serializers.SerializerMethodField()
+    # ✅ ONLY declare NEW fields (not in LeagueSerializer)
     upcoming_sessions = serializers.SerializerMethodField()
-    participants_count = serializers.SerializerMethodField()
-    recurring_days = serializers.SerializerMethodField()
-    # User participation fields (from annotations)
-    user_is_captain = serializers.BooleanField(read_only=True, required=False)
-    user_is_participant = serializers.BooleanField(read_only=True, required=False)
     user_next_session_id = serializers.SerializerMethodField()
-
-    class Meta:
-        model = League
-        fields = [
-            'id',
-            'name',
-            'description',
-            'is_event',
-            'is_active',
-            'club_info',  
-            'captain_info',
-            'minimum_skill_level',
-            'next_session',
-            'one_time_session_info',
-            'max_participants',
-            'allow_reserves',
-            'participants_count',
-            'fee',
-            'start_date',
-            'end_date',
-            'registration_start_date',
-            'registration_end_date',
-            'image_url',
-            'league_type',
-            'recurring_days',
-            'is_recurring',
-            'upcoming_sessions',
-            # Optional user-specific fields
-            'user_is_captain',
-            'user_is_participant',
-            'user_next_session_id'
-            
-        ]  # Include ALL model fields + custom fields
     
-    def get_club_info(self, obj):
-        """Return minimal club data using ClubInfoSerializer"""
-        from clubs.serializers import ClubInfoSerializer
-        return ClubInfoSerializer(obj.club).data
+    class Meta(LeagueSerializer.Meta):  # ← Inherit Meta from parent!
+        # Start with all parent fields, then add new ones
+        fields = LeagueSerializer.Meta.fields + [
+            'registration_start_date',  # NEW - detail only
+            'registration_end_date',    # NEW - detail only
+            'upcoming_sessions',         # NEW - detail only (list shows ALL, not just next)
+            'user_next_session_id',      # NEW - detail only (which session user is attending)
+        ]
     
-    def get_next_session(self, obj):
-        """
-        Get next occurrence.
-        
-        UPDATED 2026-01-23: Pass context for user_attendance_status!
-        """
-        next_occ = obj.next_occurrence
-        if next_occ:
-            # ⚡ CRITICAL: Pass request context for user_attendance_status!
-            return NextOccurrenceSerializer(next_occ, context=self.context).data
-        return None
+    # ✅ ONLY define NEW methods (not in LeagueSerializer)
     
-    def get_one_time_session_info(self, obj):
-        """
-        For One-time sessions, we need the session information as well!
-        
-        """
-        one_time_session_info = obj.one_time_session
-        if one_time_session_info:
-            return NextOccurrenceSerializer(one_time_session_info, context=self.context).data
-        return None
-    
-    def get_participants_count(self, obj):
-        """Smart participant counting"""
-        if not obj.is_event:
-            if hasattr(obj, 'league_participants_count'):
-                return obj.league_participants_count
-            return 0
-        
-        next_occ = obj.next_occurrence
-        if not next_occ:
-            return 0
-        
-        return LeagueAttendance.objects.filter(
-            session_occurrence=next_occ,
-            status=LeagueAttendanceStatus.ATTENDING
-        ).count()
-    
-    def get_recurring_days(self, obj: League) -> list[int]:
-        from public.constants import RecurrenceType
-        """
-        Get list of days this league/event occurs on.
-        
-        Returns: [0, 2, 4] for Mon, Wed, Fri
-        Uses DayOfWeek constants: MON=0, TUE=1, WED=2, THU=3, FRI=4, SAT=5, SUN=6
-        """
-        # Get days from RECURRING sessions only (exclude one-time sessions)
-        # ✅ CRITICAL: Filter by recurrence_type, NOT session count!
-        recurring_sessions = obj.sessions.exclude(recurrence_type=RecurrenceType.ONCE)
-        
-        # Get unique days from recurring sessions
-        # ✅ CRITICAL: Field is 'day_of_week' not 'day'!
-        days = recurring_sessions.values_list('day_of_week', flat=True).distinct().order_by('day_of_week')
-        return list(days)
-    
-    # 🆕 ADDED field
-
     def get_upcoming_sessions(self, obj):
-        """Serialize using NextOccurrenceSerializer (with context!)"""
+        """
+        Get ALL upcoming sessions for this league/event.
+        
+        DIFFERENCE from LeagueSerializer.next_session:
+        - LeagueSerializer: Shows ONLY next upcoming session (for EventCard)
+        - LeagueDetailSerializer: Shows ALL upcoming sessions (for detail page)
+        
+        Uses obj.upcoming_occurrences @property (defined in League model).
+        Serializes using NextOccurrenceSerializer (with context for user attendance!).
+        """
         occurrences = obj.upcoming_occurrences
         
         if occurrences:
@@ -433,9 +357,18 @@ class LeagueDetailSerializer(CaptainInfoMixin, serializers.ModelSerializer):
         """
         Returns the ID of the next session the user is attending.
         
+        USE CASE:
+        - Detail page needs to know WHICH specific session to highlight
+        - "You're attending the Monday session" vs "You're attending Wednesday"
+        
         Returns:
-        - int: Session occurrence ID of next attending session
-        - None: No upcoming sessions user is attending
+        - int: SessionOccurrence.id of user's next attending session
+        - None: User not attending any upcoming sessions
+        
+        Example:
+            Event has Mon/Wed/Fri sessions
+            User enrolled for Wednesday only
+            → Returns Wednesday's SessionOccurrence.id
         """
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
@@ -458,18 +391,28 @@ class LeagueDetailSerializer(CaptainInfoMixin, serializers.ModelSerializer):
         # Return the session occurrence ID or None
         return attendance.session_occurrence_id if attendance else None
     
-    def to_representation(self, instance):
-        """Remove user fields if not requested"""
-        data = super().to_representation(instance)
-        
-        # Remove user-specific fields if not requested
-        include_participation = self.context.get('include_user_participation', False)
-        if not include_participation:
-            data.pop('user_is_captain', None)
-            data.pop('user_is_participant', None)
-        
-        return data
+    # ✅ INHERITED from LeagueSerializer (no need to redefine!):
+    # - get_club_info()
+    # - get_captain_info() (from CaptainInfoMixin)
+    # - get_next_session()
+    # - get_one_time_session_info()
+    # - get_participants_count()
+    # - get_recurring_days()
+    # - get_user_has_upcoming_sessions()
+    # - to_representation() (conditional user fields logic)
     
+    # All field declarations inherited too:
+    # - club_info
+    # - captain_info
+    # - minimum_skill_level
+    # - next_session
+    # - one_time_session_info
+    # - participants_count
+    # - recurring_days
+    # - user_is_captain
+    # - user_is_participant
+    # - user_has_upcoming_sessions    
+
 class LeagueActivitySerializer(CaptainInfoMixin, serializers.ModelSerializer):
     """
     Simplified League serializer for activities endpoint.
@@ -486,7 +429,8 @@ class LeagueActivitySerializer(CaptainInfoMixin, serializers.ModelSerializer):
     - tags (not implemented yet on backend)
     """
     # ✅ USE ClubInfoSerializer instead of get_club_info()!
-    club_info = serializers.SerializerMethodField()
+    # club_info = serializers.SerializerMethodField()
+    club_info = ClubInfoSerializer(source='club')
     # ✅ captain_info comes from CaptainInfoMixin!
     captain_info = serializers.SerializerMethodField()
 
@@ -526,10 +470,10 @@ class LeagueActivitySerializer(CaptainInfoMixin, serializers.ModelSerializer):
         return self.context.get('user_is_participant', False)
     
     # ✅ Import INSIDE the method!
-    def get_club_info(self, obj):
-        """Return minimal club data using ClubInfoSerializer"""
-        from clubs.serializers import ClubInfoSerializer
-        return ClubInfoSerializer(obj.club).data
+    # def get_club_info(self, obj):
+    #     """Return minimal club data using ClubInfoSerializer"""
+    #     from clubs.serializers import ClubInfoSerializer
+    #     return ClubInfoSerializer(obj.club).data
     
     def get_recurring_days(self, obj: League) -> list[int]:
         from public.constants import RecurrenceType
@@ -547,19 +491,10 @@ class LeagueActivitySerializer(CaptainInfoMixin, serializers.ModelSerializer):
         # ✅ CRITICAL: Field is 'day_of_week' not 'day'!
         days = recurring_sessions.values_list('day_of_week', flat=True).distinct().order_by('day_of_week')
         return list(days)
-    
-class SessionParticipantsSerializer(serializers.Serializer):
-    """
-    Serializer for session participants response.
-    
-    Returns list of users attending a specific SessionOccurrence.
-    """
-    session_id = serializers.IntegerField()
-    count = serializers.IntegerField()
-    participants = UserInfoSerializer(many=True)
 
 class AdminLeagueListSerializer(CaptainInfoMixin, serializers.ModelSerializer):
-    club_info = serializers.SerializerMethodField()
+    # club_info = serializers.SerializerMethodField()
+    club_info = ClubInfoSerializer(source='club')
    
     captain_info = serializers.SerializerMethodField()
     minimum_skill_level = serializers.IntegerField(
@@ -591,10 +526,10 @@ class AdminLeagueListSerializer(CaptainInfoMixin, serializers.ModelSerializer):
             'is_active',
             'user_is_captain',      
         ]
-    def get_club_info(self, obj):
-        """Return minimal club data using ClubInfoSerializer"""
-        from clubs.serializers import ClubInfoSerializer
-        return ClubInfoSerializer(obj.club).data
+    # def get_club_info(self, obj):
+    #     """Return minimal club data using ClubInfoSerializer"""
+    #     from clubs.serializers import ClubInfoSerializer
+    #     return ClubInfoSerializer(obj.club).data
     
     def get_participants_count(self, obj):
         """
@@ -632,24 +567,144 @@ class AdminLeagueDetailSerializer(AdminLeagueListSerializer):
             'league_sessions',
         ]
 
-class AdminLeagueParticipantSerializer(serializers.ModelSerializer):
-    from clubs.serializers import ClubMemberSerializer
-    participant = ClubMemberSerializer(source='club_membership', read_only=True)
+class AdminLeagueParticipationSerializer(serializers.ModelSerializer):
+    """
+    Comprehensive serializer for LeagueParticipation (single instance).
+    
+    HANDLES:
+    - normal get functionality
+    - Status changes (with attendance creation/deletion)
+    - All other editable fields (captain_notes, left_at, exclude_from_rankings)
+    - Mixed updates (status + other fields in same request)
+    
+    USE CASES:
+    1. Update only status:
+       PATCH /api/admin/participants/123/
+       { "status": 1 }
+       → Updates status + creates attendance
+    
+    2. Update only captain_notes:
+       PATCH /api/admin/participants/123/
+       { "captain_notes": "Great player!" }
+       → Updates captain_notes only
+    
+    3. Update BOTH:
+       PATCH /api/admin/participants/123/
+       { "status": 1, "captain_notes": "Promoted to active!" }
+       → Updates status (with attendance) + captain_notes
+    
+    IMPORTANT:
+    - Uses existing handle_participant_status_change service
+    - Only triggers attendance logic if status actually changed
+    - Updates all other fields normally
+    """
+    
+    from clubs.serializers import AdminClubMembershipSerializer
+    participant = AdminClubMembershipSerializer(source='club_membership', read_only=True)
 
     class Meta:
         model = LeagueParticipation
         fields = [
             'id',
             'league_id',
-            'participant',
+            'participant', 
             'status',
             'joined_at',
             'left_at',
             'captain_notes',
             'exclude_from_rankings',
         ]
-
-class ParticipantStatusUpdateSerializer(serializers.Serializer):
+    
+    def validate_status(self, value):
+        """
+        Validate status is a valid LeagueParticipationStatus value.
+        (Same validation as BulkLeagueParticipationStatusSerializer)
+        """
+        valid_statuses = [choice[0] for choice in LeagueParticipationStatus.choices]
+        
+        if value not in valid_statuses:
+            raise serializers.ValidationError(
+                f"Invalid status value: {value}. "
+                f"Must be one of: {valid_statuses}"
+            )
+        
+        return value
+    
+    def update(self, instance, validated_data):
+        """
+        Update instance with ALL changed fields.
+        
+        SPECIAL HANDLING for status:
+        - If status changed → trigger attendance logic
+        - If status unchanged → no attendance logic
+        
+        ALL OTHER FIELDS:
+        - Always updated normally
+        
+        FLOW:
+        1. Check if status is changing
+        2. Update ALL fields on instance
+        3. Save instance
+        4. If status changed → handle attendance
+        5. Store attendance changes for response
+        6. Return instance
+        """
+        # ========================================
+        # DETECT STATUS CHANGE
+        # ========================================
+        status_changed = False
+        old_status = None
+        new_status = None
+        
+        if 'status' in validated_data:
+            new_status = validated_data['status']
+            old_status = instance.status
+            status_changed = (new_status != old_status)
+        
+        # ========================================
+        # UPDATE ALL FIELDS
+        # ========================================
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        
+        # ========================================
+        # HANDLE STATUS CHANGE (if applicable)
+        # ========================================
+        if status_changed:
+            # Import the existing service
+            from .services.status_change import handle_participation_status_change
+            
+            # Trigger attendance creation/deletion
+            attendance_changes = handle_participation_status_change(
+                participation=instance,
+                old_status=old_status,
+                new_status=new_status
+            )
+            
+            # Store for to_representation (optional)
+            # This allows you to return attendance info in response
+            instance._attendance_changes = attendance_changes
+        
+        return instance
+    
+    def to_representation(self, instance):
+        """
+        Return updated instance data.
+        
+        Optionally include attendance changes if status was updated.
+        """
+        # Get standard representation
+        data = super().to_representation(instance)
+        
+        # If status changed, include attendance info
+        if hasattr(instance, '_attendance_changes'):
+            data['attendance_changes'] = instance._attendance_changes
+        
+        return data
+    
+class BulkLeagueParticipationStatusSerializer(serializers.Serializer):
     """
     Serializer for ADMIN bulk updating participant status.
     
@@ -762,7 +817,7 @@ class ParticipantStatusUpdateSerializer(serializers.Serializer):
         Custom representation: Return ALL updated participations.
         
         PATTERN FROM set_preferred_club:
-        - Uses AdminLeagueParticipantSerializer for each participation
+        - Uses AdminLeagueParticipationSerializer for each participation
         - Returns array of serialized data
         - Includes attendance_changes summary
         
@@ -772,13 +827,13 @@ class ParticipantStatusUpdateSerializer(serializers.Serializer):
         Returns:
             {
                 "participants": [...],
-                "attendanceChanges": [...]
+                "attendance_changes": [...]
             }
         """
-        # Use existing AdminLeagueParticipantSerializer for consistency
-        # from .serializers import AdminLeagueParticipantSerializer
+        # Use existing AdminLeagueParticipationSerializer for consistency
+        # from .serializers import AdminLeagueParticipationSerializer
         
-        participant_data = AdminLeagueParticipantSerializer(
+        participant_data = AdminLeagueParticipationSerializer(
             instances, 
             many=True
         ).data
@@ -790,5 +845,6 @@ class ParticipantStatusUpdateSerializer(serializers.Serializer):
         
         return {
             'participants': participant_data,
-            'attendanceChanges': attendance_changes
+            'attendance_changes': attendance_changes
         }
+   

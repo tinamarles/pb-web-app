@@ -8,7 +8,7 @@ class CourtLocationInfoSerializer(serializers.ModelSerializer):
     """
     Reusable minimal CourtLocation data serializer.
     
-    ✅ USE THIS instead of duplicating get_club_info()!
+   
     
     Matches frontend TypeScript type:
     interface CourtLocationInfo {
@@ -17,7 +17,7 @@ class CourtLocationInfoSerializer(serializers.ModelSerializer):
 
     Usage:
     class MySerializer(serializers.ModelSerializer):
-        court_location_info = CourtLocationInfoSerializer(source='club')
+        court_location_info = CourtLocationInfoSerializer(source='court_location')
     """
     address = AddressSerializer(read_only=True)
 
@@ -89,12 +89,12 @@ class UserCourtBookingSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def get_captain_info(self, obj):
-        """Return minimal club data using ClubInfoSerializer"""
+        """Return minimal user data using UserInfoSerializer"""
         from users.serializers import UserInfoSerializer
         return UserInfoSerializer(obj.user).data
     
     def get_court_info(self, obj):
-        """Return minimal club data using ClubInfoSerializer"""
+        """Return minimal court data using CourtLocationInfoSerializer"""
         return CourtLocationInfoSerializer(obj.court_location).data
     
     def to_representation(self, instance):
@@ -117,82 +117,3 @@ class UserCourtBookingSerializer(serializers.ModelSerializer):
         # data['duration_minutes'] = int((end - start).total_seconds() / 60)
         
         return data
-
-class UserCourtBookingCreateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for CREATING court bookings.
-    
-    Differences from read serializer:
-    - court_location is integer (ID) not nested object
-    - with_players is list of IDs not nested objects
-    - user is set automatically from request.user
-    
-    Usage in view:
-    ```python
-    serializer = UserCourtBookingCreateSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(user=request.user)
-    ```
-    """
-    court_location = serializers.PrimaryKeyRelatedField(
-        queryset=CourtLocation.objects.all()
-    )
-    with_players = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=get_user_model().objects.all(),
-        required=False
-    )
-    
-    class Meta:
-        model = UserCourtBooking
-        fields = [
-            'court_location',  # ID
-            'court_number',
-            'booking_date',
-            'start_time',
-            'end_time',
-            'booking_type',
-            'with_players',  # List of user IDs
-            'external_booking_reference',
-            'notes',
-            'send_reminder',
-            'reminder_minutes_before',
-        ]
-    
-    def validate(self, attrs):
-        """
-        Validate booking data.
-        """
-        # Ensure end_time is after start_time
-        if attrs['end_time'] <= attrs['start_time']:
-            raise serializers.ValidationError({
-                'end_time': 'End time must be after start time'
-            })
-        
-        # Optional: Add more validations
-        # - Check if court is available (if you track availability)
-        # - Check if booking_date is not in the past
-        # - Validate reminder_minutes_before if send_reminder is True
-        
-        return attrs
-
-
-# ==========================================
-# FUTURE: Court Availability (TBD)
-# ==========================================
-
-# class CourtAvailabilitySerializer(serializers.Serializer):
-#     """
-#     For checking court availability (future feature).
-#     
-#     Input:
-#     - court_location_id
-#     - date
-#     - start_time
-#     - end_time
-#     
-#     Output:
-#     - available: bool
-#     - conflicting_bookings: List of bookings during that time
-#     """
-#     pass
