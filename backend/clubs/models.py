@@ -59,8 +59,14 @@ class Role(models.Model):
     """
     name = models.IntegerField(
         choices=RoleType,
-        unique=True,
         help_text='System role name')
+    
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.CASCADE,
+        related_name='roles',
+        help_text='Club this role belongs to. Null = global system role.'
+    )
     
     description = models.TextField(blank=True)
 
@@ -99,12 +105,14 @@ class Role(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['name']
+        ordering = ['club', 'name']
+        unique_together = [['club', 'name']]
         verbose_name = 'Role'
         verbose_name_plural = 'Roles'
     
     def __str__(self):
-        return self.get_name_display()
+        club_name = self.club.short_name if self.club else "Global"
+        return f"{club_name} - {self.get_name_display()}"
     
 # Model for ClubMembership Types: eg. Resident, Non-Resident
 class ClubMembershipType(models.Model):
