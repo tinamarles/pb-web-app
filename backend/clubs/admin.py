@@ -211,7 +211,8 @@ class ClubAdmin(admin.ModelAdmin):
     
     def load_clubs_view(self, request):
         try:
-            call_command('loaddata', 'data/production/clubs.json')
+            # call_command('loaddata', 'data/production/clubs.json')
+            call_command('loaddata', 'data/test/test_clubs.json')
             messages.success(request, '✅ Clubs loaded successfully!')
         except Exception as e:
             messages.error(request, f'❌ Error: {str(e)}')
@@ -580,7 +581,8 @@ class ClubMembershipTypeAdmin(admin.ModelAdmin):
     def load_club_membership_types_view(self, request):
         """Load club membership types from JSON fixture"""
         try:
-            call_command('loaddata', 'data/production/club_membership_types.json')
+            # call_command('loaddata', 'data/production/club_membership_types.json')
+            call_command('loaddata', 'data/test/test_club_membership_types.json')
             messages.success(request, '✅ Club Membership Types loaded successfully!')
         except Exception as e:
             messages.error(request, f'❌ Error: {str(e)}')
@@ -649,7 +651,8 @@ class ClubMembershipSkillLevelAdmin(admin.ModelAdmin):
     def load_skill_levels_view(self, request):
         """Load skill levels from JSON fixture"""
         try:
-            call_command('loaddata', 'data/production/skill_levels.json')
+            # call_command('loaddata', 'data/production/skill_levels.json')
+            call_command('loaddata', 'data/test/test_skill_levels.json')
             messages.success(request, '✅ Skill Levels loaded successfully!')
         except Exception as e:
             messages.error(request, f'❌ Error: {str(e)}')
@@ -762,23 +765,3 @@ class RoleAdmin(admin.ModelAdmin):
             return obj.club_memberships_with_role.count()
         return 0
     membership_count.short_description = 'Memberships with Role'
-
-    # ✅ ADD LOAD BUTTON FOR ROLES!
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('load-roles/', 
-                 self.admin_site.admin_view(self.load_roles_view), 
-                 name='load_roles'),
-        ]
-        return custom_urls + urls
-    
-    def load_roles_view(self, request):
-        """Load roles from JSON fixture"""
-        try:
-            call_command('loaddata', 'data/production/roles.json')
-            messages.success(request, '✅ Roles loaded successfully!')
-        except Exception as e:
-            messages.error(request, f'❌ Error: {str(e)}')
-        return redirect('..')
-    

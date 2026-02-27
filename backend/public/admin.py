@@ -50,7 +50,8 @@ class AddressAdmin(admin.ModelAdmin):
     def load_addresses_view(self, request):
         """Load addresses from JSON fixture"""
         try:
-            call_command('loaddata', 'data/production/addresses.json')
+            # call_command('loaddata', 'data/production/addresses.json')
+            call_command('loaddata', 'data/test/test_addresses.json')
             messages.success(request, '✅ Addresses loaded successfully!')
         except Exception as e:
             messages.error(request, f'❌ Error: {str(e)}')

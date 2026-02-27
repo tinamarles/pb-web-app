@@ -261,7 +261,8 @@ class ClubMembershipSkillLevel(models.Model):
         verbose_name_plural = 'Club Membership Skill Levels'
     
     def __str__(self):
-        return self.get_level_display()
+        #return self.get_level_display()
+        return self.short_name
 
 # Club model
 class Club(models.Model):
