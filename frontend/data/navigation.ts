@@ -1,5 +1,10 @@
 // app/data/navigation.ts
-import { NotificationType, NotificationTypeValue } from "@/lib/constants";
+import {
+  NotificationType,
+  NotificationTypeValue,
+  RoleType,
+  RoleTypeValue,
+} from "@/lib/constants";
 // ============================================
 // TYPE DEFINITIONS
 // ============================================
@@ -15,6 +20,7 @@ export interface NavItem {
   disabled?: boolean; // Optional: disable navigation item
   onClick?: string; // Optional: action ID for items without href (e.g., "signout")
   badgeCount?: NotificationTypeValue | NotificationTypeValue[];
+  permissions?: RoleTypeValue | RoleTypeValue[];
 }
 
 /**
@@ -165,28 +171,70 @@ export const DASHBOARD_NAV_ITEMS: NavItem[] = [
 export const DASHBOARD_ADMIN_ITEMS: NavItem[] = [
   {
     label: "Admin Dashboard",
-    href: "/admin/[clubId]/settings",
+    href: "/admin/[clubId]/events/list",
     icon: "dashboard",
   },
 ];
 
 // ✅ ADD: Admin navigation items
 export const ADMIN_NAV_ITEMS: NavItem[] = [
-  { label: "Reports", href: "/admin/[clubId]/reports", icon: "chart" },
-  { label: "Calendar", href: "/admin/[clubId]/schedule", icon: "calendar" },
-  { label: "Events", href: "/admin/[clubId]/events/list", icon: "events" },
+  {
+    label: "Reports",
+    href: "/admin/[clubId]/reports",
+    icon: "chart",
+    permissions: [
+      RoleType.ADMIN,
+      RoleType.ORGANIZER,
+      RoleType.CAPTAIN,
+      RoleType.INSTRUCTOR,
+    ],
+  },
+  {
+    label: "Calendar",
+    href: "/admin/[clubId]/schedule",
+    icon: "calendar",
+    permissions: [
+      RoleType.ADMIN,
+      RoleType.ORGANIZER,
+      RoleType.CAPTAIN,
+      RoleType.INSTRUCTOR,
+    ],
+  },
+  {
+    label: "Events",
+    href: "/admin/[clubId]/events/list",
+    icon: "events",
+    permissions: [
+      RoleType.ADMIN,
+      RoleType.ORGANIZER,
+      RoleType.CAPTAIN,
+      RoleType.INSTRUCTOR,
+    ],
+  },
   {
     label: "Memberships",
     href: "/admin/[clubId]/memberships",
     icon: "memberships",
+    permissions: [RoleType.ADMIN, RoleType.ORGANIZER],
   },
-  { label: "Members", href: "/admin/[clubId]/members", icon: "members" },
+  {
+    label: "Members",
+    href: "/admin/[clubId]/members",
+    icon: "members",
+    permissions: [RoleType.ADMIN, RoleType.ORGANIZER],
+  },
   {
     label: "Announcements",
     href: "/admin/[clubId]/announcements",
     icon: "announcements",
+    permissions: [RoleType.ADMIN, RoleType.ORGANIZER],
   },
-  { label: "Settings", href: "/admin/[clubId]/settings", icon: "settings" },
+  {
+    label: "Settings",
+    href: "/admin/[clubId]/settings",
+    icon: "settings",
+    permissions: [RoleType.ADMIN],
+  },
 ];
 
 // ✅ ADD: Feed navigation items (public users)
@@ -303,10 +351,26 @@ export const CLUB_TAB_ITEMS: NavItem[] = [
 // No icon, disabled, onClick and badgeCount required
 
 export const ADMIN_EVENT_TAB_ITEMS: NavItem[] = [
-  { label: "Participants", icon: "", href: "/admin/[clubId]/events/[eventId]/members/list" },
-  { label: "Sessions", icon: "", href: "/admin/[clubId]/events/[eventId]/sessions" },
-  { label: "Schedule", icon: "", href: "/admin/[clubId]/events/[eventId]/schedule" },
-  { label: "Announcements", icon: "", href: "/admin/[clubId]/events/[eventId]/announcements" },
+  {
+    label: "Participants",
+    icon: "",
+    href: "/admin/[clubId]/events/[eventId]/members/list",
+  },
+  {
+    label: "Sessions",
+    icon: "",
+    href: "/admin/[clubId]/events/[eventId]/sessions",
+  },
+  {
+    label: "Schedule",
+    icon: "",
+    href: "/admin/[clubId]/events/[eventId]/schedule",
+  },
+  {
+    label: "Announcements",
+    icon: "",
+    href: "/admin/[clubId]/events/[eventId]/announcements",
+  },
 ];
 // ============================================
 // FULL NAVIGATION CONFIG (Optional Export)
