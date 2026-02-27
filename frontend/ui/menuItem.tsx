@@ -127,7 +127,7 @@ function SidebarMenuItem({
     <>
       {/* Leading Icon with Badge/Alert positioned on it */}
       <div className="relative">
-        <Icon name={item.icon} size="xl" bordered />
+        <Icon name={item.icon} size="lg" bordered />
 
         {/* Badge (notification count) - positioned on icon */}
         {item.badgeCount !== undefined && item.badgeCount > 0 && (
@@ -154,8 +154,10 @@ function SidebarMenuItem({
 
   const itemClasses = `sidebar__item ${
     item.active ? "active" : ""
+  } ${
+    item.disabled ? "disabled-item" : ""
   } ${className}`;
-
+  
   // ✅ Guard: Only render Link if href exists (TypeScript requirement)
   if (!item.href) {
     console.error("❌ SidebarMenuItem: href is required but missing!", item);

@@ -16,18 +16,22 @@ export interface SidebarProps {
   className?: string;
 }
 
-export function Sidebar({ items, sections, header, className = "" }: SidebarProps) {
+export function Sidebar({
+  items,
+  sections,
+  header,
+  className = "",
+}: SidebarProps) {
   // Support legacy items prop by converting to single section
-  const finalSections: SidebarSection[] = sections || (items ? [{ items }] : []);
-  
+  const finalSections: SidebarSection[] =
+    sections || (items ? [{ items }] : []);
+
   return (
     <aside className={`sidebar ${className}`}>
       {/* Optional header (e.g., club dropdown) */}
       {header && (
         // <div className="px-4 pb-4">
-        <div className="sidebar__header">
-          {header}
-        </div>
+        <div className="sidebar__header">{header}</div>
       )}
       {/* Navigation sections */}
       <nav>
@@ -37,14 +41,10 @@ export function Sidebar({ items, sections, header, className = "" }: SidebarProp
             {section.separator && sectionIndex > 0 && (
               <div className="border-t border-outline-variant my-2 mx-4" />
             )}
-            
+
             {/* Section items */}
             {section.items.map((item) => (
-              <MenuItem
-                key={item.href}
-                context="sidebar"
-                item={item}
-              />
+              <MenuItem key={item.href} context="sidebar" item={item} />
             ))}
           </div>
         ))}
