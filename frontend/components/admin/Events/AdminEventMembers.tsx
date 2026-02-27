@@ -56,7 +56,7 @@ export function AdminEventMembersPage({
         // Show success message
         const newStatusLabel = LeagueParticipationStatusLabels[LeagueParticipationStatus.ACTIVE];
         toast.success(
-          `${member.participant.fullName} set to ${newStatusLabel}`,
+          `${member.participant.memberDetail.fullName} set to ${newStatusLabel}`,
           {
             description: result.attendanceChanges?.[0]?.message || "Status updated successfully"
           }
@@ -64,10 +64,11 @@ export function AdminEventMembersPage({
 
         // Refresh data
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to activate member:", error);
-        toast.error("Failed to activate member", {
-          description: error instanceof Error ? error.message : "Unknown error"
+        const errorData = error.errorData
+        toast.error(errorData?.error || 'Error', {
+          description: errorData?.detail,
         });
       }
     },
@@ -102,7 +103,7 @@ export function AdminEventMembersPage({
       const newStatusLabel = LeagueParticipationStatusLabels[newStatus as LeagueParticipationStatusValue];
      
       toast.success(
-        `${selectedMember.participant.fullName} set to ${newStatusLabel}`,
+        `${selectedMember.participant.memberDetail.fullName} set to ${newStatusLabel}`,
         {
           description: result.attendanceChanges?.[0]?.message || "Status updated successfully"
         }
@@ -110,12 +111,13 @@ export function AdminEventMembersPage({
 
       // Refresh data
       router.refresh();
-    } catch (error) {
-      console.error("Failed to change member status:", error);
-      toast.error("Failed to change member status", {
-        description: error instanceof Error ? error.message : "Unknown error"
-      });
-    } finally {
+    } catch (error: any) {
+        console.error("Failed to update status:", error);
+        const errorData = error.errorData
+        toast.error(errorData?.error || 'Error', {
+          description: errorData?.detail,
+        });
+      } finally {
       setIsUpdating(false);
     }
   }

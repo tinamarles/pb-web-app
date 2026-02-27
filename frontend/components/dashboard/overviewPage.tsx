@@ -36,7 +36,7 @@ export function OverviewPage() {
   // STATE & DATA
   // ========================================
   const { notifications, markNotificationAsRead } = useAuth();
-  const { currentMembership } = useDashboard();
+  const { currentMembership, memberships } = useDashboard();
   const [events, setEvents] = useState<Event[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -67,6 +67,8 @@ export function OverviewPage() {
   );
 
   const hasAnnouncements = clubAnnouncements.length > 0;
+
+  const clubIds = memberships.map(m => m.club.id);
 
   useEffect(() => {
     async function fetchData() {
@@ -393,7 +395,8 @@ export function OverviewPage() {
           size="sm" 
           icon="events" 
           label="All Events" 
-          href="/event/my-clubs"
+          // href="/event/my-clubs"
+          href={`/event/my-clubs?clubs=${clubIds.join(',')}`}
         />
         <Button
           variant="default"

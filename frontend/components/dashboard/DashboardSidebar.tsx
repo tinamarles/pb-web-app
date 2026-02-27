@@ -15,20 +15,10 @@ export function DashboardSidebar() {
   const { notifications } = useAuth();
   const { currentMembership } = useDashboard();
 
-  const notificationsList = notifications.filter(
-        (item): item is Notification & { feedType: "notification" } =>
-          item.feedType === "notification"
-  );
-    
-  const announcementsList = notifications.filter(
-    (item): item is Announcement & { feedType: "announcement" } =>
-      item.feedType === "announcement"
-  );
-
   // ✅ Pre-filter notifications by club (Dashboard-specific logic)
   // Smart filtering: club-specific vs user-level notifications
   const clubFilteredNotifications = useMemo(() => {
-    return notificationsList.filter(n => {
+    return notifications.filter(n => {
       // If notification has club.id, it's club-specific → filter by current club
       if (n.club?.id) {
         return n.club.id === currentMembership?.club.id;
@@ -71,7 +61,7 @@ export function DashboardSidebar() {
     // ✅ Add "Admin Dashboard" if user has ANY admin permissions
     if (currentMembership && hasAnyAdminPermission(currentMembership)) {
       const item = DASHBOARD_ADMIN_ITEMS.find(
-        (i) => i.href === "/admin/[clubId]/settings"
+        (i) => i.href === "/admin/[clubId]/events/list"
       ); // ← ONE admin item!
       if (item) {
         const badge = calculateBadge(item.badgeCount, clubFilteredNotifications);
