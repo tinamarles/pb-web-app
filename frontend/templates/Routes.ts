@@ -1,19 +1,14 @@
-// app/api/league/participation/[id]/status/route.ts
+// templates/Routes.ts
 /**
- * API Route: Update League Participation Status
- * Server Action: updateParticipationStatus
- *
- * User has to be logged in
- *
- * Request Body:
- * {
- *   "status": 1  // Integer constant from LeagueParticipationStatus
- * }
+ * Use this for api/.../route.ts files
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+// import the server action function from actions.ts
 import { updateParticipationStatus } from "@/lib/actions";
+
+// Error Handling Imports
 import { isApiError } from "@/lib/apiErrors";
 import { isValidationError } from "@/lib/validationErrors";
 import { handleApiErrorInRoute } from "@/lib/errorHandling";
@@ -23,12 +18,12 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_DJANGO_API_URL;
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ participationId: string }> },
+  { params }: { params: Promise<{ participationId: string }> } // any parameters that are inside the route with []
 ) {
   try {
     // ✅ Await params (Next.js 15 requirement)
     const { participationId } = await params;
-
+    
     // ✅ Get access token from cookies
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("access_token")?.value;
@@ -39,41 +34,37 @@ export async function PATCH(
 
     // ✅ Parse request body
     const body = await request.json();
-    const { status } = body;
+    const { field1, field2 } = body;
 
-    // ✅ Validate status is provided
-    if (status === undefined || status === null) {
-      throw createValidationError("Status is required", 400);
+    // ✅ Validate those fields if necessary 
+    if (field1 === undefined || field1 === null) {
+      throw createValidationError("field1 is required", 400);
     }
 
-    // ✅ Validate status is a number
-    if (typeof status !== "number") {
-      throw createValidationError("Status must be numeric", 400);
+    // ✅ Validate if field has correct type 
+    if (typeof field1 !== "number") {
+      throw createValidationError("field1 must be numeric", 400);
     }
 
     // Call server action
-    const data = await updateParticipationStatus(
-      parseInt(participationId),
-      status,
-    );
+    const data = await updateParticipationStatus(parseInt(participationId), field1)
 
     // ✅ Return Django response
     return NextResponse.json(data);
+    
   } catch (error) {
-    console.error(
-      "❌ API route error: Failed to update participation status",
-      error,
-    );
-
+    console.error("❌ API route error: Failed to update participation status", error);
+    
     // ✅ REUSE ApiError pattern!
     if (isApiError(error) || isValidationError(error)) {
       return handleApiErrorInRoute(error);
     }
-
+    
     // Fallback for unknown errors
     return NextResponse.json(
       { error: "An unexpected error occurred" },
-      { status: 500 },
+      { status: 500 }
     );
+    
   }
 }

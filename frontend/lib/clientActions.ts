@@ -13,11 +13,10 @@ import type {
   EligibleMember,
   Event,
   PaginatedResponse,
-  ParticipationStatusChangeResponse,
+  ParticipationUpdateResponse,
   SessionParticipants,
 } from "./definitions";
 import { EventListFilters } from "./definitions";
-
 /**
  * Fetch club events from the client side
  *
@@ -38,7 +37,7 @@ import { EventListFilters } from "./definitions";
 export async function getClubEventsClient(
   clubId: number,
   filters?: EventListFilters, // ✅ Filter object
-  requireAuth: boolean = true,
+  requireAuth: boolean = true, // TODO: remove and make optional; will be set to false if no value is provided
 ): Promise<PaginatedResponse<Event>> {
   const params = new URLSearchParams();
 
@@ -60,10 +59,15 @@ export async function getClubEventsClient(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      `[${response.status}] ${error.error || "Failed to fetch events"}`,
-    );
+    // Parse error from handleApiErrorInRoute
+    const errorData = await response.json().catch(() => ({
+      error: "Failed to fetch Club Events",
+    }));
+
+    // Still throw for component error handling
+    const error = new Error(errorData.detail || errorData.error);
+    (error as any).errorData = errorData;
+    throw error;
   }
 
   return response.json();
@@ -87,10 +91,15 @@ export async function getSessionParticipantsClient(
   );
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      `[${response.status}] ${error.error || "Failed to fetch events"}`,
-    );
+    // Parse error from handleApiErrorInRoute
+    const errorData = await response.json().catch(() => ({
+      error: "Failed to fetch Session Participants",
+    }));
+
+    // Still throw for component error handling
+    const error = new Error(errorData.detail || errorData.error);
+    (error as any).errorData = errorData;
+    throw error;
   }
 
   return response.json();
@@ -121,10 +130,15 @@ export async function getEligibleMembersClient(
   );
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      `[${response.status}] ${error.error || "Failed to fetch eligible members"}`,
-    );
+    // Parse error from handleApiErrorInRoute
+    const errorData = await response.json().catch(() => ({
+      error: "Failed to fetch eligible members",
+    }));
+
+    // Still throw for component error handling
+    const error = new Error(errorData.detail || errorData.error);
+    (error as any).errorData = errorData;
+    throw error;
   }
 
   return response.json();
@@ -151,10 +165,15 @@ export async function addLeagueParticipantsClient(
   );
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      `[${response.status}] ${error.error || "Failed to add participants"}`,
-    );
+    // Parse error from handleApiErrorInRoute
+    const errorData = await response.json().catch(() => ({
+      error: "Failed to add League Participants",
+    }));
+
+    // Still throw for component error handling
+    const error = new Error(errorData.detail || errorData.error);
+    (error as any).errorData = errorData;
+    throw error;
   }
 
   const data = await response.json();
@@ -165,40 +184,45 @@ export async function addLeagueParticipantsClient(
 
 /**
  * Update league participation status
- * 
+ *
  * Pattern: Client Component → clientActions.ts → API Route → Django
- * 
+ *
  * @param participationId - LeagueParticipation ID
  * @param status - New status (integer constant from LeagueParticipationStatus)
  * @returns Updated participant data + attendance changes summary
- * 
+ *
  * @example
  * // Activate a pending member
  * const result = await updateParticipationStatusClient(71, LeagueParticipationStatus.ACTIVE);
  * // result.attendanceChanges[0].message: "Created 21 attendance records"
- * 
+ *
  * // Set member on holiday
  * const result = await updateParticipationStatusClient(71, LeagueParticipationStatus.HOLIDAY);
  * // result.attendanceChanges[0].message: "Updated 21 attendance records"
  */
 export async function updateParticipationStatusClient(
   participationId: number,
-  status: number
-): Promise<ParticipationStatusChangeResponse> {
+  status: number,
+): Promise<ParticipationUpdateResponse> {
   const response = await fetch(
     `/api/league/participation/${participationId}/status`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
-    }
+    },
   );
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      `[${response.status}] ${error.error || "Failed to update participation status"}`
-    );
+    // Parse error from handleApiErrorInRoute
+    const errorData = await response.json().catch(() => ({
+      error: "Failed to update Participation Status",
+    }));
+
+    // Still throw for component error handling
+    const error = new Error(errorData.detail || errorData.error);
+    (error as any).errorData = errorData;
+    throw error;
   }
 
   return response.json();

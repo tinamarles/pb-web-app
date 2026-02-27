@@ -2,6 +2,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from 'next/headers';
 import { addLeagueParticipants } from "@/lib/actions";
+import { isApiError } from "@/lib/apiErrors";
+import { isValidationError } from "@/lib/validationErrors";
+import { handleApiErrorInRoute } from "@/lib/errorHandling";
+import { createValidationError } from "@/lib/validationErrors";
 
 export async function POST(
   request: NextRequest,
@@ -25,21 +29,24 @@ export async function POST(
     const { memberIds } = body;
 
     if (!memberIds || !Array.isArray(memberIds)) {
-      return NextResponse.json(
-        { error: 'Invalid request: memberIds array required' },
-        { status: 400 }
-      );
+      throw createValidationError("Invalid request: memberIds array required", 400);
     }
 
     // ✅ Call server action
-    const data = await addLeagueParticipants(parseInt(leagueId), memberIds);
+    const data = await addLeagueParticipants(leagueId, memberIds);
 
     return NextResponse.json(data);
   } catch (error) {
     console.error("❌ API route error: Failed to add league participants:", error);
+    // ✅ REUSE ApiError pattern!
+    if (isApiError(error) || isValidationError(error)) {
+      return handleApiErrorInRoute(error);
+    }
+
+    // Fallback for unknown errors
     return NextResponse.json(
-      { error: "Failed to add participants" },
-      { status: 500 }
+      { error: "An unexpected error occurred" },
+      { status: 500 },
     );
   }
 }
