@@ -56,6 +56,13 @@ export interface DjangoUserInfo {
   username: string;
   profile_picture_url: string;
 }
+
+export interface DjangoUserDetail extends DjangoUserInfo {
+  skill_level: string | null;
+  email: string;
+  mobile_phone: string;
+  gender: C.GenderValue;
+}
 /**
  * Base User Fields (CustomUser model)
  * Maps to:
@@ -127,6 +134,35 @@ export interface DjangoClubInfo {
   id: number;
   name: string;
   logo_url: string;
+  club_type: number;
+  short_name: string;
+}
+/**
+ * Nested Club (Lightweight - for use in serializers)
+ * Maps to:
+ * - backend: clubs - ClubDetail
+ * - frontend: type ClubDetail
+ */
+export interface DjangoClubDetail extends DjangoClubInfo {
+  description: string;
+  address: DjangoAddress | null;
+  phone_number: string;
+  email: string;
+  website_url: string;
+  banner_url: string;
+  autoapproval: boolean;
+  member_count: number;
+}
+/**
+ * Full Club (includes array of member_id)
+ * Maps to:
+ * - backend: clubs - ClubSerializer
+ * - frontend: type Club
+ */
+export interface DjangoClub extends DjangoClubDetail {
+  members: number[];
+  created_at: string;
+  updated_at: string;
 }
 /**
  * Basic Role Fields without permission flags
@@ -172,38 +208,7 @@ export interface DjangoClubMembershipSkillLevel {
   level: C.SkillLevelValue;
   description: string;
 }
-/**
- * Nested Club (Lightweight - for use in serializers)
- * Maps to:
- * - backend: clubs - NestedClubSerializer
- * - frontend: type MemberClub
- */
-export interface DjangoClubNested {
-  id: number;
-  club_type: number;
-  name: string;
-  short_name: string;
-  description: string;
-  address: DjangoAddress | null;
-  phone_number: string;
-  email: string;
-  website_url: string;
-  logo_url: string;
-  banner_url: string;
-  autoapproval: boolean;
-  member_count: number;
-}
-/**
- * Full Club (includes array of member_id)
- * Maps to:
- * - backend: clubs - ClubSerializer
- * - frontend: type Club
- */
-export interface DjangoClub extends DjangoClubNested {
-  members: number[];
-  created_at: string;
-  updated_at: string;
-}
+
 
 /**
  * Club Membership:
@@ -213,7 +218,7 @@ export interface DjangoClub extends DjangoClubNested {
  */
 export interface DjangoClubMembership {
   id: number;
-  club: DjangoClubNested;
+  club: DjangoClubDetail;
   roles: DjangoRole[]; // MTM never return NULL but returns empty [];
   type: DjangoClubMembershipType;
   levels: DjangoClubMembershipSkillLevel[]; // MTM never return NULL but returns empty [];
@@ -231,6 +236,48 @@ export interface DjangoClubMembership {
   can_manage_courts: boolean;
 }
 /**
+ * Backend:
+ * - serializer UserClubMembershipSerializer
+ * - view: ClubMembershipViewSet
+ * - endpoint: /api/memberships/?club={club_id}
+ * - actions.ts: getClubMembers(clubId, filters)
+ *
+ * Supercedes: DjangoClubMember
+ *
+ * Fields NOT included here:
+ *  status: C.MembershipStatusValue;
+ *  created_at: string;
+ *  is_preferred_club: boolean;
+ *
+ * All fields are READ ONLY
+ */
+export interface DjangoUserClubMembership {
+  id: number;
+  club_info: DjangoClubInfo;
+  member_detail: DjangoUserDetail;
+  type: DjangoClubMembershipType;
+  roles: DjangoRole[];
+  levels: DjangoClubMembershipSkillLevel[];
+}
+/**
+ * Backend:
+ * - serializer AdminClubMembershipSerializer
+ * - view: AdminClubMembershipViewSet
+ * - endpoint: /api/admin/memberships/?club={club_id}
+ * - actions.ts: getAdminClubMembers(clubId, filters)
+ * Extended fields are READ/WRITE
+ */
+export interface DjangoAdminClubMembership extends DjangoUserClubMembership {
+  is_preferred_club: boolean;
+  status: C.MembershipStatusValue;
+  registration_start_date: string | null;
+  registration_end_date: string | null;
+  membership_number: string | null;
+  type_id: number;
+  role_ids: number[];
+  level_ids: number[];
+}
+/**
  * ==============================
  * Club Details
  * ==============================
@@ -241,43 +288,12 @@ export interface DjangoClubMembership {
  * frontend: ClubDetailHome
  */
 export interface DjangoClubHome {
-  club: DjangoModelInfo;
+  club_info: DjangoClubInfo;
   latest_announcement: DjangoAnnouncement | null;
-  top_members: DjangoTopMember[];
+  top_members: DjangoUserDetail[];
   next_event: DjangoLeague | null;
 }
 
-/**
- * Top Member - used for Club Home Page and is included in
- *              Members
- * Maps to: clubs.TopMemberSerializer
- * extends: CustomUserSerializer (type: DjangoUserBase)
- * is part of: ClubMemberSerializer
- */
-export type DjangoTopMember = DjangoUserBase & {
-  joined_date: string; // joined_date maps to created_at from ClubMembership
-};
-
-/**
- * Club Member - used to display Club Member List
- *               combines User data (from TopMemberSerializer) and Membership Data
- * Maps to: clubs - ClubMemberSerializer
- * NOTE: This is NOT the same as ClubMembershipSerializer which is used for
- *       the AuthUserProvider!!!
- *
- *       The response is wrapped by the DjangoPaginatedResponse
- */
-export type DjangoClubMember = DjangoTopMember & {
-  // ClubMembership fields
-  membership_id: number;
-  club_info: DjangoClubInfo;
-  roles: DjangoRole[];
-  levels: DjangoClubMembershipSkillLevel[];
-  type: number; // id of ClubMembershipType
-  status: C.MembershipStatusValue;
-  created_at: string;
-  is_preferred_club: boolean;
-};
 // ========================================
 // APP COURT TYPES
 // ========================================
@@ -316,7 +332,7 @@ export type DjangoParticipant = DjangoUserInfo & {
 
 export interface DjangoSessionParticipants {
   session_id: number;
-  participants: DjangoParticipant[];
+  participants: DjangoUserDetail[];
   count: number;
 }
 
@@ -361,10 +377,11 @@ export interface DjangoLeague {
   recurring_days: number[];
   is_active: boolean;
   is_recurring: boolean;
-  upcoming_sessions?: DjangoSession[];
   user_has_upcoming_sessions?: boolean;
-  user_next_session_id?: number | null;
-
+  upcoming_sessions?: DjangoSession[]; // LeagueDetailSerializer only
+  user_next_session_id?: number | null; // LeagueDetailSerializer only
+  registration_start_date?: string | null; // LeagueDetailSerializer only
+  registration_end_date?: string | null; // LeagueDetailSerializer only
   // Optional user-specific fields (only when include_user_participation=true)
   user_is_captain?: boolean;
   user_is_participant?: boolean;
@@ -422,7 +439,7 @@ export interface DjangoLeagueSession {
 export interface DjangoAdminLeagueParticipant {
   id: number;
   league_id: number;
-  participant: DjangoClubMember;
+  participant: DjangoAdminClubMembership;
   status: C.LeagueParticipationStatusValue;
   joined_at: string;
   left_at: string | null;
@@ -437,13 +454,13 @@ export interface DjangoEligibleMember {
   status: C.MembershipStatusValue; // Club membership status
 }
 
-export interface DjangoParticipationStatusChangeResponse {
+export interface DjangoParticipationUpdateResponse {
   participants: DjangoAdminLeagueParticipant[];
-  attendance_changes: DjangoAttendanceChange[];
+  attendance_changes?: DjangoAttendanceChange[];
 }
 export interface DjangoAttendanceChange {
   participation_id: number;
-  attendance_created?: number;    // ✅ Now camelCase after conversion!
+  attendance_created?: number; // ✅ Now camelCase after conversion!
   attendance_deleted?: number;
   attendance_updated?: number;
   message: string;

@@ -4,7 +4,7 @@ import {
     NotificationTypeBadgeVariant } from "./constants";
 
 import { BadgeVariant } from "@/ui";
-import type { Notification } from "./definitions";
+import { Notification, Announcement, FeedItem, isAnnouncement, isNotification } from "./definitions";
 
 /**
  * Badge information returned by calculateBadge
@@ -53,9 +53,11 @@ export interface BadgeInfo {
  * );
  * // Returns: { count: 3, variant: \"error\" } (error > warning, so error wins)
  */
+
+
 export function calculateBadge(
   badgeCount: NotificationTypeValue | NotificationTypeValue[] | undefined,
-  notifications: Notification[]
+  notifications: FeedItem[], // Notification[]
 ): BadgeInfo | null {
   // No filter specified → no badge
   if (badgeCount === undefined) return null;
@@ -64,9 +66,22 @@ export function calculateBadge(
   const filters = Array.isArray(badgeCount) ? badgeCount : [badgeCount];
   
   // Filter notifications by type(s)
-  const filtered = notifications.filter(n => 
-    filters.includes(n.notificationType) && !n.isRead
-  );
+  // ✅ For Notifications: exclude read ones
+  // ✅ For Announcements: include all (no isRead property)
+  const filtered = notifications.filter(n => {
+    // First check if it matches one of the filter types
+    const matchesType = filters.includes(n.notificationType);
+    
+    if (!matchesType) return false;
+    
+    // If it's a notification, also check if unread
+    if (isNotification(n)) {
+      return !n.isRead;
+    }
+    
+    // If it's an announcement, always include (announcements don't have isRead)
+    return true;
+  });
   
   // No matching notifications → no badge
   if (filtered.length === 0) return null;

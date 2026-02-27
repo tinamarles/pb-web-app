@@ -110,44 +110,7 @@ export interface ClubMembershipSkillLevel {
   description: string;
 }
 
-/** MemberClub
- * apiResponseType: DjangoClubNested
- * backend: clubs.NestedClubSerializer
- */
-export interface MemberClub {
-  /* light-weight club that is used for a Club member. It
-     does NOT include the array that contains all the members of 
-     the club.
-  */
-  id: number;
-  clubType: C.ClubTypeValue;
-  name: string;
-  shortName: string;
-  description: string;
-  address: Address | null;
-  phoneNumber: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  email: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  websiteUrl: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  logoUrl: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
-  bannerUrl: string;
-  autoapproval: boolean; // default=False in Django
-  memberCount: number; // ✅ Added (calculated)
-}
-/** Club
- * apiResponseType: DjangoClub
- * backend: clubs.ClubSerializer
- */
-export interface Club extends MemberClub {
-  /* The complete Club object which extends MemberClub by having
-     extra fields:
-     - members: the array of id's of the users linked to that club
-     - created_at
-     - updated-at
-  */
-  members: number[]; // contains the user Id's of all club members
-  createdAt: string;
-  updatedAt: string;
-}
+
 /** ClubMembership
  * apiResponseType: DjangoClubMembership
  * backend: clubs.ClubMembershipSerializer
@@ -155,7 +118,7 @@ export interface Club extends MemberClub {
 
 export interface ClubMembership {
   id: number;
-  club: MemberClub; // required in Django
+  club: ClubDetail; // required in Django
   roles: Role[];
   type: ClubMembershipType;
   levels: ClubMembershipSkillLevel[];
@@ -173,6 +136,28 @@ export interface ClubMembership {
   canCancelLeagueSessions: boolean;
   canManageCourts: boolean;
 }
+
+export interface UserClubMembership {
+  id: number;
+  clubInfo: ClubInfo;
+  memberDetail: UserDetail;
+  type: ClubMembershipType;
+  roles: Role[];
+  levels: ClubMembershipSkillLevel[];
+}
+
+export interface AdminClubMembership extends UserClubMembership {
+  isPreferredClub: boolean;
+  status: C.MembershipStatusValue;
+  registrationStartDate: string | null;
+  registrationEndDate: string | null;
+  membershipNumber: string | null;
+  // write-only Ids for updates
+  typeId: number;
+  roleIds: number[];
+  levelIds: number[];
+}
+
 // +++ User-specific types: types for different user roles
 
 /** UserInfo
@@ -186,6 +171,17 @@ export interface UserInfo {
   fullName: string; // Computed from firstName + lastName
   username: string;
   profilePictureUrl: string;
+}
+
+/** UserDetail
+ * apiResponseType: DjangoUserDetail
+ * backend: users.UserDetailSerializer
+ */
+export interface UserDetail extends UserInfo {
+  skillLevel: string | null;
+  email: string;
+  mobilePhone: string;
+  gender: C.GenderValue; // Has default, not null
 }
 /** PublicUser
  * apiResponseType: DjangoUserBase
@@ -302,6 +298,15 @@ export interface Announcement extends BaseFeedItem {
  * Check feedType to determine which type and render appropriate component
  */
 export type FeedItem = Notification | Announcement;
+
+// Typeguards for Notification / Announcement
+export function isNotification(item: FeedItem): item is Notification {
+  return item.feedType === "notification";
+}
+
+export function isAnnouncement(item: FeedItem): item is Announcement {
+  return item.feedType === "announcement";
+}
 
 /**
  * NotificationFeedResponse - Response from /api/feed/ endpoint
@@ -463,14 +468,55 @@ export interface WeekData {
  * Club Detail
  * =============================
  */
-
-/* +++++ HOME TAB +++++ */
-
-// maps to: DjangoTopMember
-// used in Home Tab
-export interface TopMember extends PublicUser {
-  joinedDate: string;
+/**
+ * ClubInfo - minimal club info used in league/event cards
+ * apiResponseType: DjangoClubInfo
+ * backend: leagues.LeagueSerializer.get_club_info()
+ */
+export interface ClubInfo {
+  id: number;
+  name: string;
+  logoUrl: string;
+  clubType: C.ClubTypeValue;
+  shortName: string;
 }
+/** ClubDetail
+ * apiResponseType: DjangoClubDetail
+ * backend: clubs.ClubDetailSerializer
+ */
+export interface ClubDetail extends ClubInfo {
+  /* light-weight club that is used for a Club member. It
+     does NOT include the array that contains all the members of 
+     the club.
+  */
+  id: number;
+  name: string;
+  description: string;
+  address: Address | null;
+  phoneNumber: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  email: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  websiteUrl: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  logoUrl: string; // ✅ FIXED: Django has blank=True ONLY (not null=True)
+  bannerUrl: string;
+  autoapproval: boolean; // default=False in Django
+  memberCount: number; // ✅ Added (calculated)
+}
+/** Club
+ * apiResponseType: DjangoClub
+ * backend: clubs.ClubSerializer
+ */
+export interface Club extends ClubDetail {
+  /* The complete Club object which extends ClubDetail by having
+     extra fields:
+     - members: the array of id's of the users linked to that club
+     - created_at
+     - updated-at
+  */
+  members: number[]; // contains the user Id's of all club members
+  createdAt: string;
+  updatedAt: string;
+}
+/* +++++ HOME TAB +++++ */
 
 /**
  * ClubHome - Club home tab data
@@ -481,39 +527,15 @@ export interface TopMember extends PublicUser {
  * - nextEvent now uses League (not EventLight alias)
  */
 export interface ClubHome {
-  club: ModelInfo;
+  clubInfo: ClubInfo;
   latestAnnouncement: Announcement | null;
-  topMembers: TopMember[];
+  topMembers: UserDetail[];
   nextEvent: League | null; // ⚡ CHANGED: Use League directly
 }
-
-/* +++++ MEMBERS TAB +++++ */
-// maps to: DjangoClubMember
-// used in Members Tab
-export type ClubMember = TopMember & {
-  membershipId: number;
-  clubInfo: ClubInfo;
-  roles: Role[];
-  levels: ClubMembershipSkillLevel[];
-  type: number;
-  status: C.MembershipStatusValue;
-  createdAt: string;
-  isPreferredClub: boolean;
-};
 
 /* +++++ EVENTS TAB +++++ */
 // maps to: DjangoLeague
 // used in Events Tab
-/**
- * ClubInfo - minimal club info used in league/event cards
- * apiResponseType: DjangoClubInfo
- * backend: leagues.LeagueSerializer.get_club_info()
- */
-export interface ClubInfo {
-  id: number;
-  name: string;
-  logoUrl: string;
-}
 
 /**
  * NextOccurrence - next session info for events/leagues
@@ -552,15 +574,11 @@ export interface LeagueSession {
   activeUntil: string | null;
   isActive: boolean;
 }
-// Type for participant data
-export type Participant = UserInfo & {
-  skillLevel: string | null; // DecimalField, null=True
-};
 
 // API Response type
 export interface SessionParticipants {
   sessionId: number;
-  participants: Participant[];
+  participants: UserDetail[];
   count: number;
 }
 /**
@@ -594,9 +612,11 @@ export interface League {
   recurringDays: C.DayOfWeekValue[];
   isRecurring: boolean;
   isActive: boolean; // ✅ Added based on is_active property in Django model
-  upcomingSessions?: Session[];
+  upcomingSessions?: Session[];          // LeagueDetailSerializer Only
   userHasUpcomingSessions?: boolean;
-  userNextSessionId?: number | null;
+  userNextSessionId?: number | null;     // LeagueDetailSerializer Only
+  registrationStartDate?: string | null; // LeagueDetailSerializer Only
+  registrationEndDate?: string | null;   // LeagueDetailSerializer Only
 
   // Optional user-specific fields (only when requested)
   userIsCaptain?: boolean;
@@ -674,7 +694,7 @@ export type AdminEvent = AdminEventBase & {
 export interface AdminLeagueParticipant {
   id: number;
   leagueId: number;
-  participant: ClubMember;
+  participant: AdminClubMembership;
   status: C.LeagueParticipationStatusValue;
   joinedAt: string;
   leftAt: string | null;
@@ -696,9 +716,9 @@ export interface EligibleMember {
 /** Update Participation Status
  * Returned from /api/leagues/participation/{memberId}/status
  */
-export interface ParticipationStatusChangeResponse {
+export interface ParticipationUpdateResponse {
   participants: AdminLeagueParticipant[];
-  attendanceChanges: AttendanceChange[];
+  attendanceChanges?: AttendanceChange[];
 }
 
 /**
@@ -706,7 +726,7 @@ export interface ParticipationStatusChangeResponse {
  */
 export interface AttendanceChange {
   participationId: number;
-  attendanceCreated?: number;    // ✅ Now camelCase after conversion!
+  attendanceCreated?: number; // ✅ Now camelCase after conversion!
   attendanceDeleted?: number;
   attendanceUpdated?: number;
   message: string;
