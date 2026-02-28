@@ -72,8 +72,8 @@ class CustomUserAdmin(UserAdmin):
             if dry_run:
                 messages.warning(request, '🧪 DRY RUN: Would load users.json (check file exists)')
             else:
-                # call_command('loaddata', 'data/production/users.json')
-                call_command('loaddata', 'data/test/test_users.json')
+                call_command('loaddata', 'data/production/users.json')
+                # call_command('loaddata', 'data/test/test_users.json')
                 messages.success(request,'✅ Users loaded successfully!')
         except Exception as e:
             messages.error(request, f'❌ Error: {str(e)}')

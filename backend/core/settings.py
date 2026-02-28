@@ -32,7 +32,8 @@ SECRET_KEY = os.environ.get('SIMPLE_SECRET_KEY')
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY not found. Ensure it's set in the .env file or as an environment variable.")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
