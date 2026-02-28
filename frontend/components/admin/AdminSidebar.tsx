@@ -98,7 +98,7 @@ export function AdminSidebar() {
   // Memoize sections to prevent unnecessary re-renders
   const sections: SidebarSection[] = useMemo(() => {
     const baseItems: SidebarItem[] = ADMIN_NAV_ITEMS.map((item) => {
-      const badge = calculateBadge(item.badgeCount, clubFilteredNotifications);
+      const badge = clubFilteredNotifications ? calculateBadge(item.badgeCount, clubFilteredNotifications) : null;
       // ✅ Check permission for this item based on user's roles
       const userHasPermission = hasPermission(item, currentMembership);
       

@@ -77,7 +77,7 @@ export function StatusChangeModal({
       open={open}
       onOpenChange={handleOpenChange}
       title="Change Member Status"
-      description={`${member.participant.fullName}`}
+      description={`${member.participant.memberDetail.fullName}`}
       variant="default"
       titleClassName='headline-md text-primary'
       descriptionClassName='title-lg strong text-secondary'

@@ -2,6 +2,7 @@
 // import { Module } from "@/shared";
 import { ModuleClientOnly as Module } from "@/shared";
 import { ErrorToastHandler } from "@/components/ErrorToastHandler";
+import { Suspense } from "react";
 export default function SidebarLayout({
   children,
   sidebar,
@@ -11,7 +12,9 @@ export default function SidebarLayout({
 }) {
   return (
     <>
-      <ErrorToastHandler /> {/* Global error handler for API errors */}
+      <Suspense fallback={null}>
+        <ErrorToastHandler /> {/* Global error handler for API errors */}
+      </Suspense>
       <Module type="profile">
         <>
           {sidebar}

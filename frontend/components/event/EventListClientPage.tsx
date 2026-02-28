@@ -107,7 +107,7 @@ export function EventListClient({ events, isJoinMode }: EventListClientProps) {
   function EventList() {
     return (
       <div className="clubList-container grid-3 xl:grid-cols-4">
-        {events.map((event) => (
+        {/* {events.map((event) => (
           <EventCard
             key={event.id}
             event={event}
@@ -115,7 +115,7 @@ export function EventListClient({ events, isJoinMode }: EventListClientProps) {
             variant="grid-display"
             onAction={handleEventAction}
           />
-        ))}
+        ))} */}
       </div>
     );
   }

@@ -136,7 +136,7 @@ export function SignUpForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
                 placeholder="example@mail.com"
                 className="peer input-base has-icon
                         invalid:[&:not(:placeholder-shown):not(:focus)]:border-error

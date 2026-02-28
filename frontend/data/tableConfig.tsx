@@ -72,7 +72,7 @@ const eventColumns: ColumnDef<AdminEventBase>[] = [
   {
     id: "captain",
     label: "Captain",
-    accessor: "captainInfo", // Assuming event.captainInfo has fullName and profilePictureUrl
+    accessor: "captainInfo.fullName", // Assuming event.captainInfo has fullName and profilePictureUrl
     sortable: false,
     render: (event) => {
       return (
@@ -221,17 +221,17 @@ const participantColumns: ColumnDef<AdminLeagueParticipant>[] = [
   {
     id: "pictureUrl",
     label: "Img",
-    accessor: "participant.fullName",
+    accessor: "participant.memberDetail.fullName",
     sortable: true,
     render: (member) => {
       const avatarColor =
-        member.participant.gender === Gender.FEMALE
+        member.participant.memberDetail.gender === Gender.FEMALE
           ? "bg-primary text-on-primary"
           : "bg-info text-on-info";
       return (
         <Avatar
-          src={member.participant.profilePictureUrl}
-          name={member.participant.fullName}
+          src={member.participant.memberDetail.profilePictureUrl}
+          name={member.participant.memberDetail.fullName}
           size="xs"
           className={`${avatarColor}`}
         />
@@ -242,41 +242,41 @@ const participantColumns: ColumnDef<AdminLeagueParticipant>[] = [
   {
     id: "firstName",
     label: "First Name",
-    accessor: "participant.firstName",
+    accessor: "participant.memberDetail.firstName",
     sortable: true,
-    render: (member) => member.participant.firstName,
+    render: (member) => member.participant.memberDetail.firstName,
     className: "text-left",
   },
   {
     id: "lastName",
     label: "Last Name",
-    accessor: "participant.lastName",
+    accessor: "participant.memberDetail.lastName",
     sortable: true,
-    render: (member) => member.participant.lastName,
+    render: (member) => member.participant.memberDetail.lastName,
     className: "text-left",
   },
   {
     id: "email",
     label: "Last Name",
-    accessor: "participant.email",
+    accessor: "participant.memberDetail.email",
     sortable: true,
-    render: (member) => member.participant.email,
+    render: (member) => member.participant.memberDetail.email,
     className: "text-left",
   },
   {
     id: "phone",
     label: "Mobile Phone",
-    accessor: "mobilePhone",
+    accessor: "participant.memberDetail.mobilePhone",
     sortable: true,
-    render: (member) => member.participant.mobilePhone,
+    render: (member) => member.participant.memberDetail.mobilePhone,
     className: "text-left",
   },
   {
     id: "skill",
     label: "Level",
-    accessor: "participant.skillLevel",
+    accessor: "participant.memberDetail.skillLevel",
     sortable: true,
-    render: (member) => member.participant.skillLevel,
+    render: (member) => member.participant.memberDetail.skillLevel,
     className: "text-left",
   },
   {

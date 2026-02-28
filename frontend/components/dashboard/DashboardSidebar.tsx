@@ -45,7 +45,8 @@ export function DashboardSidebar() {
     };
 
     const baseItems: SidebarItem[] = DASHBOARD_NAV_ITEMS.map((item) => {
-      const badge = calculateBadge(item.badgeCount, clubFilteredNotifications);
+      
+      const badge = clubFilteredNotifications ? calculateBadge(item.badgeCount, clubFilteredNotifications) : null;
       return {
       label: item.label,
       icon: item.icon,

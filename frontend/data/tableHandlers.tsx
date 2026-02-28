@@ -46,7 +46,7 @@ export async function handleEmailSelectedMembers(
   }
 
   // Extract email addresses
-  const emails = members.map((m) => m.participant.email).filter(Boolean);
+  const emails = members.map((m) => m.participant.memberDetail.email).filter(Boolean);
 
   if (emails.length === 0) {
     toast.error("No valid email addresses found");

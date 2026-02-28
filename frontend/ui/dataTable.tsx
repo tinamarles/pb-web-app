@@ -109,6 +109,7 @@ export function DataTable<T>({
       return config.columns.some((col) => {
         if (!col.accessor) return false;
         const value = getNestedValue(row, col.accessor);
+
         if (value == null) return false;
         return String(value).toLowerCase().includes(searchQuery.toLowerCase());
       });
